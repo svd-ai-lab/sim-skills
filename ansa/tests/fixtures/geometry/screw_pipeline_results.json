@@ -1,0 +1,24 @@
+{
+  "mesh": {
+    "faces": "10",
+    "grids": "1915",
+    "mesh_ret": "1",
+    "shells": "1947"
+  },
+  "mesh_ok": true,
+  "quality": {
+    "prop_count": "1",
+    "quads": "0",
+    "total_off": "0",
+    "total_shells": "1947",
+    "trias": "0"
+  },
+  "quality_ok": true,
+  "export": {
+    "ansa_exported": "True",
+    "ansa_size": "878376",
+    "nas_exported": "True",
+    "nas_size": "209436"
+  },
+  "export_ok": true
+}
