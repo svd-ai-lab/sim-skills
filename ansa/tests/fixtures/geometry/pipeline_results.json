@@ -1,0 +1,36 @@
+{
+  "load": {
+    "faces": "10",
+    "grids": "0",
+    "parts": "1",
+    "shells": "0"
+  },
+  "load_ok": true,
+  "mesh": {
+    "faces_meshed": "10",
+    "grids": "13",
+    "mesh_ret": "1",
+    "shells": "22"
+  },
+  "mesh_ok": true,
+  "quality": {
+    "grid_count": "13",
+    "prop_count": "1",
+    "shell_count": "22",
+    "total_off_elements": "0"
+  },
+  "quality_ok": true,
+  "material": {
+    "mat_created": "True",
+    "total_mats": "2"
+  },
+  "material_ok": true,
+  "export": {
+    "exported": "True",
+    "has_elements": "True",
+    "has_grid": "True",
+    "lines": "70",
+    "size_bytes": "3054"
+  },
+  "export_ok": true
+}
