@@ -28,3 +28,6 @@ Thumbs.db
 *.trn
 flprt.*
 cleanup-fluent-*.bat
+
+# Local Claude Code skills (project-private, do not publish)
+.claude/
