@@ -53,10 +53,41 @@ For every skill: `exit_code == 0` ALONE does **not** satisfy acceptance. Always 
 
 Values in any `reference/.../examples/` directory describe a specific published test case. They are **not** silently applicable to a different user's task. You may *offer* them ("the mixing_elbow example uses 0.4 m/s — would you like to use those values?") but must wait for explicit confirmation before adopting them as Category A inputs.
 
+### Runtime version awareness (Step 0 of every skill)
+
+**Mandatory.** The first thing every skill protocol does after `sim connect` succeeds is:
+
+```bash
+sim --host <ip> inspect session.versions
+```
+
+This returns:
+
+```json
+{
+  "sdk":     {"name": "ansys-fluent-core", "version": "0.38.1"},
+  "solver":  {"name": "fluent",            "version": "25.2"},
+  "profile": "pyfluent_0_38_modern",
+  "skill_revision": "v2",
+  "env_path": "/.../.sim/envs/fluent-pyfluent-0-38"
+}
+```
+
+The agent **must** use the returned `profile` (or `skill_revision`) to choose which subfolder to load:
+
+- **Snippets:** read only from `<skill>/snippets/<profile>/*.py` and `<skill>/snippets/common/*.py`. Never load a snippet from a different profile folder.
+- **Reference docs:** anything in `<skill>/reference/<profile>/` overrides anything in `<skill>/reference/common/` for that profile.
+- **Workflows:** same profile-folder rule as snippets.
+
+If `profile` is empty, unknown, or marked deprecated in the driver's `compatibility.yaml`, **stop and surface the version table to the user**. Do not guess. The contract for this whole mechanism is in [`sim-cli/docs/architecture/version-compat.md`](https://github.com/svd-ai-lab/sim-cli/blob/main/docs/architecture/version-compat.md).
+
+Why this matters: a snippet written for PyFluent 0.38 (uses `.general.material`) silently produces `AttributeError` on PyFluent 0.37 (which expects `.material` directly). Without Step 0 the agent has no way to tell which dialect it should write — it would have to guess from the SDK version, which is exactly the bug Step 0 fixes.
+
 ### When to stop and escalate
 
 Across all skills, stop and report (don't silently retry) when:
 - The solver / driver is unavailable or fails to launch
+- The runtime profile is empty, unknown, or deprecated (see "Runtime version awareness" above)
 - A snippet returns non-zero exit / `ok=false` / raises an exception
 - Session state is inconsistent with expectations after a step
 - The acceptance checklist cannot be satisfied
