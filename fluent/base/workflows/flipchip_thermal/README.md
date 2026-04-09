@@ -7,13 +7,28 @@ Based on: https://blog.ozeninc.com/resources/flip-chip-thermal-characterization-
 
 ## Case file
 
-Download from [Ozen Engineering](https://blog.ozeninc.com/hubfs/Flip_chip_demo_simplified.zip),
-extract it, then point `$SIM_DATASETS` at the parent directory. The script expects
-the file at `$SIM_DATASETS/flipchip/Flip_chip_demo_simplified.cas.h5`.
+The case is hosted by Ozen Engineering, not vendored in this repo. Use the
+`fetch_case.py` helper — stdlib only, idempotent, runs with plain `python3`
+or `uv run`:
+
+```bash
+uv run fetch_case.py            # downloads to $SIM_DATASETS/flipchip/
+uv run fetch_case.py --force    # re-download even if present
+uv run fetch_case.py --dest /some/other/dir
+```
+
+If `$SIM_DATASETS` is unset, the script downloads to
+`~/.cache/sim-datasets/flipchip/` and tells you to export `SIM_DATASETS` to
+match. The demo script then looks for the file at
+`$SIM_DATASETS/flipchip/Flip_chip_demo_simplified.cas.h5`.
 
 ```powershell
 $env:SIM_DATASETS = "C:\path\to\datasets"
 ```
+
+Manual fallback if the Ozen URL breaks: download the zip from the
+[Ozen blog post](https://blog.ozeninc.com/resources/flip-chip-thermal-characterization-using-ansys-fluent)
+and place `Flip_chip_demo_simplified.cas.h5` under `$SIM_DATASETS/flipchip/`.
 
 - `Flip_chip_demo_simplified.cas.h5` — Fluent 25.1 format, 455K cells
 - 2S2P PCB (4 copper + 3 FR-4 layers), 49 BGA solder balls, die + substrate + underfill

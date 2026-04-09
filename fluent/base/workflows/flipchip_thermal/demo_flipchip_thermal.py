@@ -30,10 +30,17 @@ import os as _os
 _datasets = _os.environ.get("SIM_DATASETS")
 if not _datasets:
     raise RuntimeError(
-        "SIM_DATASETS env var not set. Set it to the directory containing "
-        "the flipchip dataset (expects flipchip/Flip_chip_demo_simplified.cas.h5 inside)."
+        "SIM_DATASETS env var not set. Either run `uv run fetch_case.py` "
+        "(from this workflow dir) and export SIM_DATASETS as it instructs, "
+        "or set it manually to the directory containing "
+        "flipchip/Flip_chip_demo_simplified.cas.h5."
     )
 CASE_FILE = Path(_datasets) / "flipchip" / "Flip_chip_demo_simplified.cas.h5"
+if not CASE_FILE.exists():
+    raise RuntimeError(
+        f"Case file not found: {CASE_FILE}\n"
+        f"Run `uv run fetch_case.py` from {Path(__file__).parent} to download it."
+    )
 DIE_POWER_W = 1.0  # 1 W die power for thermal resistance calculation
 
 # Outer walls of the package + PCB assembly
