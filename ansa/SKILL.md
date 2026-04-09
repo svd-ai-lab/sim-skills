@@ -1,214 +1,67 @@
 ---
 name: ansa-sim
-description: Use when running BETA CAE ANSA v25 pre-processor scripts through sim in headless batch mode (`ansa_win64.exe -execscript -nogui`). Phase 1 covers batch `.py` execution only — no persistent session, no GUI, no `.ansa` database manipulation without a script wrapper.
+description: Use when running BETA CAE ANSA pre-processor scripts through sim in headless batch mode (`ansa64.bat -execscript -nogui`). Phase 1 covers batch `.py` execution only — no persistent session, no GUI, no `.ansa` database manipulation without a script wrapper.
 ---
 
 # ansa-sim
 
-Control protocol for running **BETA CAE ANSA v25.0.0** (pre-processor) through the `sim` runtime.
+You are connected to **BETA CAE ANSA** via sim-cli. This file is the
+**index**. It tells you where to look for actual content — it does not
+contain the content itself.
 
-## Identity
+The `/connect` response told you which active layer applies via:
 
-- **Solver**: BETA CAE ANSA v25.0.0 (pre-processor; ANSA does not solve, it builds/cleans/meshes models for downstream solvers — Nastran, Abaqus, LS-DYNA, OpenFOAM, …)
-- **Driver**: `sim.drivers.ansa.AnsaDriver`
-- **Execution model**: One-shot batch (`ansa_win64.exe -execscript -nogui`)
-- **Phase**: 1 — batch `.py` script execution only
-- **Verified**: 2026-04-03, 31 pytest + 4 real execution tests pass
-
-## Scope boundary
-
-Phase 1 covers batch execution of `.py` scripts that `import ansa`. The agent **can**:
-- Validate scripts (syntax, imports, batch compatibility)
-- Run scripts in headless mode
-- Parse JSON output from scripts
-- Report results
-
-The agent **cannot**:
-- Maintain a persistent ANSA session across multiple calls
-- Interact with the ANSA GUI
-- Open/modify `.ansa` databases without a script wrapper
-- Run solvers (ANSA is a pre-processor)
-
-## Execution model
-
-```
-lint(.py) → connect() → run_file(.py) → parse_output(stdout) → verify acceptance
+```json
+"skills": {
+  "root":               "<sim-skills>/ansa",
+  "active_sdk_layer":   null,        // ANSA has no Python SDK importable from outside
+  "active_solver_layer":"25.0"       // or "24.1" / "23.1"
+}
 ```
 
-## Required protocol
+Always read `base/`, then your active `solver/<version>/`. There is no
+`sdk/` overlay because the ANSA `ansa` Python module only loads inside
+an ANSA-spawned interpreter — there's nothing pip-installable to pin.
 
-### Step 0 — Identify task type
-Confirm the user has a `.py` ANSA script → load workflow template.
+---
 
-### Step 1 — Validate inputs
-- `.py` file exists: `Path(script).exists()`
-- Script is valid: `driver.lint(script).ok is True`
-- ANSA installed: `driver.connect().status == "ok"`
+## base/ — always relevant
 
-→ Do not call `run_file()` until all three pass.
-
-### Step 2 — Run
-```python
-result = driver.run_file(script)
-```
-May take 10 seconds to 10+ minutes. **Do not interrupt.**
-
-### Step 3 — Evaluate result
-1. `result.exit_code == 0`? → If non-zero: report and stop
-2. `result.stderr` empty or warnings only? → If errors: report
-3. `result.stdout` non-empty? → If empty: suspicious
-4. Acceptance criterion? → `parse_output(result.stdout)`, compare values
-
-→ **`exit_code=0` ALONE does NOT satisfy acceptance criterion.**
-
-### Step 4 — Report
-exit_code, duration_s, extracted values, stderr if non-empty.
-
-## Input validation policy
-
-**Category A — Must confirm before running:**
-- `.py` script path
-- Acceptance criterion (what "success" means)
-
-**Category B — Derivable:**
-- ANSA version: `driver.connect().version`
-- Has `main()`: detected by linter
-
-## When to stop and escalate
-
-- `driver.lint()` returns `ok=False`
-- `driver.connect()` returns `status != "ok"`
-- `result.exit_code != 0`
-- `result.stderr` contains ERROR or traceback
-- Acceptance criterion not met
-
-## Script convention
-
-ANSA scripts should follow this pattern for sim integration:
-
-```python
-import json
-import ansa
-from ansa import base, session, constants
-
-def main():
-    """Entry point — called by ansa64.bat -execscript 'script.py|main()'."""
-    session.New('discard')
-    base.Open('/path/to/model.ansa')
-
-    # ... perform operations ...
-
-    result = {"element_count": 12345, "min_quality": 0.32, "ok": True}
-    print(json.dumps(result))
-
-if __name__ == "__main__":
-    main()
-```
-
-Key conventions:
-- Define `main()` as entry point
-- Print a single JSON line to stdout as the last output
-- Use `session.New('discard')` to start clean
-- Avoid GUI-only functions (`PickEntities`, `guitk`)
-
-## ANSA Python API quick reference
-
-### Core imports
-```python
-from ansa import base, constants, mesh, session
-```
-
-### Common operations
-```python
-# Set solver deck
-base.SetCurrentDeck(constants.NASTRAN)  # ABAQUS, LSDYNA, FLUENT, etc.
-
-# Collect entities
-shells = base.CollectEntities(deck, None, "SHELL")
-props  = base.CollectEntities(deck, None, "__PROPERTIES__")
-
-# Read/write entity values
-vals = entity.get_entity_values(deck, {"T", "PID", "Name"})
-entity.set_entity_values(deck, {"Name": "new_name", "T": 2.5})
-
-# Create entities
-prop = base.CreateEntity(deck, "PSHELL", {"Name": "plate", "T": 1.0})
-mat  = base.CreateEntity(deck, "MAT1", {"E": 210000.0, "NU": 0.3})
-
-# File I/O
-session.New('discard')
-base.Open('/path/to/model.ansa')
-base.SaveAs('/path/out.ansa')
-
-# Element quality
-skew = base.ElementQuality(elem, "SKEW")
-off  = base.CalculateOffElements(comp)  # {'TOTAL OFF': n}
-
-# Mesh repair
-mesh.FixQuality()
-mesh.ReconstructViolatingShells(expand_level)
-```
-
-### Common pitfalls
-| Pitfall | Fix |
+| Path | What's there |
 |---|---|
-| `CollectEntities` arg 2 error | Use `None` for global scope, not a single entity |
-| GUI functions in `-nogui` mode | Avoid `guitk.*`, `PickEntities` — linter warns |
-| Deck mismatch | Entity ops must match the loaded deck |
-| `ANSA_SRV` unresolved | Driver sets `ANSA_SRV=localhost` automatically |
+| `base/reference/` | Patterns for writing ANSA Python scripts that will be executed via `-execscript "script.py|main()"`. Common imports, exit conventions, error surfacing. |
+| `base/spec/` | The contract this skill commits to (Phase 1 scope, what's in/out of scope). |
+| `base/docs/` | Background notes, links to BETA documentation. |
+| `base/skill_tests/` | Skill QA cases. |
+| `base/known_issues.md` | Vendor quirks (path-handling oddities, license behavior). |
 
-## Automation capability assessment
+## solver/<active_solver_layer>/ — release specifics
 
-Based on research (GitHub repos, conference papers, community forums):
+Empty stubs by default; per-release deltas land here as discovered.
 
-- **No persistent session API** — ANSA has no external RPC/socket/COM interface
-- **No attach-to-running-instance** — unlike MATLAB Engine or COMSOL LiveLink
-- **`ansa` module is process-internal only** — cannot be imported from external Python
-- **KOMVOS framework** dispatches batch jobs, not live sessions
-- **One-shot batch is the only reliable automation path**
+- `solver/25.0/notes.md` — current
+- `solver/24.1/notes.md`
+- `solver/23.1/notes.md`
 
-If persistent sessions become needed, the only viable (unofficial) approach is a self-hosted socket server script running inside ANSA's embedded Python.
+## Hard constraints
 
-## Environment requirements
+1. **Phase 1 is one-shot only.** No persistent sessions. Every `sim
+   exec` payload starts a fresh ANSA process via `-execscript`. State
+   does not survive across calls; if you need state, write a single
+   bigger script.
+2. **`main()` is required.** ANSA's `-execscript "script.py|main()"`
+   syntax expects an entry function. Don't write top-level statements
+   that need to run; put them inside `def main():`.
+3. **Acceptance ≠ exit code.** Always extract a structured artifact
+   (a JSON line, a written file path) and validate against the user's
+   criterion.
 
-- `ANSA_SRV=localhost` (set by driver automatically)
-- ANSA v25.0.0 installed at standard path
-- SSQ-patched `ansa_win64.exe` (replaces `shared_v25.0.0/win64/`)
+---
 
-## File index
+## Required protocol (one paragraph)
 
-### Top-level
-- `SKILL.md` — this file
-- `known_issues.md` — license, batch mode, gotchas
-- `pytest.ini` — pytest config
-
-### `reference/` — ANSA scripting docs
-- `reference/ansa_api_reference.md` — distilled ANSA Python API reference
-- `reference/ANSA_Scripting_User_Guide.md` — distilled scripting user guide
-- `reference/youtube_ansa_api_research.md` — notes from ANSA-related video tutorials
-- `reference/official_docs/` — subset of the official ANSA docs (intro, 10-min tutorial, interpreter, script editor, user guide, full API, batch-mesh API, CAD API, mesh API)
-
-### `spec/` — design specs
-- `spec/2026-04-02-ansa-sim-design.md` — Phase 1 design spec for the ansa-sim driver and skill
-
-### `docs/` — investigation reports
-- `docs/ansa_investigation_summary.md` — initial findings
-- `docs/ansa_runtime_dev_report.md` — runtime / driver development report
-- `docs/iap_remotecontrol_test_report.md` — test report for IAP RemoteControl mode
-- `docs/ansa_final_report.md` — final Phase 1 report
-
-### `tests/` — pytest unit + integration
-- `tests/test_ansa_driver.py` — driver unit tests
-- `tests/test_runtime.py` — runtime layer tests
-- `tests/test_pipeline.py`, `tests/test_geometry_pipeline.py` — pipeline tests
-- `tests/conftest.py` — fixtures, skip-logic for missing ANSA
-- `tests/fixtures/` — `.py` script fixtures: good (`good_ansa_script.py`, `ex_*`), bad (`no_import.py`, `no_main.py`, `syntax_error.py`, `gui_script.py`)
-
-### `skill_tests/` — protocol acceptance test cases (not pytest)
-- `skill_tests/execution_test_cases_v1.md` — Phase 1 acceptance test cases EX-01..EX-09
-
-## Requirements
-
-- BETA CAE ANSA v25.0.0 installed
-- `sim-cli` with the ANSA driver
-- For integration tests: a valid ANSA license
+After `/connect` succeeds, validate Category A inputs (input geometry,
+output target, acceptance criteria), then send the Python script via
+`sim exec`. The driver shells out to `ansa64.bat -execscript
+"<tmp>.py|main()" -nogui`. Parse the script's structured output and
+evaluate against the user's acceptance criterion.
