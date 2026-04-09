@@ -5,90 +5,68 @@ description: Use when running MATLAB scripts through the sim runtime — current
 
 # matlab-sim
 
-Control protocol for executing MATLAB through the `sim` runtime. This skill is for sim-driven execution, not general MATLAB tutoring.
+You are connected to **MATLAB** via sim-cli. This file is the **index**.
+It tells you where to look for actual content — it does not contain the
+content itself.
 
-## Phases
+The `/connect` response told you which active layer applies via:
 
-| Phase | Status | Description |
-|---|---|---|
-| **v0** | Current | One-shot `.m` script execution via `sim run --solver matlab` |
-| **v1** | Planned | Persistent local MATLAB sessions via `sim connect` / `sim exec` |
-
-## When to use
-
-- Task involves running a `.m` script through sim
-- Need machine-readable results extracted via JSON
-- Working with MATLAB local install (not remote / not MATLAB Online)
-
-**Do NOT use** for general MATLAB tutoring / API lookup.
-
-## Working rules
-
-1. **Prefer `.m` scripts and explicit JSON outputs** for machine-readable results.
-2. **Do not assume MATLAB desktop / session state exists** unless the runtime explicitly exposes it.
-3. **When persistent sessions arrive**, treat shared human+agent sessions as cooperative and stateful.
-4. **Reuse upstream MATLAB references** when they reduce duplication, but keep `sim` execution assumptions explicit.
-
-## Required protocol — v0 (one-shot)
-
-### Step 0 — Validate inputs
-- `.m` script exists at provided path
-- Acceptance criterion stated by user (what to extract, what counts as success)
-- MATLAB available: `driver.connect().status == "ok"`
-
-### Step 1 — Run
-```bash
-sim run script.m --solver matlab
+```json
+"skills": {
+  "root":               "<sim-skills>/matlab",
+  "active_sdk_layer":   "24.1",      // or "24.2" / "23.2"
+  "active_solver_layer":null         // engine version IS the release pin
+}
 ```
 
-### Step 2 — Evaluate
-- `result.exit_code == 0`
-- `result.stderr` empty or warnings only
-- `parse_output(result.stdout)` — last `jsonencode(...)` line on stdout — matches the user's acceptance criterion
-- **`exit_code == 0` ALONE does NOT satisfy acceptance** — always validate against the criterion
+`active_sdk_layer` is the matlabengine package version. There is no
+separate `solver/` overlay because each matlabengine X.Y is rigidly
+coupled to one MATLAB release (24.1 ↔ R2024a, 24.2 ↔ R2024b, etc.).
 
-### Step 3 — Report
-exit_code, duration, extracted values, stderr if non-empty.
+Always read `base/`, then your active `sdk/<version>/`. Later layers
+override earlier ones on identically-named files.
 
-## Script convention
+---
 
-MATLAB scripts driven by sim should print a final `jsonencode(...)` payload when structured output is needed. Errors should remain visible in MATLAB stderr / stdout — do not hide them behind custom wrappers unless the runtime contract requires it.
+## base/ — always relevant
 
-```matlab
-% script.m
-result = struct();
-result.value = computed_value;
-result.ok = true;
-disp(jsonencode(result));
-```
+| Path | What's there |
+|---|---|
+| `base/reference/` | MATLAB control patterns: how to pass numpy arrays to engine, how to read engine.workspace, how to surface MATLAB errors as Python exceptions. |
+| `base/snippets/` | Ready-made `sim run` payloads for common analyses. |
+| `base/workflows/` | End-to-end multi-script examples. |
+| `base/driver_upgrade.md` | Process notes for bumping the matlabengine SDK pin. |
 
-## File index
+## sdk/<active_sdk_layer>/ — engine-version specifics
 
-### Top-level
-- `SKILL.md` — this file
-- `LICENSE` — Apache-2.0
-- `driver_upgrade.md` — companion sub-skill for evolving the MATLAB driver from v0 → v1 (handles CLI changes, MATLAB Engine API updates, compatibility with upstream MATLAB tooling)
+Empty stubs by default; per-engine deltas land here as discovered.
 
-### `reference/` — domain knowledge
-- `reference/README.md` — index of MATLAB runtime notes, task templates, and curated upstream links to MathWorks resources
+- `sdk/24.2/notes.md` — matlabengine 24.2 / R2024b
+- `sdk/24.1/notes.md` — matlabengine 24.1 / R2024a
+- `sdk/23.2/notes.md` — matlabengine 23.2 / R2023b
 
-### `workflows/` — end-to-end demos
-- `workflows/README.md` — index of MATLAB demo scripts and task workflows
+## tests/ (top-level, not part of the layered tree)
 
-### `snippets/` — reusable snippets (planned)
-- `snippets/README.md` — standalone MATLAB snippet files for step-by-step execution (placeholder for v1)
+QA artifacts for the skill itself. Not loaded during a normal session.
 
-### `tests/` — pytest scaffolding
-- `tests/README.md` — integration-test scaffolding for the MATLAB driver
+---
 
-## Upstream references
+## Hard constraints
 
-- [`matlab/matlab-mcp-core-server`](https://github.com/matlab/matlab-mcp-core-server) — official capability baseline
-- [`svd-ai-lab/matlab-mcp-server`](https://github.com/svd-ai-lab/matlab-mcp-server) — interactive session / reference design input
-- [`matlab/skills`](https://github.com/matlab/skills) — MATLAB agent workflow patterns
+1. **MATLAB output is not structured by default.** Always wrap the
+   final result in an explicit JSON line on stdout that the driver's
+   `parse_output()` can pick up. Free-form `disp()` output gets lost.
+2. **Don't leave a MATLAB desktop running.** v0 is one-shot per script;
+   the driver tears the engine down between calls. Don't write
+   snippets that depend on workspace state surviving across `sim run`
+   invocations.
 
-## Requirements
+---
 
-- Python 3.10+
-- MATLAB installed locally
-- `sim-cli` with the MATLAB driver (`MatlabDriver` in `sim.drivers.matlab`)
+## Required protocol (one paragraph)
+
+Validate Category A inputs (the .m script(s), the data files they need,
+the acceptance criteria), then `sim run script.m --solver matlab`.
+After completion, parse the JSON line off stdout and evaluate against
+the user's acceptance criteria. For multi-step pipelines, chain
+`sim run` calls — each is its own engine lifecycle.

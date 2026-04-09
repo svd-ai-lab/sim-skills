@@ -1,8 +1,0 @@
-__pycache__/
-*.pyc
-.pytest_cache/
-.sim/
-*.bak
-*.bak2
-logs/
-*.png
