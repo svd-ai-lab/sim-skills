@@ -2,7 +2,7 @@
 Fetch the Ozen Engineering flip-chip demo case file for this workflow.
 
 Downloads Flip_chip_demo_simplified.zip from Ozen's blog and extracts the
-.cas.h5 into $SIM_DATASETS/flipchip/. Idempotent — skips if the target
+.cas.h5 into $SIM_DATASETS/flipchip/. Idempotent - skips if the target
 already exists. Stdlib only; runs with plain python3 or `uv run`.
 
 Usage:
@@ -30,7 +30,7 @@ from urllib.request import Request, urlopen
 ZIP_URL = "https://blog.ozeninc.com/hubfs/Flip_chip_demo_simplified.zip"
 CASE_NAME = "Flip_chip_demo_simplified.cas.h5"
 SUBDIR = "flipchip"
-MIN_BYTES = 1_000_000  # sanity floor — real file is ~40 MB
+MIN_BYTES = 1_000_000  # sanity floor - real file is ~40 MB
 DEFAULT_DEST = Path.home() / ".cache" / "sim-datasets"
 
 
@@ -40,7 +40,7 @@ def resolve_dest(cli_dest: str | None) -> Path:
     env = os.environ.get("SIM_DATASETS")
     if env:
         return Path(env).expanduser().resolve()
-    print(f"[fetch_case] SIM_DATASETS not set — using default: {DEFAULT_DEST}")
+    print(f"[fetch_case] SIM_DATASETS not set - using default: {DEFAULT_DEST}")
     return DEFAULT_DEST
 
 
@@ -101,7 +101,7 @@ def main() -> int:
 
     if target.exists() and not args.force:
         size_mb = target.stat().st_size / 1e6
-        print(f"[fetch_case] already present: {target} ({size_mb:.1f} MB) — skipping")
+        print(f"[fetch_case] already present: {target} ({size_mb:.1f} MB) - skipping")
         print(f"[fetch_case] use --force to re-download")
         return 0
 
@@ -122,7 +122,7 @@ def main() -> int:
 
     size = target.stat().st_size
     if size < MIN_BYTES:
-        print(f"[fetch_case] extracted file is suspiciously small ({size} bytes) — aborting",
+        print(f"[fetch_case] extracted file is suspiciously small ({size} bytes) - aborting",
               file=sys.stderr)
         target.unlink()
         return 1
