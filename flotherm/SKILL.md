@@ -50,6 +50,19 @@ for the inline driver. Not loaded during a normal session.
 
 ---
 
+## Example files provenance
+
+Files under `base/reference/flotherm/2504/examples/` are copies of
+vendor-shipped demo models from the Flotherm installation directory:
+
+| Skill path | Source (Flotherm install) |
+|---|---|
+| `examples/pack/Mobile_Demo-Steady_State.pack` | `examples\FloSCRIPT\Demonstration Examples\Transient Power Update\Mobile_Demo-Steady_State.pack` |
+| `examples/pack/SuperPosition.pack` | `examples\Demonstration Models\Superposition\SuperPosition.pack` |
+
+These can be regenerated from any Flotherm 2504 installation at
+`C:\Program Files\Siemens\SimcenterFlotherm\2504\examples\`.
+
 ## Hard constraints
 
 1. **GUI must be visible.** Phase A is GUI automation; running headless
