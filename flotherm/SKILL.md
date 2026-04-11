@@ -55,6 +55,7 @@ via `GetDlgItem(1148)` + `SendMessage(WM_SETTEXT)` + `BM_CLICK`.
 
 | Path | What's there |
 |---|---|
+| `base/reference/floscript_modeling.md` | **FloSCRIPT model generation reference** — command vocabulary, patterns, step templates for building models from scratch via Claude. |
 | `base/reference/` | FloSCRIPT XML patterns, GUI control sequences, Win32 message recipes. |
 | `base/workflows/` | End-to-end demo runs of typical Phase A `.pack` cases. |
 | `base/docs/` | Background on the GUI-automation approach and why headless batch is broken upstream. |
@@ -88,6 +89,26 @@ vendor-shipped demo models from the Flotherm installation directory:
 
 These can be regenerated from any Flotherm 2504 installation at
 `C:\Program Files\Siemens\SimcenterFlotherm\2504\examples\`.
+
+## Model generation (building from scratch)
+
+To build a Flotherm model from a natural language description, generate
+FloSCRIPT XML step by step. See `base/reference/floscript_modeling.md`
+for the full command reference, common patterns, and pitfalls.
+
+```bash
+sim connect --solver flotherm --ui-mode gui
+sim lint step1.xml                          # XSD validates automatically
+sim exec step1.xml                          # create geometry + save checkpoint
+sim lint step2.xml
+sim exec step2.xml                          # add sources + save checkpoint
+sim exec 'solve'                            # run CFD
+sim disconnect
+```
+
+Each step is a separate FloSCRIPT file with `<project_save_as>` at the
+end for crash recovery. Lint before play — XSD validation catches
+typos and structural errors with line numbers.
 
 ## Hard constraints
 
