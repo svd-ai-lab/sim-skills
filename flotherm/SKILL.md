@@ -1,6 +1,6 @@
 ---
 name: flotherm-sim
-description: Use when running Simcenter Flotherm thermal cases through the sim runtime — Phase A `.pack` execution via Win32 API automation playing back FloSCRIPT XML in the Flotherm GUI. Headless batch mode is currently broken (vendor defect).
+description: Use when running Simcenter Flotherm thermal cases through the sim runtime — `.pack` import and solve via pywinauto UIA menu automation + Win32 file dialog. Headless batch mode is broken (vendor defect).
 ---
 
 # flotherm-sim
@@ -21,7 +21,33 @@ The `/connect` response told you which active layer applies via:
 
 Always read `base/`, then your active `solver/<version>/`. There is no
 `sdk/` overlay because Flotherm has no Python wrapper — the driver
-controls Flotherm via Win32 API GUI automation.
+controls Flotherm via pywinauto UIA (Qt menu automation) + Win32
+ctypes (standard file dialogs).
+
+---
+
+## Working commands (verified 2026-04-11)
+
+```bash
+sim connect --solver flotherm --ui-mode gui     # launch Flotherm GUI
+sim exec '<path>.pack'                          # import pack into GUI
+sim exec 'solve'                                # run CFD solve
+sim exec 'status'                               # query session state
+sim disconnect                                  # kill all processes
+```
+
+### How GUI automation works
+
+```
+sim exec → driver.run() → _play_floscript(script_path)
+  ├─ subprocess: pywinauto UIA expand() Macro → invoke() Play FloSCRIPT
+  │  (invoke blocks due to modal dialog; subprocess killed after timeout)
+  └─ main process: Win32 ctypes fills file dialog → clicks Open
+```
+
+UIA runs in a **subprocess** to isolate COM state corruption from the
+server process. The file dialog is a standard Windows dialog, handled
+via `GetDlgItem(1148)` + `SendMessage(WM_SETTEXT)` + `BM_CLICK`.
 
 ---
 
@@ -65,22 +91,24 @@ These can be regenerated from any Flotherm 2504 installation at
 
 ## Hard constraints
 
-1. **GUI must be visible.** Phase A is GUI automation; running headless
-   or in a remote-desktop-disconnected session causes Win32 SendInput
-   to no-op silently.
-2. **Don't open Flotherm by hand while sim is using it.** Win32 message
-   delivery races between user input and the playback. Let the driver
-   own the lifecycle.
-3. **Acceptance ≠ exit code.** Always extract a numeric (max temp,
+1. **GUI must be visible.** The automation uses pywinauto UIA which
+   requires the Flotherm window to be in an interactive desktop session.
+   `sim serve` must be started from RDP, not SSH.
+2. **Don't open Flotherm by hand while sim is using it.** UIA element
+   discovery races with user input. Let the driver own the lifecycle.
+3. **UIA must run in a subprocess.** `invoke()` on Qt menu items throws
+   COMError and corrupts COM state for the entire process. Always
+   isolate in `subprocess.Popen` with timeout.
+4. **Acceptance ≠ exit code.** Always extract a numeric (max temp,
    junction-to-ambient ΔT) from the .pack output and validate against
    the user's criterion.
 
 ---
 
-## Required protocol (one paragraph)
+## Required protocol
 
-After `/connect` succeeds, validate Category A inputs (the .pack file,
-the FloSCRIPT XML, acceptance criteria), launch the playback through
-the driver, and watch for the playback-complete signal. After
-completion, parse the .pack result file and evaluate against the
-user's acceptance criterion.
+1. `sim connect --solver flotherm --ui-mode gui` — launches Flotherm
+2. `sim exec '<path>.pack'` — imports pack (uses `project_import` FloSCRIPT with `import_type="Pack File"`)
+3. `sim exec 'solve'` — plays `<start start_type="solver"/>` FloSCRIPT
+4. Verify solve completed: check Message Window for `I/9001 - Solver stopped: steady solution converged`
+5. `sim disconnect` — kills floserv, floview, flotherm

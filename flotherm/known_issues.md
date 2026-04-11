@@ -51,15 +51,25 @@ The Flotherm **GUI mode** (`floserv.exe 16 -d DefaultSI`) functions correctly:
 - Opens projects, runs solves, produces results
 - No E/11029, no RunTable errors
 
-### Why the GUI cannot be automated (yet)
+### GUI automation — WORKING (2026-04-11)
 
-Flotherm does not expose an external API (no Python SDK, no gRPC, no COM, no TCP sockets). The internal IPC uses proprietary channel protocol between floserv and child processes. Unlike Ansys Fluent (which has `ansys-fluent-core` / PyFluent with gRPC), there is no documented way to send FloSCRIPT commands to a running floserv from an external process.
+Flotherm does not expose an external API, but **GUI automation via pywinauto UIA is proven working**:
 
-Potential future approaches:
-1. **Windows UI Automation** (`pywinauto`): Programmatically click GUI menus
-2. **Reverse-engineer the channel protocol**: Connect to named pipes, send XML
-3. **Siemens support**: Request batch mode fix or external API documentation
-4. **Flotherm XT**: Different product with potentially different automation support
+```
+pywinauto UIA: expand() Macro MenuItem → invoke() Play FloSCRIPT
+  (invoke blocks due to modal dialog — run in subprocess with timeout)
+Win32 ctypes: fill file dialog (control ID 1148) → click Open (IDOK)
+  (standard Windows dialog, not Qt — ctypes works fine)
+```
+
+Verified end-to-end: connect → import pack → solve (153K cells, converged) → disconnect.
+
+Key requirements:
+- `sim serve` must run in an interactive desktop session (not SSH session 0)
+- UIA operations must run in a **subprocess** (COM state corrupts after `invoke()` COMError)
+- `pywinauto` must be installed in the sim-cli venv (`uv pip install pywinauto`)
+
+See `sim-proj/.claude/skills/gui-automation/SKILL.md` for detailed patterns and gotchas.
 
 ### Impact on test cases
 
