@@ -29,13 +29,6 @@
 
 ---
 
-## 📰 News
-
-- **2026-04-07** 🚀 **sim-skills v0.1** — first public release on GitHub. Six skills in the grid, consolidated from the earlier `svd-ai-lab/ion-agent-{ansa,comsol,flotherm,fluent,matlab,openfoam}` family. Every skill now ships in the standard Anthropic skill format (YAML frontmatter + `SKILL.md`).
-- **2026-04-07** 🤝 Paired with the companion runtime [`sim-cli`](https://github.com/svd-ai-lab/sim-cli) — the two repos are designed to grow in lockstep, one skill per new driver.
-
----
-
 ## 🤔 Why sim-skills?
 
 LLM agents already know how to write PyFluent, MATLAB, COMSOL, and OpenFOAM scripts — training data is full of them. What they *don't* have is **operational discipline** for each tool: which inputs are physical decisions vs. operational defaults, what the acceptance criterion actually is, when to stop and ask, which API version's quirks bite where.
@@ -146,6 +139,13 @@ Each `<solver>/` directory is self-contained: `SKILL.md` at the top is the agent
 ## 🔗 Related projects
 
 - **[`sim-cli`](https://github.com/svd-ai-lab/sim-cli)** — the paired runtime. One CLI, one HTTP protocol, an open driver registry. This repo is its agent-facing twin.
+
+---
+
+## 📰 News
+
+- **2026-04-07** 🚀 **sim-skills v0.1** — first public release on GitHub. Six skills in the grid, consolidated from the earlier `svd-ai-lab/ion-agent-{ansa,comsol,flotherm,fluent,matlab,openfoam}` family. Every skill now ships in the standard Anthropic skill format (YAML frontmatter + `SKILL.md`).
+- **2026-04-07** 🤝 Paired with the companion runtime [`sim-cli`](https://github.com/svd-ai-lab/sim-cli) — the two repos are designed to grow in lockstep, one skill per new driver.
 
 ---
 
