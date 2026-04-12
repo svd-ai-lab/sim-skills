@@ -56,6 +56,8 @@ Every skill lives in its own top-level folder. The grid is **open and growing** 
 | [**ansa-sim**](ansa/SKILL.md) | Structural pre-processing | Headless batch (`ansa_win64 -execscript -nogui`) | Phase 1 🟡 | BETA CAE ANSA v25 scripts; no persistent session yet |
 | [**flotherm-sim**](flotherm/SKILL.md) | Electronics thermal | GUI + Win32 FloSCRIPT playback | Phase A 🟡 | Simcenter Flotherm 2504 `.pack` cases |
 | [**matlab-sim**](matlab/SKILL.md) | Numerical / scripting | One-shot `sim run --solver matlab` | v0 🟡 | `.m` scripts one-shot; persistent session planned for v1 |
+| [**workbench-sim**](workbench/SKILL.md) | CAE orchestration | Persistent PyWorkbench SDK + RunWB2 fallback | Working ✅ | Ansys Workbench project/system/journal orchestration; cells 1-3 of Static Structural |
+| [**mechanical-sim**](mechanical/SKILL.md) | Structural physics | Persistent PyMechanical gRPC session (GUI) | Working ✅ | Ansys Mechanical BCs/solve/results; cells 4-6 of Static Structural. E2E tested with official example. |
 | **+ your skill** | — | — | 🛠 | Drop a `<solver>/SKILL.md`, register in `CLAUDE.md`, open a PR |
 
 **Legend** · ✅ Working · 🟡 In progress (phased rollout) · 🛠 Open for contribution
@@ -128,6 +130,8 @@ sim-skills/
 ├── ansa/              BETA CAE ANSA v25 pre-processor (batch, Phase 1)
 ├── flotherm/          Simcenter Flotherm 2504 (GUI + Win32, Phase A)
 ├── matlab/            MATLAB via sim run (v0 one-shot)
+├── workbench/         Ansys Workbench orchestration via PyWorkbench (cells 1-3)
+├── mechanical/        Ansys Mechanical BCs/solve/results via PyMechanical (cells 4-6)
 │
 └── assets/            banner and related graphics
 ```
