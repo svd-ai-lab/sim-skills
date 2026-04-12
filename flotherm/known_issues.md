@@ -3,8 +3,8 @@
 ## ISSUE-001: Batch mode (`flotherm.bat -b`) non-functional in Flotherm 2504
 
 **Date discovered**: 2026-04-01  
-**Severity**: Critical — blocks all headless solve operations  
-**Status**: Open — no workaround within driver layer  
+**Severity**: Critical — blocks headless solve via `flotherm.bat -b`  
+**Status**: **WORKAROUND FOUND** (2026-04-12) — direct `translator.exe` + `solexe.exe` bypasses floserv entirely  
 
 ### Symptom
 
@@ -46,12 +46,50 @@ The solve **never runs**. Zero field files are modified. Exit code is misleading
 
 ### What works instead
 
-The Flotherm **GUI mode** (`floserv.exe 16 -d DefaultSI`) functions correctly:
-- Launches CommandCentre + floview via named pipe channels
-- Opens projects, runs solves, produces results
-- No E/11029, no RunTable errors
+#### Direct translator + solver — WORKING HEADLESS (2026-04-12)
 
-### GUI automation — WORKING (2026-04-11)
+The RunTable bug is in **floserv**, not in the actual translator or solver executables. By calling them directly, we bypass floserv entirely and get a fully headless batch solve from SSH:
+
+```
+# Step 1: Set up Flotherm environment (without launching floserv)
+call "C:\Program Files\Siemens\SimcenterFlotherm\2504\WinXP\bin\flotherm.bat" -env
+
+# Step 2: Translate model to solver format
+translator.exe -p "<FLOUSERDIR>\<ProjectName>.<GUID>" -n1
+
+# Step 3: Run solver
+solexe.exe -p "<FLOUSERDIR>\<ProjectName>.<GUID>"
+```
+
+**Verified on**: Mobile_Demo_Steady_State (153K cells, 2 domains)  
+**Environment**: SSH session to win1 (no interactive desktop, no GUI)  
+**Solver output**: 500 iterations, single precision, serial, status 4 (max iterations hit)  
+**Solver time**: CPU 1:07, Clock 1:41  
+**Evidence**: `logit` shows real residuals, Temperature ~35°C, field files modified in `msp_0/end/`
+
+Key points:
+- `flotherm.bat -env` sets environment variables without launching anything
+- `translator.exe -p <project_path> -n1` translates the model (writes grid, field init files)
+- `solexe.exe -p <project_path>` runs the CFD solver directly (writes `logit`, updates `end/` fields)
+- Exit codes: both return 0 on success
+- `solexed.exe` is the double-precision variant; `solexe_p.exe` is parallel
+- No license issues — the SALT/MGLS license is checked at solve time, works from SSH
+- Solver log is written to `DataSets/BaseSolution/PDTemp/logit`
+
+This approach does NOT require:
+- floserv.exe (bypassed entirely)
+- CommandCentre (bypassed)
+- RunTable / server.cfg parsing (bypassed)
+- Interactive desktop / GUI session
+- pywinauto or any GUI automation
+
+`server.cfg` reveals the full invocation chain that floserv normally uses:
+```
+7 floproxy channel translator -c -p path -nX
+10 floproxy channel solexe precision -p path t n -cc scenario
+```
+
+#### GUI automation — WORKING (2026-04-11)
 
 Flotherm does not expose an external API, but **GUI automation via pywinauto UIA is proven working**:
 

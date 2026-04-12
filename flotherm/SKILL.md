@@ -1,6 +1,6 @@
 ---
 name: flotherm-sim
-description: Use when running Simcenter Flotherm thermal cases through the sim runtime — `.pack` import and solve via pywinauto UIA menu automation + Win32 file dialog. Headless batch mode is broken (vendor defect).
+description: Use when running Simcenter Flotherm thermal cases through the sim runtime. Two solve paths: (1) direct batch via translator.exe + solexe.exe (headless, no GUI), (2) GUI automation via pywinauto UIA for .pack import.
 ---
 
 # flotherm-sim
@@ -26,7 +26,24 @@ ctypes (standard file dialogs).
 
 ---
 
-## Working commands (verified 2026-04-11)
+## Execution paths
+
+### Direct batch (headless, preferred for re-solves)
+
+Bypasses floserv entirely — calls translator and solver executables directly.
+Works from SSH with no interactive desktop.
+
+```batch
+call flotherm.bat -env                     # set environment only
+translator.exe -p "<FLOUSERDIR>\<project>" -n1   # translate model
+solexe.exe -p "<FLOUSERDIR>\<project>"           # run CFD solver
+```
+
+**Requirements**: Project must already be unpacked in `FLOUSERDIR` (registered in `group.cat`).
+**Solver log**: `<project>/DataSets/BaseSolution/PDTemp/logit`
+**Result fields**: `<project>/DataSets/BaseSolution/msp_*/end/Temperature` etc.
+
+### GUI automation (for .pack import + first solve)
 
 ```bash
 sim connect --solver flotherm --ui-mode gui     # launch Flotherm GUI
