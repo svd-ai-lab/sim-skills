@@ -1,6 +1,6 @@
 ---
 name: flotherm-sim
-description: Use when running Simcenter Flotherm thermal cases through the sim runtime — `.pack` import and solve via pywinauto UIA menu automation + Win32 file dialog. Headless batch mode is broken (vendor defect).
+description: Use when running Simcenter Flotherm thermal cases through the sim runtime. Primary path is GUI automation via pywinauto UIA (`.pack` import + FloSCRIPT playback). Direct batch (`translator.exe` + `solexe.exe`) is a headless optimization for re-solving existing projects only.
 ---
 
 # flotherm-sim
@@ -26,15 +26,52 @@ ctypes (standard file dialogs).
 
 ---
 
-## Working commands (verified 2026-04-11)
+## Execution paths
+
+### GUI automation — primary path (recommended)
+
+All vendor-documented CLI playback modes are broken in Flotherm 2504 (see `known_issues.md` ISSUE-001). GUI automation via pywinauto UIA is the only verified end-to-end working path for `.pack` import, FloSCRIPT playback, and first-time project creation/modification.
 
 ```bash
-sim connect --solver flotherm --ui-mode gui     # launch Flotherm GUI
+sim connect --solver flotherm --ui-mode gui     # launch Flotherm GUI (needs RDP/interactive desktop)
 sim exec '<path>.pack'                          # import pack into GUI
 sim exec 'solve'                                # run CFD solve
 sim exec 'status'                               # query session state
 sim disconnect                                  # kill all processes
 ```
+
+**Requirements**: `sim serve` must run in an interactive desktop session (RDP, not SSH session 0). The GUI binary needs a real desktop to render Qt widgets.
+
+### Direct batch — headless optimization for re-solves only
+
+Bypasses floserv — calls translator and solver executables directly. Works from SSH with no interactive desktop, BUT only for projects that already exist in `FLOUSERDIR` (i.e., previously imported/created via the GUI path).
+
+```batch
+call flotherm.bat -env                              :: set environment only
+translator.exe -p "<FLOUSERDIR>\<project>.<GUID>" -n1   :: discretize model → msp_0
+solexe.exe -p "<FLOUSERDIR>\<project>.<GUID>"           :: run CFD solver
+```
+
+**What this path can do**:
+- Re-solve an existing project with no parameter changes (e.g., crash recovery, rerun with different iteration count after manually editing `solver_control`)
+- Run on a Flotherm project that was originally imported via the GUI path
+- Fully headless, fully scriptable, works from SSH
+
+**What this path cannot do**:
+- Create a new project from scratch
+- Import a `.pack` file (needs GUI automation)
+- Modify model parameters (requires FloSCRIPT playback, which is broken in CLI)
+- Change geometry, materials, boundary conditions, power values, etc.
+
+**Solver log**: `<project>/DataSets/BaseSolution/PDTemp/logit`  
+**Result fields**: `<project>/DataSets/BaseSolution/msp_*/end/Temperature` etc.  
+**Solver variants**: `solexe.exe` (single), `solexed.exe` (double), `solexe_p.exe` (parallel)
+
+### Decision rule
+
+- **Need to import a `.pack` or create/modify a project?** → GUI automation
+- **Just re-solving an existing unmodified project?** → Direct batch (faster, headless)
+- **Need model parameter modification headlessly?** → Not yet possible (see `known_issues.md` ISSUE-003)
 
 ### How GUI automation works
 
