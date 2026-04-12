@@ -24,7 +24,7 @@ When a task involves any supported solver:
 4. Reach for supporting files when SKILL.md instructs: `reference/` for patterns and templates, `workflows/` for end-to-end examples, `snippets/` for ready-made `sim exec` payloads, `skill_tests/` for acceptance test cases
 5. **Never invent solver-specific defaults for Category A (physical-decision) inputs** — ask the user
 
-## The 6 skills
+## The 8 skills
 
 | Directory | Skill name | Use when |
 |---|---|---|
@@ -34,10 +34,12 @@ When a task involves any supported solver:
 | `fluent/` | `fluent-sim` | Driving an Ansys Fluent meshing or solver session via PyFluent 0.38 — incremental snippets or single-file workflows |
 | `matlab/` | `matlab-sim` | Running MATLAB `.m` scripts one-shot via `sim run --solver matlab` (v0); persistent sessions planned for v1 |
 | `openfoam/` | `openfoam-sim` | Running OpenFOAM v2206 cases through `sim serve` on a Linux box via SSH tunnel — meshing, MPI parallel, classifier-based pass/fail |
+| `workbench/` | `workbench-sim` | Driving Ansys Workbench via PyWorkbench SDK — project creation, analysis systems, IronPython journals, sub-solver integration (PyMechanical/PyFluent). Owns cells 1-3 of Static Structural. |
+| `mechanical/` | `mechanical-sim` | Driving Ansys Mechanical via PyMechanical — BCs, loads, solver execution, result extraction. Owns cells 4-6 of Static Structural. Observation commands tightly coupled with live GUI window (`batch=False`). |
 
 ## Cross-skill conventions
 
-These conventions apply across all 6 skills. Each individual SKILL.md may add its own constraints on top.
+These conventions apply across all 8 skills. Each individual SKILL.md may add its own constraints on top.
 
 ### Input classification (used in every skill's "Required protocol" Step 1)
 
