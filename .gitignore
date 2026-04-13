@@ -31,3 +31,14 @@ cleanup-fluent-*.bat
 
 # Local Claude Code skills (project-private, do not publish)
 .claude/
+
+# Solver binary outputs (too large for git)
+*.odb
+*.sim
+*.prt
+*.com
+*.sta
+*.msg
+*.rpy
+*.rpy.*
+__pycache__/
