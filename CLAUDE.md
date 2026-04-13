@@ -24,7 +24,7 @@ When a task involves any supported solver:
 4. Reach for supporting files when SKILL.md instructs: `reference/` for patterns and templates, `workflows/` for end-to-end examples, `snippets/` for ready-made `sim exec` payloads, `skill_tests/` for acceptance test cases
 5. **Never invent solver-specific defaults for Category A (physical-decision) inputs** — ask the user
 
-## The 8 skills
+## The 10 skills
 
 | Directory | Skill name | Use when |
 |---|---|---|
@@ -36,10 +36,12 @@ When a task involves any supported solver:
 | `openfoam/` | `openfoam-sim` | Running OpenFOAM v2206 cases through `sim serve` on a Linux box via SSH tunnel — meshing, MPI parallel, classifier-based pass/fail |
 | `workbench/` | `workbench-sim` | Driving Ansys Workbench via PyWorkbench SDK — project creation, analysis systems, IronPython journals, sub-solver integration (PyMechanical/PyFluent). Owns cells 1-3 of Static Structural. |
 | `mechanical/` | `mechanical-sim` | Driving Ansys Mechanical via PyMechanical — BCs, loads, solver execution, result extraction. Owns cells 4-6 of Static Structural. Observation commands tightly coupled with live GUI window (`batch=False`). |
+| `abaqus/` | `abaqus-sim` | Running Dassault Systemes SIMULIA Abaqus via `.inp` input decks or Abaqus/CAE Python scripts — static/dynamic/thermal FEA through sim one-shot execution. |
+| `starccm/` | `starccm-sim` | Running Simcenter STAR-CCM+ 2602 via Java macros in batch mode — CFD/multiphysics geometry creation, mesh generation, solver execution, result extraction. |
 
 ## Cross-skill conventions
 
-These conventions apply across all 8 skills. Each individual SKILL.md may add its own constraints on top.
+These conventions apply across all 10 skills. Each individual SKILL.md may add its own constraints on top.
 
 ### Input classification (used in every skill's "Required protocol" Step 1)
 
