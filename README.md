@@ -54,12 +54,14 @@ Every skill lives in its own top-level folder. The grid is **open and growing** 
 | [**comsol-sim**](comsol/SKILL.md) | Multiphysics | Persistent JPype Java API session | Working ✅ | Long multiphysics runs with optional human GUI oversight |
 | [**openfoam-sim**](openfoam/SKILL.md) | CFD (OSS) | Remote `sim serve` on Linux via SSH tunnel | Working ✅ | Meshing, MPI parallel, classifier-based pass/fail on OpenFOAM v2206 |
 | [**ansa-sim**](ansa/SKILL.md) | Structural pre-processing | Headless batch (`ansa_win64 -execscript -nogui`) | Phase 1 🟡 | BETA CAE ANSA v25 scripts; no persistent session yet |
-| [**flotherm-sim**](flotherm/SKILL.md) | Electronics thermal | GUI + Win32 FloSCRIPT playback | Phase A 🟡 | Simcenter Flotherm 2504 `.pack` cases |
+| [**flotherm-sim**](flotherm/SKILL.md) | Electronics thermal | GUI + Win32 FloSCRIPT playback | Working ✅ | Simcenter Flotherm 2504 natural-language model generation, XSD-validated FloSCRIPT, checkpoint-based step-by-step build |
 | [**matlab-sim**](matlab/SKILL.md) | Numerical / scripting | One-shot `sim run --solver matlab` | v0 🟡 | `.m` scripts one-shot; persistent session planned for v1 |
 | [**workbench-sim**](workbench/SKILL.md) | CAE orchestration | Persistent PyWorkbench SDK + RunWB2 fallback | Working ✅ | Ansys Workbench project/system/journal orchestration; cells 1-3 of Static Structural |
 | [**mechanical-sim**](mechanical/SKILL.md) | Structural physics | Persistent PyMechanical gRPC session (GUI) | Working ✅ | Ansys Mechanical BCs/solve/results; cells 4-6 of Static Structural. E2E tested with official example. |
 | [**starccm-sim**](starccm/SKILL.md) | CFD / Multiphysics | One-shot batch Java macros (`starccm+ -batch`) | Working ✅ | Simcenter STAR-CCM+ 2602 geometry, meshing, solver execution via Java macros. E2E tested. |
-| [**cfx-sim**](cfx/SKILL.md) | CFD (turbomachinery) | One-shot batch CLI (`cfx5solve -batch`) | Working ✅ | Ansys CFX via CCL definition files, cfx5post visualization, convergence analysis. E2E verified with VMFL015. |
+| [**abaqus-sim**](abaqus/SKILL.md) | Structural FEA | One-shot `.inp` decks or Abaqus/CAE Python scripts | Working ✅ | Dassault Systemes SIMULIA Abaqus static/dynamic/thermal FEA; cantilever beam E2E with deformation contour evidence. |
+| [**pybamm-sim**](pybamm/SKILL.md) | Battery modeling | One-shot `sim run --solver pybamm` | Working ✅ | PyBaMM DFN / SPM / SPMe battery models; no separate solver binary — the pybamm package version *is* the solver version. |
+| [**cfx-sim**](cfx/SKILL.md) | CFD (turbomachinery) | Persistent hybrid (`cfx5post -line` + batch render) | Working ✅ | Ansys CFX via CCL definition files, interactive post-processing, hybrid contour rendering. E2E verified with VMFL015. |
 | **+ your skill** | — | — | 🛠 | Drop a `<solver>/SKILL.md`, register in `CLAUDE.md`, open a PR |
 
 **Legend** · ✅ Working · 🟡 In progress (phased rollout) · 🛠 Open for contribution
@@ -134,6 +136,9 @@ sim-skills/
 ├── matlab/            MATLAB via sim run (v0 one-shot)
 ├── workbench/         Ansys Workbench orchestration via PyWorkbench (cells 1-3)
 ├── mechanical/        Ansys Mechanical BCs/solve/results via PyMechanical (cells 4-6)
+├── starccm/           Simcenter STAR-CCM+ 2602 via Java macros (batch)
+├── abaqus/            Dassault Systemes SIMULIA Abaqus via .inp decks / Abaqus/CAE Python
+├── pybamm/            PyBaMM battery models (pure Python, one-shot)
 ├── cfx/               Ansys CFX turbomachinery/general-purpose CFD via CCL + cfx5solve
 │
 └── assets/            banner and related graphics
