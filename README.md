@@ -62,6 +62,7 @@ Every skill lives in its own top-level folder. The grid is **open and growing** 
 | [**abaqus-sim**](abaqus/SKILL.md) | Structural FEA | One-shot `.inp` decks or Abaqus/CAE Python scripts | Working ✅ | Dassault Systemes SIMULIA Abaqus static/dynamic/thermal FEA; cantilever beam E2E with deformation contour evidence. |
 | [**pybamm-sim**](pybamm/SKILL.md) | Battery modeling | One-shot `sim run --solver pybamm` | Working ✅ | PyBaMM DFN / SPM / SPMe battery models; no separate solver binary — the pybamm package version *is* the solver version. |
 | [**cfx-sim**](cfx/SKILL.md) | CFD (turbomachinery) | Persistent hybrid (`cfx5post -line` + batch render) | Working ✅ | Ansys CFX via CCL definition files, interactive post-processing, hybrid contour rendering. E2E verified with VMFL015. |
+| [**lsdyna-sim**](lsdyna/SKILL.md) | Explicit FEA | One-shot `lsdyna i=<file.k>` | Working ✅ | Ansys LS-DYNA explicit/implicit nonlinear FEA; keyword file validation, auto DLL discovery. Single hex tension E2E. |
 | **+ your skill** | — | — | 🛠 | Drop a `<solver>/SKILL.md`, register in `CLAUDE.md`, open a PR |
 
 **Legend** · ✅ Working · 🟡 In progress (phased rollout) · 🛠 Open for contribution
@@ -140,6 +141,7 @@ sim-skills/
 ├── abaqus/            Dassault Systemes SIMULIA Abaqus via .inp decks / Abaqus/CAE Python
 ├── pybamm/            PyBaMM battery models (pure Python, one-shot)
 ├── cfx/               Ansys CFX turbomachinery/general-purpose CFD via CCL + cfx5solve
+├── lsdyna/            Ansys LS-DYNA explicit/implicit nonlinear FEA via .k keyword files
 │
 └── assets/            banner and related graphics
 ```
@@ -156,6 +158,7 @@ Each `<solver>/` directory is self-contained: `SKILL.md` at the top is the agent
 
 ## 📰 News
 
+- **2026-04-14** 💥 **LS-DYNA skill** — new Ansys LS-DYNA solver skill for explicit/implicit nonlinear FEA. 4 reference docs (keyword format, material models, control cards, output files), single hex tension E2E with 7129-cycle normal termination evidence. 7 known issues documented including exit-code-0-on-error trap and DLL dependency auto-discovery.
 - **2026-04-14** 🌀 **CFX skill** — new Ansys CFX solver skill with persistent session support. Hybrid architecture: `cfx5post -line` for instant numerical queries (Perl `evaluate()`), auto-delegated `cfx5post -batch` for contour rendering. 6 reference docs (CCL language, CLI tools, BCs, solver control, post-processing, session workflow), 4 snippets, VMFL015 E2E with 17-step session transcript + pressure/velocity contour evidence. 11 known issues documented.
 - **2026-04-13** 🏭 **Abaqus + Star-CCM+ skills** — two new solver skills with E2E evidence. Abaqus: cantilever beam FEA with Abaqus/CAE deformation contour export. Star-CCM+: Java macro API reference, pipe flow mesh generation with Trimmer scene render. Both include known issues, version notes, and physics-based acceptance criteria.
 - **2026-04-07** 🚀 **sim-skills v0.1** — first public release on GitHub. Six skills in the grid, consolidated from the earlier `svd-ai-lab/ion-agent-{ansa,comsol,flotherm,fluent,matlab,openfoam}` family. Every skill now ships in the standard Anthropic skill format (YAML frontmatter + `SKILL.md`).

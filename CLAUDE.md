@@ -24,7 +24,7 @@ When a task involves any supported solver:
 4. Reach for supporting files when SKILL.md instructs: `reference/` for patterns and templates, `workflows/` for end-to-end examples, `snippets/` for ready-made `sim exec` payloads, `skill_tests/` for acceptance test cases
 5. **Never invent solver-specific defaults for Category A (physical-decision) inputs** — ask the user
 
-## The 12 skills
+## The 13 skills
 
 | Directory | Skill name | Use when |
 |---|---|---|
@@ -40,10 +40,11 @@ When a task involves any supported solver:
 | `starccm/` | `starccm-sim` | Running Simcenter STAR-CCM+ 2602 via Java macros in batch mode — CFD/multiphysics geometry creation, mesh generation, solver execution, result extraction. |
 | `workbench/` | `workbench-sim` | Driving Ansys Workbench via PyWorkbench SDK — project creation, analysis systems, IronPython journals, sub-solver integration (PyMechanical/PyFluent). Owns cells 1-3 of Static Structural. |
 | `cfx/` | `cfx-sim` | Running Ansys CFX simulations via CCL definition files and cfx5solve batch execution — turbomachinery and general-purpose CFD with cfx5post visualization. |
+| `lsdyna/` | `lsdyna-sim` | Running Ansys LS-DYNA explicit/implicit FEA via `.k` keyword files and lsdyna batch execution — nonlinear dynamics, crash, forming, impact simulations. |
 
 ## Cross-skill conventions
 
-These conventions apply across all 12 skills. Each individual SKILL.md may add its own constraints on top.
+These conventions apply across all 13 skills. Each individual SKILL.md may add its own constraints on top.
 
 ### Input classification (used in every skill's "Required protocol" Step 1)
 
