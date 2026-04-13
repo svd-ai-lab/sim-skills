@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What is this directory?
 
-`sim-skills/` is a collection of **per-solver agent skills** for the [`sim`](../sim-cli/) simulation runtime. Each subdirectory (`ansa/`, `comsol/`, `flotherm/`, `fluent/`, `matlab/`, `openfoam/`) is **one skill** in the Anthropic skill format:
+`sim-skills/` is a collection of **per-solver agent skills** for the [`sim`](../sim-cli/) simulation runtime. Each subdirectory (`abaqus/`, `ansa/`, `comsol/`, `flotherm/`, `fluent/`, `matlab/`, `mechanical/`, `openfoam/`, `pybamm/`, `starccm/`, `workbench/`) is **one skill** in the Anthropic skill format:
 
 ```
 <solver>/
@@ -24,24 +24,25 @@ When a task involves any supported solver:
 4. Reach for supporting files when SKILL.md instructs: `reference/` for patterns and templates, `workflows/` for end-to-end examples, `snippets/` for ready-made `sim exec` payloads, `skill_tests/` for acceptance test cases
 5. **Never invent solver-specific defaults for Category A (physical-decision) inputs** — ask the user
 
-## The 10 skills
+## The 11 skills
 
 | Directory | Skill name | Use when |
 |---|---|---|
+| `abaqus/` | `abaqus-sim` | Running Dassault Systemes SIMULIA Abaqus via `.inp` input decks or Abaqus/CAE Python scripts — static/dynamic/thermal FEA through sim one-shot execution. |
 | `ansa/` | `ansa-sim` | Running BETA CAE ANSA v25 pre-processor scripts in headless batch (Phase 1; no persistent session, no GUI) |
 | `comsol/` | `comsol-sim` | Driving COMSOL Multiphysics via the JPype Java API, with optional human GUI oversight |
 | `flotherm/` | `flotherm-sim` | Running Simcenter Flotherm 2504 thermal `.pack` cases via GUI + Win32 FloSCRIPT playback (Phase A) |
 | `fluent/` | `fluent-sim` | Driving an Ansys Fluent meshing or solver session via PyFluent 0.38 — incremental snippets or single-file workflows |
 | `matlab/` | `matlab-sim` | Running MATLAB `.m` scripts one-shot via `sim run --solver matlab` (v0); persistent sessions planned for v1 |
-| `openfoam/` | `openfoam-sim` | Running OpenFOAM v2206 cases through `sim serve` on a Linux box via SSH tunnel — meshing, MPI parallel, classifier-based pass/fail |
-| `workbench/` | `workbench-sim` | Driving Ansys Workbench via PyWorkbench SDK — project creation, analysis systems, IronPython journals, sub-solver integration (PyMechanical/PyFluent). Owns cells 1-3 of Static Structural. |
 | `mechanical/` | `mechanical-sim` | Driving Ansys Mechanical via PyMechanical — BCs, loads, solver execution, result extraction. Owns cells 4-6 of Static Structural. Observation commands tightly coupled with live GUI window (`batch=False`). |
-| `abaqus/` | `abaqus-sim` | Running Dassault Systemes SIMULIA Abaqus via `.inp` input decks or Abaqus/CAE Python scripts — static/dynamic/thermal FEA through sim one-shot execution. |
+| `openfoam/` | `openfoam-sim` | Running OpenFOAM v2206 cases through `sim serve` on a Linux box via SSH tunnel — meshing, MPI parallel, classifier-based pass/fail |
+| `pybamm/` | `pybamm-sim` | Running PyBaMM battery models (DFN / SPM / SPMe) one-shot via `sim run --solver pybamm` — pure Python, no separate solver binary; the pybamm package version *is* the solver version. |
 | `starccm/` | `starccm-sim` | Running Simcenter STAR-CCM+ 2602 via Java macros in batch mode — CFD/multiphysics geometry creation, mesh generation, solver execution, result extraction. |
+| `workbench/` | `workbench-sim` | Driving Ansys Workbench via PyWorkbench SDK — project creation, analysis systems, IronPython journals, sub-solver integration (PyMechanical/PyFluent). Owns cells 1-3 of Static Structural. |
 
 ## Cross-skill conventions
 
-These conventions apply across all 10 skills. Each individual SKILL.md may add its own constraints on top.
+These conventions apply across all 11 skills. Each individual SKILL.md may add its own constraints on top.
 
 ### Input classification (used in every skill's "Required protocol" Step 1)
 
