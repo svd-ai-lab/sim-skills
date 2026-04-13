@@ -1,0 +1,47 @@
+# CFD-Post session file for VMFL015 post-processing
+# Generates pressure and velocity contour images
+
+# Create a contour on default wall
+CONTOUR: PressureContour
+  Apply Instancing Transform = On
+  Colour Map = Default Colour Map
+  Colour Variable = Pressure
+  Contour Range = Global
+  Culling Mode = No Culling
+  Domain List = All Domains
+  Font = Sans Serif
+  Fringe Fill = On
+  Lighting = On
+  Line Width = 1
+  Location List = Default Domain Default
+  Number of Contours = 20
+  Show Numbers = Off
+  Specular Lighting = On
+  Surface Drawing = Smooth Shading
+  Transparency = 0.0
+  Visibility = On
+END
+
+# Export pressure contour image
+HARDCOPY:
+  Hardcopy Filename = pressure_contour.png
+  Hardcopy Format = png
+  Image Height = 1200
+  Image Width = 1600
+  White Background = On
+END
+>print
+
+# Switch to velocity
+CONTOUR: PressureContour
+  Colour Variable = Velocity
+END
+
+HARDCOPY:
+  Hardcopy Filename = velocity_contour.png
+  Hardcopy Format = png
+  Image Height = 1200
+  Image Width = 1600
+  White Background = On
+END
+>print

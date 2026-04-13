@@ -1,0 +1,261 @@
+[
+  {
+    "step": 1,
+    "description": "Launch cfx5post session on VMFL015 results",
+    "command": "driver.launch(res_file=015_001.res)",
+    "result": {
+      "ok": true,
+      "session_id": "cfx-2369171842944",
+      "res_file": "E:\\CFX_tutorial\\test_case_to_rrh\\test_case_to_rrh\\VMFL015_CFX\\input\\015_001.res",
+      "mode": "post",
+      "solver": "cfx",
+      "version": "24.1"
+    },
+    "timestamp": "2026-04-14 00:30:03"
+  },
+  {
+    "step": 2,
+    "description": "Query available boundaries",
+    "command": "driver.query('session.boundaries')",
+    "result": {
+      "ok": true,
+      "boundaries": [
+        "Default Domain Default",
+        "inlet",
+        "outlet"
+      ]
+    },
+    "timestamp": "2026-04-14 00:30:09"
+  },
+  {
+    "step": 3,
+    "description": "Query available result variables",
+    "command": "driver.query('session.variables')",
+    "result": {
+      "ok": true,
+      "variables": [
+        "Absolute Pressure",
+        "Approximated Mass Flow",
+        "Area",
+        "Aspect Ratio",
+        "Connectivity Number",
+        "Courant Number",
+        "Density",
+        "Dynamic Viscosity",
+        "Eddy Viscosity",
+        "Edge Length Ratio",
+        "Element Volume Inverse",
+        "Element Volume Ratio",
+        "First Blending Function for BSL and SST model",
+        "Force X",
+        "Force Y",
+        "Force Z",
+        "Interpolated Mass Flow",
+        "Length",
+        "Mass Flow",
+        "Maximum Face Angle",
+        "... (116 total)"
+      ]
+    },
+    "timestamp": "2026-04-14 00:30:14"
+  },
+  {
+    "step": 4,
+    "description": "Evaluate mass flow at inlet (should be 1.379 kg/s)",
+    "command": "evaluate(massFlow()@inlet)",
+    "result": {
+      "ok": true,
+      "label": "mass_flow_inlet",
+      "result": {
+        "value": 1.37899994850159,
+        "units": "kg s^-1"
+      },
+      "stdout": "massFlow()@inlet = 1.37899994850159 [kg s^-1]"
+    },
+    "timestamp": "2026-04-14 00:30:19"
+  },
+  {
+    "step": 5,
+    "description": "Evaluate mass flow at outlet (should be -1.379 kg/s, conservation)",
+    "command": "evaluate(massFlow()@outlet)",
+    "result": {
+      "ok": true,
+      "label": "mass_flow_outlet",
+      "result": {
+        "value": -1.37901902198792,
+        "units": "kg s^-1"
+      },
+      "stdout": "massFlow()@outlet = -1.37901902198792 [kg s^-1]"
+    },
+    "timestamp": "2026-04-14 00:30:24"
+  },
+  {
+    "step": 6,
+    "description": "Area-average pressure at inlet",
+    "command": "evaluate(areaAve(Pressure)@inlet)",
+    "result": {
+      "ok": true,
+      "label": "pressure_inlet",
+      "result": {
+        "value": 1866.43212890625,
+        "units": "kg m^-1 s^-2"
+      },
+      "stdout": "areaAve(Pressure)@inlet = 1866.43212890625 [kg m^-1 s^-2]"
+    },
+    "timestamp": "2026-04-14 00:30:29"
+  },
+  {
+    "step": 7,
+    "description": "Area-average pressure at outlet (should be ~0 Pa)",
+    "command": "evaluate(areaAve(Pressure)@outlet)",
+    "result": {
+      "ok": true,
+      "label": "pressure_outlet",
+      "result": {
+        "value": -0.0580862164497375,
+        "units": "kg m^-1 s^-2"
+      },
+      "stdout": "areaAve(Pressure)@outlet = -0.0580862164497375 [kg m^-1 s^-2]"
+    },
+    "timestamp": "2026-04-14 00:30:34"
+  },
+  {
+    "step": 8,
+    "description": "Area-average velocity at inlet",
+    "command": "evaluate(areaAve(Velocity)@inlet)",
+    "result": {
+      "ok": true,
+      "label": "velocity_inlet",
+      "result": {
+        "value": 0.931090831756592,
+        "units": "m s^-1"
+      },
+      "stdout": "areaAve(Velocity)@inlet = 0.931090831756592 [m s^-1]"
+    },
+    "timestamp": "2026-04-14 00:30:39"
+  },
+  {
+    "step": 9,
+    "description": "Max pressure in domain",
+    "command": "evaluate(maxVal(Pressure)@Default Domain)",
+    "result": {
+      "ok": true,
+      "label": "max_pressure",
+      "result": {
+        "value": 2213.86450195313,
+        "units": "kg m^-1 s^-2"
+      },
+      "stdout": "maxVal(Pressure)@Default Domain = 2213.86450195313 [kg m^-1 s^-2]"
+    },
+    "timestamp": "2026-04-14 00:30:44"
+  },
+  {
+    "step": 10,
+    "description": "Min pressure in domain",
+    "command": "evaluate(minVal(Pressure)@Default Domain)",
+    "result": {
+      "ok": true,
+      "label": "min_pressure",
+      "result": {
+        "value": -3304.33056640625,
+        "units": "kg m^-1 s^-2"
+      },
+      "stdout": "minVal(Pressure)@Default Domain = -3304.33056640625 [kg m^-1 s^-2]"
+    },
+    "timestamp": "2026-04-14 00:30:49"
+  },
+  {
+    "step": 11,
+    "description": "Inlet area",
+    "command": "evaluate(area()@inlet)",
+    "result": {
+      "ok": true,
+      "label": "area_inlet",
+      "result": {
+        "value": 0.00165644113440067,
+        "units": "m^2"
+      },
+      "stdout": "area()@inlet = 0.00165644113440067 [m^2]"
+    },
+    "timestamp": "2026-04-14 00:30:55"
+  },
+  {
+    "step": 12,
+    "description": "Outlet area",
+    "command": "evaluate(area()@outlet)",
+    "result": {
+      "ok": true,
+      "label": "area_outlet",
+      "result": {
+        "value": 0.00686189718544483,
+        "units": "m^2"
+      },
+      "stdout": "area()@outlet = 0.00686189718544483 [m^2]"
+    },
+    "timestamp": "2026-04-14 00:31:00"
+  },
+  {
+    "step": 13,
+    "description": "Create pressure contour on domain walls",
+    "command": "enterccl: CONTOUR: SessionPressure ...",
+    "result": {
+      "ok": true,
+      "label": "create_pressure_contour",
+      "stdout": "=\nDefault Domain Default\nSessionPressure"
+    },
+    "timestamp": "2026-04-14 00:31:06"
+  },
+  {
+    "step": 14,
+    "description": "Export pressure contour image (114625 bytes)",
+    "command": "enterccl: HARDCOPY + >print",
+    "result": {
+      "ok": true,
+      "label": "export_pressure_image",
+      "image": "E:\\simcli\\sim-skills\\cfx\\base\\workflows\\vmfl015\\evidence\\session_pressure.png",
+      "image_size": 114625,
+      "stdout": "Image exported: session_pressure.png (114625 bytes)",
+      "image_file": "E:\\simcli\\sim-skills\\cfx\\base\\workflows\\vmfl015\\evidence\\session_pressure.png",
+      "image_exists": true,
+      "image_size_bytes": 114625
+    },
+    "timestamp": "2026-04-14 00:31:11"
+  },
+  {
+    "step": 15,
+    "description": "Switch contour to velocity",
+    "command": "enterccl: Colour Variable = Velocity",
+    "result": {
+      "ok": true,
+      "label": "switch_to_velocity",
+      "stdout": ""
+    },
+    "timestamp": "2026-04-14 00:31:17"
+  },
+  {
+    "step": 16,
+    "description": "Export velocity contour image (101486 bytes)",
+    "command": "enterccl: HARDCOPY + >print",
+    "result": {
+      "ok": true,
+      "label": "export_velocity_image",
+      "image": "E:\\simcli\\sim-skills\\cfx\\base\\workflows\\vmfl015\\evidence\\session_velocity.png",
+      "image_size": 101486,
+      "stdout": "Image exported: session_velocity.png (101486 bytes)",
+      "image_file": "E:\\simcli\\sim-skills\\cfx\\base\\workflows\\vmfl015\\evidence\\session_velocity.png",
+      "image_exists": true,
+      "image_size_bytes": 101486
+    },
+    "timestamp": "2026-04-14 00:31:21"
+  },
+  {
+    "step": 17,
+    "description": "Disconnect session",
+    "command": "driver.disconnect()",
+    "result": {
+      "ok": true,
+      "disconnected": true
+    },
+    "timestamp": "2026-04-14 00:31:23"
+  }
+]

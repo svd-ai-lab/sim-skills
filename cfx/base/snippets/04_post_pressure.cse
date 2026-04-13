@@ -1,0 +1,25 @@
+# Snippet 04: Post-process — export pressure contour on walls
+# Usage: cfx5post -batch 04_post_pressure.cse <results.res>
+# Expected: pressure_contour.png generated in working directory
+
+CONTOUR: WallPressure
+  Apply Instancing Transform = On
+  Colour Map = Default Colour Map
+  Colour Variable = Pressure
+  Contour Range = Global
+  Domain List = All Domains
+  Fringe Fill = On
+  Location List = Default Domain Default
+  Number of Contours = 20
+  Surface Drawing = Smooth Shading
+  Visibility = On
+END
+
+HARDCOPY:
+  Hardcopy Filename = pressure_contour.png
+  Hardcopy Format = png
+  Image Height = 1200
+  Image Width = 1600
+  White Background = On
+END
+>print

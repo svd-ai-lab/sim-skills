@@ -59,6 +59,7 @@ Every skill lives in its own top-level folder. The grid is **open and growing** 
 | [**workbench-sim**](workbench/SKILL.md) | CAE orchestration | Persistent PyWorkbench SDK + RunWB2 fallback | Working ✅ | Ansys Workbench project/system/journal orchestration; cells 1-3 of Static Structural |
 | [**mechanical-sim**](mechanical/SKILL.md) | Structural physics | Persistent PyMechanical gRPC session (GUI) | Working ✅ | Ansys Mechanical BCs/solve/results; cells 4-6 of Static Structural. E2E tested with official example. |
 | [**starccm-sim**](starccm/SKILL.md) | CFD / Multiphysics | One-shot batch Java macros (`starccm+ -batch`) | Working ✅ | Simcenter STAR-CCM+ 2602 geometry, meshing, solver execution via Java macros. E2E tested. |
+| [**cfx-sim**](cfx/SKILL.md) | CFD (turbomachinery) | One-shot batch CLI (`cfx5solve -batch`) | Working ✅ | Ansys CFX via CCL definition files, cfx5post visualization, convergence analysis. E2E verified with VMFL015. |
 | **+ your skill** | — | — | 🛠 | Drop a `<solver>/SKILL.md`, register in `CLAUDE.md`, open a PR |
 
 **Legend** · ✅ Working · 🟡 In progress (phased rollout) · 🛠 Open for contribution
@@ -133,6 +134,7 @@ sim-skills/
 ├── matlab/            MATLAB via sim run (v0 one-shot)
 ├── workbench/         Ansys Workbench orchestration via PyWorkbench (cells 1-3)
 ├── mechanical/        Ansys Mechanical BCs/solve/results via PyMechanical (cells 4-6)
+├── cfx/               Ansys CFX turbomachinery/general-purpose CFD via CCL + cfx5solve
 │
 └── assets/            banner and related graphics
 ```
@@ -149,6 +151,7 @@ Each `<solver>/` directory is self-contained: `SKILL.md` at the top is the agent
 
 ## 📰 News
 
+- **2026-04-14** 🌀 **CFX skill** — new Ansys CFX solver skill with persistent session support. Hybrid architecture: `cfx5post -line` for instant numerical queries (Perl `evaluate()`), auto-delegated `cfx5post -batch` for contour rendering. 6 reference docs (CCL language, CLI tools, BCs, solver control, post-processing, session workflow), 4 snippets, VMFL015 E2E with 17-step session transcript + pressure/velocity contour evidence. 11 known issues documented.
 - **2026-04-13** 🏭 **Abaqus + Star-CCM+ skills** — two new solver skills with E2E evidence. Abaqus: cantilever beam FEA with Abaqus/CAE deformation contour export. Star-CCM+: Java macro API reference, pipe flow mesh generation with Trimmer scene render. Both include known issues, version notes, and physics-based acceptance criteria.
 - **2026-04-07** 🚀 **sim-skills v0.1** — first public release on GitHub. Six skills in the grid, consolidated from the earlier `svd-ai-lab/ion-agent-{ansa,comsol,flotherm,fluent,matlab,openfoam}` family. Every skill now ships in the standard Anthropic skill format (YAML frontmatter + `SKILL.md`).
 - **2026-04-07** 🤝 Paired with the companion runtime [`sim-cli`](https://github.com/svd-ai-lab/sim-cli) — the two repos are designed to grow in lockstep, one skill per new driver.

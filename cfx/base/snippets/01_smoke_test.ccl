@@ -1,0 +1,16 @@
+# Snippet 01: Smoke test — verifies cfx5solve can be invoked
+# Usage: cfx5solve -batch -def <any.def> -ccl 01_smoke_test.ccl
+# Expected: solve starts, CCL overrides applied, exits normally
+# This snippet reduces max iterations to 5 for a quick connectivity test
+
+FLOW: Flow Analysis 1
+  SOLVER CONTROL:
+    CONVERGENCE CONTROL:
+      Maximum Number of Iterations = 5
+      Minimum Number of Iterations = 1
+    END
+  END
+END
+COMMAND FILE:
+  Version = 24.1
+END
