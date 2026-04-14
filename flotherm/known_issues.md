@@ -67,6 +67,26 @@ solexe.exe -p "<FLOUSERDIR>\<ProjectName>.<GUID>"
 **Solver time**: CPU 1:07, Clock 1:41  
 **Evidence**: `logit` shows real residuals, Temperature ~35°C, field files modified in `msp_0/end/`
 
+#### Machine-dependent: headless path CRASHES on some machines (2026-04-12)
+
+Tested 2026-04-12 on `DESKTOP-623UBP1` (Windows 11 Pro 10.0.26200),
+both Flotherm 2410 and 2504 installed:
+
+- `translator.exe -p <project> -n1` → `0xC0000005` (Access Violation)
+- `solexe.exe -p <project>` → `0xC0000409` (Stack Buffer Overrun)
+- Environment correctly sourced via `flotherm.bat -env` (FLO_ROOT,
+  FLOUSERDIR, PATH all set); `SALT_LICENSE_SERVER` corrected to the
+  registry value
+- Fresh project extracts (from installation `examples/` and from
+  sim-skills copies) both crash identically
+- **Same crash in both 2410 and 2504** — not a version-specific issue
+
+This indicates the headless path is not universally reliable.
+Filed as [sim-cli#14]. On machines where this path crashes, fall
+back to GUI automation via `feat/flotherm-gui-automation` branch.
+
+[sim-cli#14]: https://github.com/svd-ai-lab/sim-cli/issues/14
+
 Key points:
 - `flotherm.bat -env` sets environment variables without launching anything
 - `translator.exe -p <project_path> -n1` translates the model (writes grid, field init files)
