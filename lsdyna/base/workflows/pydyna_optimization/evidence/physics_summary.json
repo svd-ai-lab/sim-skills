@@ -1,0 +1,29 @@
+{
+  "runs": [
+    {
+      "thickness": 0.1,
+      "n_states": 52,
+      "max_disp": 3.909794221931894,
+      "case_dir": "C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\sim_lsdyna_6lt99ctz\\thickness_0.1"
+    },
+    {
+      "thickness": 0.6,
+      "n_states": 52,
+      "max_disp": 2.606960053301649,
+      "case_dir": "C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\sim_lsdyna_6lt99ctz\\thickness_0.6"
+    },
+    {
+      "thickness": 1.1,
+      "n_states": 52,
+      "max_disp": 2.209198291318663,
+      "case_dir": "C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\sim_lsdyna_6lt99ctz\\thickness_1.1"
+    },
+    {
+      "thickness": 1.6,
+      "n_states": 52,
+      "max_disp": 2.1416076676899953,
+      "case_dir": "C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\sim_lsdyna_6lt99ctz\\thickness_1.6"
+    }
+  ],
+  "session_wd": "C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\sim_lsdyna_6lt99ctz"
+}

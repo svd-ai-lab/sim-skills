@@ -41,6 +41,70 @@ class TestBaseReference:
         assert (SKILL_ROOT / "base" / "known_issues.md").is_file()
 
 
+class TestPyDynaReference:
+    def test_pydyna_install_reference(self):
+        assert (SKILL_ROOT / "base" / "reference" / "pydyna_install.md").is_file()
+
+    def test_pydyna_keywords_api_reference(self):
+        f = SKILL_ROOT / "base" / "reference" / "pydyna_keywords_api.md"
+        assert f.is_file()
+        text = f.read_text(encoding="utf-8")
+        assert "from ansys.dyna.core import Deck" in text
+        assert "kwd.Mat003" in text or "kwd.MatElastic" in text
+
+    def test_pydyna_run_api_reference(self):
+        f = SKILL_ROOT / "base" / "reference" / "pydyna_run_api.md"
+        assert f.is_file()
+        text = f.read_text(encoding="utf-8")
+        assert "run_dyna" in text
+
+    def test_pydyna_agent_integration_reference(self):
+        f = SKILL_ROOT / "base" / "reference" / "pydyna_agent_integration.md"
+        assert f.is_file()
+        text = f.read_text(encoding="utf-8")
+        assert "ansys.dyna.core agent" in text
+
+    def test_session_workflow_reference(self):
+        f = SKILL_ROOT / "base" / "reference" / "session_workflow.md"
+        assert f.is_file()
+        text = f.read_text(encoding="utf-8")
+        assert "session.summary" in text
+        assert "deck.summary" in text
+        assert "results.summary" in text
+
+
+class TestPyDynaWorkflows:
+    def test_taylor_bar_workflow(self):
+        f = SKILL_ROOT / "base" / "workflows" / "pydyna_taylor_bar" / "README.md"
+        assert f.is_file()
+
+    def test_pendulum_workflow(self):
+        assert (SKILL_ROOT / "base" / "workflows" / "pydyna_pendulum" / "README.md").is_file()
+
+    def test_pipe_workflow(self):
+        assert (SKILL_ROOT / "base" / "workflows" / "pydyna_pipe" / "README.md").is_file()
+
+    def test_beer_can_workflow(self):
+        assert (SKILL_ROOT / "base" / "workflows" / "pydyna_buckling_beer_can" / "README.md").is_file()
+
+    def test_optimization_workflow(self):
+        assert (SKILL_ROOT / "base" / "workflows" / "pydyna_optimization" / "README.md").is_file()
+
+    def test_jupyter_plotting_workflow(self):
+        assert (SKILL_ROOT / "base" / "workflows" / "pydyna_jupyter_plotting" / "README.md").is_file()
+
+
+class TestPyDynaRawDocs:
+    def test_raw_docs_present(self):
+        raw = SKILL_ROOT / "base" / "pydyna_raw"
+        assert raw.is_dir()
+        # Must contain the canonical example
+        assert (raw / "examples" / "Taylor_Bar" / "plot_taylor_bar.md").is_file()
+        # Must contain the API getting-started
+        assert (raw / "getting-started" / "modules" / "keywords.md").is_file()
+        assert (raw / "getting-started" / "modules" / "run.md").is_file()
+
+
 class TestSnippets:
     def test_snippets_dir_exists(self):
         assert (SKILL_ROOT / "base" / "snippets").is_dir()
