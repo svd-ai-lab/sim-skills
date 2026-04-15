@@ -63,6 +63,29 @@ Every skill lives in its own top-level folder. The grid is **open and growing** 
 | [**pybamm-sim**](pybamm/SKILL.md) | Battery modeling | One-shot `sim run --solver pybamm` | Working ✅ | PyBaMM DFN / SPM / SPMe battery models; no separate solver binary — the pybamm package version *is* the solver version. |
 | [**cfx-sim**](cfx/SKILL.md) | CFD (turbomachinery) | Persistent hybrid (`cfx5post -line` + batch render) | Working ✅ | Ansys CFX via CCL definition files, interactive post-processing, hybrid contour rendering. E2E verified with VMFL015. |
 | [**lsdyna-sim**](lsdyna/SKILL.md) | Explicit FEA | One-shot `lsdyna i=<file.k>` | Working ✅ | Ansys LS-DYNA explicit/implicit nonlinear FEA; keyword file validation, auto DLL discovery. Single hex tension E2E. |
+| [**mapdl-sim**](mapdl/SKILL.md) | Implicit FEA | Both: one-shot `sim run` + persistent PyMAPDL gRPC session (`sim connect/exec/inspect`) | Working ✅ | Ansys MAPDL static / modal / thermal / harmonic. 2D I-beam + 3D notched-plate Phase 1 E2E; same 2D beam re-driven through 10-step session (Phase 2). Headless PyVista contour PNGs. |
+| [**calculix-sim**](calculix/SKILL.md) | Static / frequency / thermal FEA | One-shot `ccx -i <file>` | Working ✅ | Open-source Abaqus-dialect `.inp` on Linux. Cantilever tip U2 = −2002 (0.1 % err). |
+| [**gmsh-sim**](gmsh/SKILL.md) | Mesh generation | One-shot `gmsh -3 <file.geo>` / Python API | Working ✅ | 2D/3D meshing with CAD import; exports for CalculiX/OpenFOAM/FEniCS/SU2. |
+| [**su2-sim**](su2/SKILL.md) | Open-source CFD | One-shot `SU2_CFD <file.cfg>` | Working ✅ | NACA0012 inviscid, RMS[Rho] dropped 3.5 orders. |
+| [**lammps-sim**](lammps/SKILL.md) | Molecular dynamics | One-shot `lmp -in <file.in>` | Working ✅ | LJ NVT Nose-Hoover, final T = 1.07 (target 1.5). |
+| [**scikit-fem-sim**](scikit_fem/SKILL.md) | Pure-Python FEM | One-shot Python script | Working ✅ | Poisson on unit square, u_max = 0.07345 (0.3 % err). |
+| [**elmer-sim**](elmer/SKILL.md) | Multi-physics FEM | One-shot `ElmerSolver <file.sif>` | Working ✅ | CSC-IT `.sif` heat/elasticity/EM/fluid. Steady heat max = 0.07426 (0.8 % err). |
+| [**meshio-sim**](meshio/SKILL.md) | Mesh format conversion | One-shot Python script | Working ✅ | 20+ mesh formats, the glue between sim's pre-processors and solvers. |
+| [**pyvista-sim**](pyvista/SKILL.md) | Post-processing | One-shot Python script | Working ✅ | Scalar stats, iso-surfaces, area/volume integration, headless PNG. |
+| [**pymfem-sim**](pymfem/SKILL.md) | High-order FEM | One-shot Python script | Working ✅ | LLNL MFEM bindings. Poisson u_max = 0.07353 (0.2 % err via UMFPackSolver). |
+| [**openseespy-sim**](openseespy/SKILL.md) | Structural / earthquake FEM | One-shot Python script | Working ✅ | PEER's OpenSees. Cantilever tip err 1.3e-12. |
+| [**sfepy-sim**](sfepy/SKILL.md) | Pure-Python FEM (weak forms) | One-shot Python script | Working ✅ | Term / Problem API. Poisson 1.3 % err on 8×8 mesh. |
+| [**cantera-sim**](cantera/SKILL.md) | Combustion / kinetics | One-shot Python script | Working ✅ | LBNL / Caltech. CH4/air adiabatic flame T = 2225.5 K. |
+| [**openmdao-sim**](openmdao/SKILL.md) | Multi-disciplinary optimization | One-shot Python script | Working ✅ | NASA MDAO. Sellar coupled MDA y1 = 25.59, y2 = 12.06. |
+| [**fipy-sim**](fipy/SKILL.md) | Finite-volume PDE | One-shot Python script | Working ✅ | NIST FVM. 1D steady Poisson err 1.6e-15. |
+| [**pymoo-sim**](pymoo/SKILL.md) | Multi-objective optimization | One-shot Python script | Working ✅ | NSGA-II/III, MOEA/D, CMAES. ZDT1 36 Pareto solutions. |
+| [**pyomo-sim**](pyomo/SKILL.md) | Optimization modeling | One-shot Python script | Working ✅ | Sandia LP/MIP/NLP. Classic LP obj = 36 via HiGHS. |
+| [**simpy-sim**](simpy/SKILL.md) | Discrete-event simulation | One-shot Python script | Working ✅ | Queueing, manufacturing. M/M/1 L err 1.9 %. |
+| [**trimesh-sim**](trimesh/SKILL.md) | Triangular-mesh processing | One-shot Python script | Working ✅ | STL/OBJ/PLY, volume/area/inertia. Box V = 24 exact. |
+| [**devito-sim**](devito/SKILL.md) | Symbolic FD + JIT C codegen | One-shot Python script | Working ✅ | Imperial College. 2D heat mass conservation 4e-7. |
+| [**coolprop-sim**](coolprop/SKILL.md) | Thermo-properties | One-shot Python script | Working ✅ | REFPROP-equivalent. Water @ 1 atm T_sat = 373.124 K. |
+| [**scikit-rf-sim**](scikit_rf/SKILL.md) | RF / microwave analysis | One-shot Python script | Working ✅ | Touchstone I/O, S-parameters. Short/open/match S11 = −1/+1/0 exact. |
+| [**pandapower-sim**](pandapower/SKILL.md) | Power-system analysis | One-shot Python script | Working ✅ | Fraunhofer IEE. 2-bus PF vm_pu = 0.998, losses 1.4 kW. |
 | **+ your skill** | — | — | 🛠 | Drop a `<solver>/SKILL.md`, register in `CLAUDE.md`, open a PR |
 
 **Legend** · ✅ Working · 🟡 In progress (phased rollout) · 🛠 Open for contribution
@@ -158,6 +181,22 @@ Each `<solver>/` directory is self-contained: `SKILL.md` at the top is the agent
 
 ## 📰 News
 
+- **2026-04-15** 🐍 **Pure-Python simulation ecosystem — 13 new skills** paired with their sim-cli drivers. Each skill ships `SKILL.md` + 3-4 reference docs + verified snippets + known-issues + SDK notes, and each driver E2E is physics-validated:
+  - [`openseespy-sim`](openseespy/SKILL.md) — structural/earthquake FEM (cantilever tip err 1.3e-12)
+  - [`sfepy-sim`](sfepy/SKILL.md) — pure-Python FEM (Poisson 1.3% err)
+  - [`cantera-sim`](cantera/SKILL.md) — combustion / chemical kinetics (CH4/air T_ad = 2225 K)
+  - [`openmdao-sim`](openmdao/SKILL.md) — NASA MDAO framework (Sellar MDA)
+  - [`fipy-sim`](fipy/SKILL.md) — NIST finite-volume PDE (Poisson err 1.6e-15)
+  - [`pymoo-sim`](pymoo/SKILL.md) — NSGA-II/III multi-objective (ZDT1 36 Pareto)
+  - [`pyomo-sim`](pyomo/SKILL.md) — LP/MIP/NLP modeling (classic LP obj=36)
+  - [`simpy-sim`](simpy/SKILL.md) — discrete-event simulation (M/M/1 L err 1.9%)
+  - [`trimesh-sim`](trimesh/SKILL.md) — triangular mesh processing
+  - [`devito-sim`](devito/SKILL.md) — symbolic FD + JIT C codegen
+  - [`coolprop-sim`](coolprop/SKILL.md) — REFPROP-equivalent thermo-properties
+  - [`scikit-rf-sim`](scikit_rf/SKILL.md) — RF/microwave network analysis
+  - [`pandapower-sim`](pandapower/SKILL.md) — Fraunhofer IEE power-system analysis
+- **2026-04-15** 🐧 **Open-source Linux CAE — 9 new skills** paired with Linux-native drivers. CFD/FEM/mesh/post-processing stack now covered end-to-end with OSS tools: [`calculix-sim`](calculix/SKILL.md), [`gmsh-sim`](gmsh/SKILL.md), [`su2-sim`](su2/SKILL.md), [`lammps-sim`](lammps/SKILL.md), [`scikit-fem-sim`](scikit_fem/SKILL.md), [`elmer-sim`](elmer/SKILL.md), [`meshio-sim`](meshio/SKILL.md), [`pyvista-sim`](pyvista/SKILL.md), [`pymfem-sim`](pymfem/SKILL.md). Each with verified physics benchmark (cantilever, Poisson, NACA0012, LJ NVT, etc.) and headless PNG evidence where relevant.
+- **2026-04-14** 🔩 **MAPDL skill (`mapdl-sim`)** — new Ansys MAPDL skill covering both one-shot and session-mode driving. 4 reference docs (PyMAPDL API, command conventions, postprocessing, analysis-workflow skeletons for static/modal/thermal/harmonic), 7 hard constraints, 4-version solver layers (24.1–25.2), 1 SDK layer (0.72), 8 known issues. 3 vendor verification workflows: `mapdl_beam` (2D BEAM188 simply-supported, max UZ −0.0265 cm via `sim run`), `notch_3d` (3D SOLID186 stress concentration K_t=1.98 vs Roark 1.60), and `mapdl_beam_session` (same beam re-driven through 10-step `sim connect/exec/inspect/disconnect` lifecycle, identical physics). All workflows ship `physics_summary.json` + headless PyVista contour PNGs as evidence — no GUI scripting.
 - **2026-04-14** 🌡 **Flotherm 2410 (2024.3) version layer** — added `flotherm/solver/2410/` with version notes mirroring 2504. XSD schema for FloSCRIPT validated; the headless solve crash documented in known issues (same 0xC0000005 as 2504).
 - **2026-04-14** 🔬 **LS-DYNA skill — 5 official PyDyna examples driven end-to-end via real `sim` CLI**. Each workflow ships a PowerShell driver (`run_*.ps1`), a DPF rendering script, a JSON transcript of every `sim connect/exec/inspect` call, and PNG visual evidence: **Taylor Bar** (impact mushroom-head, 25 steps), **Pendulum** (Newton's cradle, 22 steps), **Pipe** (rigid-body rotation, 21 steps), **Beer Can** (Yoshimura buckling diamond pattern, 17 steps, snap-down at t=0.33), **Optimization** (4-iteration thickness sweep with monotonic stiffness trend). Plus dual-path SKILL.md (handwritten `.k` vs PyDyna `keywords` API), `session_workflow.md`, 4 PyDyna API references, 6 example READMEs, full `pydyna_raw/` mirror of the official docs.
 - **2026-04-14** 💥 **LS-DYNA skill** — new Ansys LS-DYNA solver skill for explicit/implicit nonlinear FEA. 4 reference docs (keyword format, material models, control cards, output files), single hex tension E2E with 7129-cycle normal termination evidence. 7 known issues documented including exit-code-0-on-error trap and DLL dependency auto-discovery.

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What is this directory?
 
-`sim-skills/` is a collection of **per-solver agent skills** for the [`sim`](../sim-cli/) simulation runtime. Each subdirectory (`abaqus/`, `ansa/`, `comsol/`, `flotherm/`, `fluent/`, `matlab/`, `mechanical/`, `openfoam/`, `pybamm/`, `starccm/`, `workbench/`) is **one skill** in the Anthropic skill format:
+`sim-skills/` is a collection of **per-solver agent skills** for the [`sim`](../sim-cli/) simulation runtime. Each subdirectory (`abaqus/`, `ansa/`, `cfx/`, `comsol/`, `flotherm/`, `fluent/`, `lsdyna/`, `mapdl/`, `matlab/`, `mechanical/`, `openfoam/`, `pybamm/`, `starccm/`, `workbench/`) is **one skill** in the Anthropic skill format:
 
 ```
 <solver>/
@@ -24,7 +24,7 @@ When a task involves any supported solver:
 4. Reach for supporting files when SKILL.md instructs: `reference/` for patterns and templates, `workflows/` for end-to-end examples, `snippets/` for ready-made `sim exec` payloads, `skill_tests/` for acceptance test cases
 5. **Never invent solver-specific defaults for Category A (physical-decision) inputs** — ask the user
 
-## The 13 skills
+## The 36 skills
 
 | Directory | Skill name | Use when |
 |---|---|---|
@@ -41,10 +41,33 @@ When a task involves any supported solver:
 | `workbench/` | `workbench-sim` | Driving Ansys Workbench via PyWorkbench SDK — project creation, analysis systems, IronPython journals, sub-solver integration (PyMechanical/PyFluent). Owns cells 1-3 of Static Structural. |
 | `cfx/` | `cfx-sim` | Running Ansys CFX simulations via CCL definition files and cfx5solve batch execution — turbomachinery and general-purpose CFD with cfx5post visualization. |
 | `lsdyna/` | `lsdyna-sim` | Running Ansys LS-DYNA explicit/implicit FEA via `.k` keyword files and lsdyna batch execution — nonlinear dynamics, crash, forming, impact simulations. |
+| `mapdl/` | `mapdl-sim` | Running Ansys MAPDL implicit FEA via PyMAPDL Python scripts — static/modal/thermal/harmonic analyses, `.rst` extraction, headless PyVista contour plots. |
+| `calculix/` | `calculix-sim` | Running CalculiX (CCX) via Abaqus-dialect `.inp` input decks — open-source static/frequency/thermal FEA through sim one-shot execution on Linux. |
+| `gmsh/` | `gmsh-sim` | Running Gmsh (finite-element mesh generator) via `.geo` DSL or Python API scripts — 2D/3D meshing, CAD import, export to CalculiX/OpenFOAM/FEniCS/SU2. |
+| `su2/` | `su2-sim` | Running SU2 (open-source multi-physics CFD solver) via `.cfg` config files + `.su2` meshes — Euler/RANS/LES/adjoint design on Linux. |
+| `lammps/` | `lammps-sim` | Running LAMMPS (classical molecular dynamics) via `.in` / `.lmp` scripts — LJ/EAM/Tersoff/ReaxFF potentials, NVE/NVT/NPT ensembles on Linux. |
+| `scikit_fem/` | `scikit-fem-sim` | Running scikit-fem (pure-Python FEM library) via Python scripts — weak form assembly, function spaces, BCs, linear/nonlinear PDE solves. |
+| `elmer/` | `elmer-sim` | Running Elmer FEM (open-source multi-physics FEM suite from CSC-IT) via `.sif` solver-input files + mesh directories — heat/elasticity/electromagnetics/fluid multiphysics on Linux. |
+| `meshio/` | `meshio-sim` | Converting mesh formats between 20+ types (Gmsh/VTK/XDMF/CGNS/Abaqus/CalculiX/SU2/OpenFOAM) via pure-Python meshio library — the glue between sim's pre-processors and solvers. |
+| `pyvista/` | `pyvista-sim` | Post-processing simulation results (.vtu/.vtk/.msh) via pyvista — Pythonic VTK for scalar stats, iso-surfaces, area/volume integration, headless PNG rendering. |
+| `pymfem/` | `pymfem-sim` | Running PyMFEM (Python bindings for LLNL's MFEM C++ FEM library) via Python scripts — high-order H1/H(div)/H(curl) elements, UMFPack direct solve, PCG/GMRES iterative. |
+| `openseespy/` | `openseespy-sim` | Running OpenSeesPy (PEER's structural earthquake-engineering FEM framework) via Python scripts — elastic/inelastic beams, fiber sections, pushover, time-history, modal/eigen. |
+| `sfepy/` | `sfepy-sim` | Running SfePy (Simple Finite Elements in Python) via direct API — Mesh / Field / Term / Problem composition for Poisson, elasticity, NS, multi-physics weak forms. |
+| `cantera/` | `cantera-sim` | Running Cantera (open-source thermodynamics / kinetics / transport from LBNL/Caltech) via Python scripts — equilibrium, reactor networks, premixed/diffusion flames, ignition delay. |
+| `openmdao/` | `openmdao-sim` | Running OpenMDAO (NASA's open-source multidisciplinary design / analysis / optimization framework) via Python scripts — coupled MDA, gradient-based optimization, DOE, surrogates. |
+| `fipy/` | `fipy-sim` | Running FiPy (NIST's pure-Python finite-volume PDE solver) via Python scripts — diffusion / convection / reaction PDEs on 1D/2D/3D structured or Gmsh meshes. |
+| `pymoo/` | `pymoo-sim` | Running pymoo (Multi-Objective Optimization in Python) via Python scripts — NSGA-II/III, MOEA/D, GA, DE, PSO, CMAES — for benchmark and user-defined objective/constraint vectors. |
+| `pyomo/` | `pyomo-sim` | Running Pyomo (Sandia's Python optimization modeling language) via Python scripts — LP/MIP/NLP/MINLP problems dispatched to HiGHS / GLPK / CBC / IPOPT / Gurobi / CPLEX. |
+| `simpy/` | `simpy-sim` | Running SimPy (process-based discrete-event simulation in pure Python) via Python scripts — queueing systems, manufacturing lines, network protocols, hospital flow. |
+| `trimesh/` | `trimesh-sim` | Running Trimesh (pure-Python triangular mesh processing) via Python scripts — STL/OBJ/PLY load, volume/area/inertia, watertight repair, boolean ops, ray casts, signed distance. |
+| `devito/` | `devito-sim` | Running Devito (symbolic finite-difference DSL with JIT C codegen, Imperial College) via Python scripts — wave/heat/acoustic/elastic PDEs on regular grids, high-order stencils. |
+| `coolprop/` | `coolprop-sim` | Running CoolProp (open-source REFPROP-equivalent thermophysical-property database) via Python scripts — Helmholtz-EoS for ~120 pure fluids + humid air, for HVAC / refrigeration / power-plant cycle analysis. |
+| `scikit_rf/` | `scikit-rf-sim` | Running scikit-rf (Python RF/microwave network analysis) via Python scripts — Touchstone (.sNp) I/O, S-parameter math, transmission-line / CPW / waveguide media, SOLT/TRL calibration. |
+| `pandapower/` | `pandapower-sim` | Running pandapower (Fraunhofer IEE Python power-system analysis with PYPOWER backend) via Python scripts — load flow, OPF, short-circuit, time-series on transmission/distribution networks. |
 
 ## Cross-skill conventions
 
-These conventions apply across all 13 skills. Each individual SKILL.md may add its own constraints on top.
+These conventions apply across all 36 skills. Each individual SKILL.md may add its own constraints on top.
 
 ### Input classification (used in every skill's "Required protocol" Step 1)
 

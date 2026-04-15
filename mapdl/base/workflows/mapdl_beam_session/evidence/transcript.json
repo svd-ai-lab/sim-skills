@@ -1,0 +1,72 @@
+[
+  {
+    "step": "ps-initial",
+    "command": "E:\\simcli\\sim-cli\\.venv\\Scripts\\sim.exe --host 127.0.0.1 ps",
+    "returncode": 0,
+    "response": "{\n  \"connected\": true,\n  \"session_id\": \"mapdl-1776161824\",\n  \"solver\": \"mapdl\",\n  \"mode\": \"meshing\",\n  \"ui_mode\": \"no_gui\",\n  \"connected_at\": 1776161825.2180974,\n  \"run_count\": 0,\n  \"profile\": \"mapdl_v24_1\"\n}",
+    "ts": "2026-04-14T10:18:29.465729Z"
+  },
+  {
+    "step": "inspect-session",
+    "command": "E:\\simcli\\sim-cli\\.venv\\Scripts\\sim.exe --host 127.0.0.1 inspect session.summary",
+    "returncode": 0,
+    "response": "{\n  \"session_id\": \"mapdl-1776161824\",\n  \"solver\": \"mapdl\",\n  \"mode\": \"meshing\",\n  \"ui_mode\": \"no_gui\",\n  \"connected_at\": 1776161825.2180974,\n  \"run_count\": 0,\n  \"profile\": \"mapdl_v24_1\",\n  \"connected\": true\n}",
+    "ts": "2026-04-14T10:18:29.797731Z"
+  },
+  {
+    "step": "exec-1-prep",
+    "command": "E:\\simcli\\sim-cli\\.venv\\Scripts\\sim.exe --host 127.0.0.1 exec --label prep_setup mapdl.prep7()\nmapdl.et(1, \"BEAM188\")\nmapdl.keyopt(1, 4, 1)\nmapdl.mp(\"EX\", 1, 2e7)\nmapdl.mp(\"PRXY\", 1, 0.27)\nmapdl.sectype(1, \"BEAM\", \"I\", \"ISection\", 3)\nmapdl.secoffset(\"CENT\")\nmapdl.secdata(15, 15, 29, 2, 2, 1)\n_result = {\"step\": \"prep_setup\", \"ok\": True}",
+    "returncode": 0,
+    "response": "[OK] label='prep_setup'  elapsed=0.032s\n  result: {'step': 'prep_setup', 'ok': True}",
+    "ts": "2026-04-14T10:18:30.179173Z"
+  },
+  {
+    "step": "exec-2-mesh",
+    "command": "E:\\simcli\\sim-cli\\.venv\\Scripts\\sim.exe --host 127.0.0.1 exec --label build_mesh mapdl.n(1, 0, 0, 0); mapdl.n(12, 110, 0, 0); mapdl.n(23, 220, 0, 0)\nmapdl.fill(1, 12, 10); mapdl.fill(12, 23, 10)\nfor nn in mapdl.mesh.nnum[:-1]:\n    mapdl.e(int(nn), int(nn) + 1)\n_result = {\"nodes\": int(len(mapdl.mesh.nnum)),\n           \"elems\": int(len(mapdl.mesh.enum))}",
+    "returncode": 0,
+    "response": "[OK] label='build_mesh'  elapsed=0.062s\n  result: {'nodes': 23, 'elems': 22}",
+    "ts": "2026-04-14T10:18:30.570973Z"
+  },
+  {
+    "step": "inspect-mesh",
+    "command": "E:\\simcli\\sim-cli\\.venv\\Scripts\\sim.exe --host 127.0.0.1 inspect mesh.summary",
+    "returncode": 0,
+    "response": "{\n  \"ok\": true,\n  \"n_nodes\": 23,\n  \"n_elements\": 22,\n  \"element_type_ids\": [\n    1\n  ]\n}",
+    "ts": "2026-04-14T10:18:30.898155Z"
+  },
+  {
+    "step": "exec-3-solve",
+    "command": "E:\\simcli\\sim-cli\\.venv\\Scripts\\sim.exe --host 127.0.0.1 exec --label solve mapdl.finish(); mapdl.slashsolu()\nfor c in (\"UX\",\"UY\",\"ROTX\",\"ROTZ\"):\n    mapdl.d(\"all\", c)\nmapdl.d(1, \"UZ\"); mapdl.d(23, \"UZ\")\nmapdl.f(12, \"FZ\", -22840.0)\nmapdl.antype(\"STATIC\")\nmapdl.solve()\nmapdl.finish()\n_result = {\"solved\": True}",
+    "returncode": 0,
+    "response": "[OK] label='solve'  elapsed=0.079s\n  result: {'solved': True}",
+    "ts": "2026-04-14T10:18:31.308519Z"
+  },
+  {
+    "step": "inspect-files-after-solve",
+    "command": "E:\\simcli\\sim-cli\\.venv\\Scripts\\sim.exe --host 127.0.0.1 inspect workdir.files",
+    "returncode": 0,
+    "response": "{\n  \"ok\": true,\n  \"workdir\": \"C:\\\\Users\\\\ADMINI~1\\\\AppData\\\\Local\\\\Temp\\\\sim_mapdl_fhx4h5l2\",\n  \"files\": [\n    \".__tmp__.inp\",\n    \".__tmp__.out\",\n    \"file.DSP\",\n    \"file.bat\",\n    \"file.err\",\n    \"file.esav\",\n    \"file.full\",\n    \"file.lock\",\n    \"file.log\",\n    \"file.mntr\",\n    \"file.page\",\n    \"file.rst\"\n  ],\n  \"n_files\": 12,\n  \"has_rst\": true,\n  \"has_db\": false,\n  \"pngs\": []\n}",
+    "ts": "2026-04-14T10:18:31.646518Z"
+  },
+  {
+    "step": "exec-4-post",
+    "command": "E:\\simcli\\sim-cli\\.venv\\Scripts\\sim.exe --host 127.0.0.1 exec --label post import numpy as np\nmapdl.post1(); mapdl.set(1, 1)\nuz = mapdl.post_processing.nodal_displacement(\"Z\")\nmapdl.post_processing.plot_nodal_displacement(\n    \"Z\",\n    savefig=r\"E:\\simcli\\sim-skills\\mapdl\\base\\workflows\\mapdl_beam_session\\evidence\\session_mapdl_beam_uz.png\",\n    off_screen=True,\n    window_size=(1200, 700),\n    cmap=\"viridis\",\n    show_edges=True,\n)\n_result = {\"min_uz_cm\": float(uz.min()),\n           \"max_abs_uz_cm\": float(np.max(np.abs(uz))),\n           \"png\": r\"E:\\simcli\\sim-skills\\mapdl\\base\\workflows\\mapdl_beam_session\\evidence\\session_mapdl_beam_uz.png\"}",
+    "returncode": 0,
+    "response": "[OK] label='post'  elapsed=1.282s\n  stderr: E:\\simcli\\sim-cli\\.venv\\Lib\\site-packages\\ansys\\mapdl\\core\\mesh_grpc.py:103: PyVistaFutureWarning: The default value of `algorithm` for the filter\n  stderr: `UnstructuredGrid.extract_surface` will change in the future. It currently defaults to\n  stderr: `'dataset_surface'`, but will change to `None`. Explicitly set the `algorithm` keyword to\n  stderr: silence this warning.\n  stderr:   self._surf_cache = self._grid.extract_surface()\n  result: {'min_uz_cm': -0.02651218953366208, 'max_abs_uz_cm': 0.02651218953366208, 'png': 'E:\\\\simcli\\\\sim-skills\\\\mapdl\\\\base\\\\workflows\\\\mapdl_beam_session\\\\evidence\\\\session_mapdl_beam_uz.png'}",
+    "ts": "2026-04-14T10:18:33.261628Z"
+  },
+  {
+    "step": "inspect-last-result",
+    "command": "E:\\simcli\\sim-cli\\.venv\\Scripts\\sim.exe --host 127.0.0.1 inspect last.result",
+    "returncode": 0,
+    "response": "{\n  \"has_last_run\": true,\n  \"ok\": true,\n  \"label\": \"post\",\n  \"stdout\": \"\",\n  \"stderr\": \"E:\\\\simcli\\\\sim-cli\\\\.venv\\\\Lib\\\\site-packages\\\\ansys\\\\mapdl\\\\core\\\\mesh_grpc.py:103: PyVistaFutureWarning: The default value of `algorithm` for the filter\\n`UnstructuredGrid.extract_surface` will change in the future. It currently defaults to\\n`'dataset_surface'`, but will change to `None`. Explicitly set the `algorithm` keyword to\\nsilence this warning.\\n  self._surf_cache = self._grid.extract_surface()\\n\",\n  \"error\": null,\n  \"result\": {\n    \"min_uz_cm\": -0.02651218953366208,\n    \"max_abs_uz_cm\": 0.02651218953366208,\n    \"png\": \"E:\\\\simcli\\\\sim-skills\\\\mapdl\\\\base\\\\workflows\\\\mapdl_beam_session\\\\evidence\\\\session_mapdl_beam_uz.png\"\n  },\n  \"elapsed_s\": 1.282,\n  \"session_id\": \"mapdl-1776161824\",\n  \"started_at\": 1776161913.232628\n}",
+    "ts": "2026-04-14T10:18:33.587793Z"
+  },
+  {
+    "step": "disconnect",
+    "command": "E:\\simcli\\sim-cli\\.venv\\Scripts\\sim.exe --host 127.0.0.1 disconnect",
+    "returncode": 0,
+    "response": "[sim] disconnected (session_id=mapdl-1776161824)",
+    "ts": "2026-04-14T10:18:37.221334Z"
+  }
+]

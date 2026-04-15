@@ -1,0 +1,33 @@
+{
+  "workflow": "mapdl_beam",
+  "source": "https://mapdl.docs.pyansys.com/version/stable/examples/gallery_examples/00-mapdl-examples/mapdl_beam.html",
+  "execution": {
+    "runner": "sim run --solver mapdl",
+    "run_id": 95,
+    "duration_s": 9.312,
+    "exit_code": 0,
+    "mapdl_version": "24.1",
+    "pymapdl_version": "0.72.1"
+  },
+  "problem": {
+    "physics": "Static structural — simply-supported I-beam, mid-span point load",
+    "element": "BEAM188 (22 elements, 23 nodes)",
+    "material": "Steel, E=2e7 N/cm^2 (200 GPa), PRXY=0.27",
+    "section": "I-section, flange 15 cm, web 29 cm, thickness 2 cm",
+    "span_cm": 220,
+    "applied_load_N": -22840,
+    "load_location": "node 12 (mid-span), FZ direction"
+  },
+  "results": {
+    "max_abs_disp_cm": 0.026512189533662075,
+    "max_deflection_cm_signed": -0.026512189533662075,
+    "deflection_sign_check": "negative (downward) — physically correct",
+    "png": "mapdl_beam_disp_z.png"
+  },
+  "acceptance": {
+    "exit_code_zero": true,
+    "deflection_downward": true,
+    "deflection_magnitude_in_range_0_to_1_cm": true,
+    "overall_ok": true
+  }
+}
