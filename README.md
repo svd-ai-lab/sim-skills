@@ -64,6 +64,7 @@ Every skill lives in its own top-level folder. The grid is **open and growing** 
 | [**cfx-sim**](cfx/SKILL.md) | CFD (turbomachinery) | Persistent hybrid (`cfx5post -line` + batch render) | Working ✅ | Ansys CFX via CCL definition files, interactive post-processing, hybrid contour rendering. E2E verified with VMFL015. |
 | [**lsdyna-sim**](lsdyna/SKILL.md) | Explicit FEA | One-shot `lsdyna i=<file.k>` | Working ✅ | Ansys LS-DYNA explicit/implicit nonlinear FEA; keyword file validation, auto DLL discovery. Single hex tension E2E. |
 | [**mapdl-sim**](mapdl/SKILL.md) | Implicit FEA | Both: one-shot `sim run` + persistent PyMAPDL gRPC session (`sim connect/exec/inspect`) | Working ✅ | Ansys MAPDL static / modal / thermal / harmonic. 2D I-beam + 3D notched-plate Phase 1 E2E; same 2D beam re-driven through 10-step session (Phase 2). Headless PyVista contour PNGs. |
+| [**icem-sim**](icem/SKILL.md) | Meshing preprocessor | One-shot `icemcfd.bat -batch -script <file.tcl>` | Working ✅ | Ansys ICEM CFD Tcl batch meshing. Box.tin → 26752 tetra E2E (3.9s). 143 solver export interfaces. |
 | [**calculix-sim**](calculix/SKILL.md) | Static / frequency / thermal FEA | One-shot `ccx -i <file>` | Working ✅ | Open-source Abaqus-dialect `.inp` on Linux. Cantilever tip U2 = −2002 (0.1 % err). |
 | [**gmsh-sim**](gmsh/SKILL.md) | Mesh generation | One-shot `gmsh -3 <file.geo>` / Python API | Working ✅ | 2D/3D meshing with CAD import; exports for CalculiX/OpenFOAM/FEniCS/SU2. |
 | [**su2-sim**](su2/SKILL.md) | Open-source CFD | One-shot `SU2_CFD <file.cfg>` | Working ✅ | NACA0012 inviscid, RMS[Rho] dropped 3.5 orders. |
@@ -181,6 +182,7 @@ Each `<solver>/` directory is self-contained: `SKILL.md` at the top is the agent
 
 ## 📰 News
 
+- **2026-04-16** 🔧 **ICEM CFD skill (`icem-sim`)** — new Ansys ICEM CFD meshing preprocessor skill. Tcl batch scripting via `icemcfd.bat -batch -script`, batch meshing API from Programmer's Guide (`ic_run_tetra` p143, `ic_run_hexa` p145, `ic_create_output` p197). 3 reference docs, 8 known issues, 4-version solver layers (24.1–25.2). Box.tin → 26752 tetra E2E verified (3.9s). No session mode — ICEM is a preprocessor, one-shot is the correct model.
 - **2026-04-15** 🐍 **Pure-Python simulation ecosystem — 13 new skills** paired with their sim-cli drivers. Each skill ships `SKILL.md` + 3-4 reference docs + verified snippets + known-issues + SDK notes, and each driver E2E is physics-validated:
   - [`openseespy-sim`](openseespy/SKILL.md) — structural/earthquake FEM (cantilever tip err 1.3e-12)
   - [`sfepy-sim`](sfepy/SKILL.md) — pure-Python FEM (Poisson 1.3% err)

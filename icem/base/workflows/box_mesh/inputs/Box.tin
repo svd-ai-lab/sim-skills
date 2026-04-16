@@ -1,0 +1,272 @@
+// tetin file version 1.1
+// written by icwbmesh - version 17.0 on Fri Jan 15 14:31:31 2016
+
+set_triangulation_tolerance 0.001
+define_family FAM0__COL__35_1_1 color 13479731
+define_family CREATED_MATERIAL_1 color 12465088
+define_family CREATED_MATERIAL_2 color 5518332
+define_family FAM0__COL__925_1_1 color 6748211
+define_family CREATED_MATERIAL color 3735111
+define_family CREATED_MATERIAL_3 color 3380194
+define_family SOLID_1_1 color 13675571
+define_family CREATED_MATERIAL_4 color 3402627
+define_family FACET_MESH color 12696883
+define_family CREATED_MATERIAL_5 color 6551859
+define_family CREATED_MATERIAL_6 color 13349427
+
+prescribed_point 0.014999999664724 -0.014999999664724 0.01799999922514 family SOLID_1_1 name VERT5
+prescribed_point -0.014000000432134 -0.014999999664724 0.01799999922514 family SOLID_1_1 name VERT6
+prescribed_point -0.014000000432134 -0.014999999664724 0 family SOLID_1_1 name VERT7
+prescribed_point 0.014999999664724 -0.014999999664724 0 family SOLID_1_1 name VERT8
+prescribed_point -0.014000000432134 0.0049999998882413 0.01799999922514 family SOLID_1_1 name VERT9
+prescribed_point -0.014000000432134 0.0049999998882413 0 family SOLID_1_1 name VERT10
+prescribed_point 0.014999999664724 0.0049999998882413 0.01799999922514 family SOLID_1_1 name VERT11
+prescribed_point 0.014999999664724 0.0049999998882413 0 family SOLID_1_1 name VERT12
+define_curve family SOLID_1_1 tetra_size 1e+010 name EDGE13 vertex1 VERT5 vertex2 VERT6 dscell_id 1073741825 scobj_id 0 151
+bspline
+2,2,0
+0,0,1,1
+0.015,-0.015,0.018
+-0.014,-0.015,0.018
+define_curve family SOLID_1_1 tetra_size 1e+010 name EDGE14 vertex1 VERT7 vertex2 VERT6 dscell_id 1073741826 scobj_id 0 154
+bspline
+2,2,0
+0,0,1,1
+-0.014,-0.015,0
+-0.014,-0.015,0.018
+define_curve family SOLID_1_1 tetra_size 1e+010 name EDGE15 vertex1 VERT8 vertex2 VERT7 dscell_id 1073741827 scobj_id 0 157
+bspline
+2,2,0
+0,0,1,1
+0.015,-0.015,0
+-0.014,-0.015,0
+define_curve family SOLID_1_1 tetra_size 1e+010 name EDGE16 vertex1 VERT8 vertex2 VERT5 dscell_id 1073741828 scobj_id 0 160
+bspline
+2,2,0
+0,0,1,1
+0.015,-0.015,0
+0.015,-0.015,0.018
+define_curve family SOLID_1_1 tetra_size 1e+010 name EDGE17 vertex1 VERT6 vertex2 VERT9 dscell_id 1073741829 scobj_id 0 163
+bspline
+2,2,0
+0,0,1,1
+-0.014,-0.015,0.018
+-0.014,0.005,0.018
+define_curve family SOLID_1_1 tetra_size 1e+010 name EDGE18 vertex1 VERT10 vertex2 VERT9 dscell_id 1073741830 scobj_id 0 166
+bspline
+2,2,0
+0,0,1,1
+-0.014,0.005,0
+-0.014,0.005,0.018
+define_curve family SOLID_1_1 tetra_size 1e+010 name EDGE19 vertex1 VERT7 vertex2 VERT10 dscell_id 1073741831 scobj_id 0 169
+bspline
+2,2,0
+0,0,1,1
+-0.014,-0.015,0
+-0.014,0.005,0
+define_curve family SOLID_1_1 tetra_size 1e+010 name EDGE20 vertex1 VERT9 vertex2 VERT11 dscell_id 1073741832 scobj_id 0 172
+bspline
+2,2,0
+0,0,1,1
+-0.014,0.005,0.018
+0.015,0.005,0.018
+define_curve family SOLID_1_1 tetra_size 1e+010 name EDGE21 vertex1 VERT12 vertex2 VERT11 dscell_id 1073741833 scobj_id 0 175
+bspline
+2,2,0
+0,0,1,1
+0.015,0.005,0
+0.015,0.005,0.018
+define_curve family SOLID_1_1 tetra_size 1e+010 name EDGE22 vertex1 VERT10 vertex2 VERT12 dscell_id 1073741834 scobj_id 0 178
+bspline
+2,2,0
+0,0,1,1
+-0.014,0.005,0
+0.015,0.005,0
+define_curve family SOLID_1_1 tetra_size 1e+010 name EDGE23 vertex1 VERT11 vertex2 VERT5 dscell_id 1073741835 scobj_id 0 181
+bspline
+2,2,0
+0,0,1,1
+0.015,0.005,0.018
+0.015,-0.015,0.018
+define_curve family SOLID_1_1 tetra_size 1e+010 name EDGE24 vertex1 VERT12 vertex2 VERT8 dscell_id 1073741836 scobj_id 0 184
+bspline
+2,2,0
+0,0,1,1
+0.015,0.005,0
+0.015,-0.015,0
+define_surface height 0.0019718227 size_ratio 1.8 height_ratio 1.8 name FACE25 family SOLID_1_1 tetra_size 0.0019718227 mz_type 1 dscell_id 2147483649 orig_type 0 scobj_id 0 133
+trim_surface n_loops 1
+loop n_curves 4
+coedge 3dcurve   EDGE13
+polyline n_points 2
+0.29973788972071,0.37569938559267
+0.70026211027929,0.37569938559267
+coedge 3dcurve - EDGE14
+polyline n_points 2
+0.70026211027929,0.37569938559267
+0.70026211027929,0.62430061440733
+coedge 3dcurve - EDGE15
+polyline n_points 2
+0.70026211027929,0.62430061440733
+0.29973788972071,0.62430061440733
+coedge 3dcurve   EDGE16
+polyline n_points 2
+0.29973788972071,0.62430061440733
+0.29973788972071,0.37569938559267
+bspline
+2,2,2,2,0
+0,0,1,1
+0,0,1,1
+0.036702554428602,-0.015,0.045202554424877
+-0.035702555196012,-0.015,0.045202554424877
+0.036702554428602,-0.015,-0.027202555199737
+-0.035702555196012,-0.015,-0.027202555199737
+define_surface height 0.0019718227 size_ratio 1.8 height_ratio 1.8 name FACE26 family SOLID_1_1 tetra_size 0.0019718227 mz_type 1 dscell_id 2147483650 orig_type 0 scobj_id 0 136
+trim_surface n_loops 1
+loop n_curves 4
+coedge 3dcurve   EDGE17
+polyline n_points 2
+0.34232350243463,0.67519611203184
+0.34232350243463,0.32480388796816
+coedge 3dcurve - EDGE18
+polyline n_points 2
+0.34232350243463,0.32480388796816
+0.65767649756537,0.32480388796816
+coedge 3dcurve - EDGE19
+polyline n_points 2
+0.65767649756537,0.32480388796816
+0.65767649756537,0.67519611203184
+coedge 3dcurve   EDGE14
+polyline n_points 2
+0.65767649756537,0.67519611203184
+0.34232350243463,0.67519611203184
+bspline
+2,2,2,2,0
+0,0,1,1
+0,0,1,1
+-0.014,0.023539445595187,0.037539445095998
+-0.014,0.023539445595187,-0.019539445870859
+-0.014,-0.03353944537167,0.037539445095998
+-0.014,-0.03353944537167,-0.019539445870859
+define_surface height 0.0019718227 size_ratio 1.8 height_ratio 1.8 name FACE27 family SOLID_1_1 tetra_size 0.0019718227 mz_type 1 dscell_id 2147483651 orig_type 0 scobj_id 0 139
+trim_surface n_loops 1
+loop n_curves 4
+coedge 3dcurve   EDGE20
+polyline n_points 2
+0.37569938559267,0.70026211027929
+0.37569938559267,0.29973788972071
+coedge 3dcurve - EDGE21
+polyline n_points 2
+0.37569938559267,0.29973788972071
+0.62430061440733,0.29973788972071
+coedge 3dcurve - EDGE22
+polyline n_points 2
+0.62430061440733,0.29973788972071
+0.62430061440733,0.70026211027929
+coedge 3dcurve   EDGE18
+polyline n_points 2
+0.62430061440733,0.70026211027929
+0.37569938559267,0.70026211027929
+bspline
+2,2,2,2,0
+0,0,1,1
+0,0,1,1
+0.036702554428602,0.005,0.045202554424877
+0.036702554428602,0.005,-0.027202555199737
+-0.035702555196012,0.005,0.045202554424877
+-0.035702555196012,0.005,-0.027202555199737
+define_surface height 0.0019718227 size_ratio 1.8 height_ratio 1.8 name FACE28 family SOLID_1_1 tetra_size 0.0019718227 mz_type 1 dscell_id 2147483652 orig_type 0 scobj_id 0 142
+trim_surface n_loops 1
+loop n_curves 4
+coedge 3dcurve   EDGE23
+polyline n_points 2
+0.32480388796816,0.34232350243463
+0.67519611203184,0.34232350243463
+coedge 3dcurve - EDGE16
+polyline n_points 2
+0.67519611203184,0.34232350243463
+0.67519611203184,0.65767649756537
+coedge 3dcurve - EDGE24
+polyline n_points 2
+0.67519611203184,0.65767649756537
+0.32480388796816,0.65767649756537
+coedge 3dcurve   EDGE21
+polyline n_points 2
+0.32480388796816,0.65767649756537
+0.32480388796816,0.34232350243463
+bspline
+2,2,2,2,0
+0,0,1,1
+0,0,1,1
+0.015,0.023539445595187,0.037539445095998
+0.015,-0.03353944537167,0.037539445095998
+0.015,0.023539445595187,-0.019539445870859
+0.015,-0.03353944537167,-0.019539445870859
+define_surface height 0.0019718227 size_ratio 1.8 height_ratio 1.8 name FACE29 family SOLID_1_1 tetra_size 0.0019718227 mz_type 1 dscell_id 2147483653 orig_type 0 scobj_id 0 145
+trim_surface n_loops 1
+loop n_curves 4
+coedge 3dcurve - EDGE13
+polyline n_points 2
+0.69403311603351,0.63381593865412
+0.30596688396649,0.63381593865412
+coedge 3dcurve - EDGE23
+polyline n_points 2
+0.30596688396649,0.63381593865412
+0.30596688396649,0.36618406134588
+coedge 3dcurve - EDGE20
+polyline n_points 2
+0.30596688396649,0.36618406134588
+0.69403311603351,0.36618406134588
+coedge 3dcurve - EDGE17
+polyline n_points 2
+0.69403311603351,0.36618406134588
+0.69403311603351,0.63381593865412
+bspline
+2,2,2,2,0
+0,0,1,1
+0,0,1,1
+0.037864755552918,0.032364756048381,0.018
+-0.036864756320328,0.032364756048381,0.018
+0.037864755552918,-0.042364755824864,0.018
+-0.036864756320328,-0.042364755824864,0.018
+define_surface height 0.0019718227 size_ratio 1.8 height_ratio 1.8 name FACE30 family SOLID_1_1 tetra_size 0.0019718227 mz_type 1 dscell_id 2147483654 orig_type 0 scobj_id 0 148
+trim_surface n_loops 1
+loop n_curves 4
+coedge 3dcurve   EDGE24
+polyline n_points 2
+0.36618406134588,0.30596688396649
+0.63381593865412,0.30596688396649
+coedge 3dcurve   EDGE15
+polyline n_points 2
+0.63381593865412,0.30596688396649
+0.63381593865412,0.69403311603351
+coedge 3dcurve   EDGE19
+polyline n_points 2
+0.63381593865412,0.69403311603351
+0.36618406134588,0.69403311603351
+coedge 3dcurve   EDGE22
+polyline n_points 2
+0.36618406134588,0.69403311603351
+0.36618406134588,0.30596688396649
+bspline
+2,2,2,2,0
+0,0,1,1
+0,0,1,1
+0.037864755552918,0.032364756048381,0
+0.037864755552918,-0.042364755824864,0
+-0.036864756320328,0.032364756048381,0
+-0.036864756320328,-0.042364755824864,0
+affix 0
+define_shell n_surfaces 6 name SOLID_1_1.1 family SOLID_1_1
+FACE25 
+FACE26 
+FACE27 
+FACE28 
+FACE29 
+FACE30 
+define_lump name SOLID_1_1 family SOLID_1_1 n_shells 1 
+SOLID_1_1.1
+define_solid body n_lumps 1 n_sheets 0 mz_type 1 name SOLID_1_1 family SOLID_1_1
+SOLID_1_1
+define_model 1e+010 reference_size 1 units m
+return

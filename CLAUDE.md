@@ -42,6 +42,7 @@ When a task involves any supported solver:
 | `cfx/` | `cfx-sim` | Running Ansys CFX simulations via CCL definition files and cfx5solve batch execution — turbomachinery and general-purpose CFD with cfx5post visualization. |
 | `lsdyna/` | `lsdyna-sim` | Running Ansys LS-DYNA explicit/implicit FEA via `.k` keyword files and lsdyna batch execution — nonlinear dynamics, crash, forming, impact simulations. |
 | `mapdl/` | `mapdl-sim` | Running Ansys MAPDL implicit FEA via PyMAPDL Python scripts — static/modal/thermal/harmonic analyses, `.rst` extraction, headless PyVista contour plots. |
+| `icem/` | `icem-sim` | Running Ansys ICEM CFD meshing via Tcl batch scripts — tetra/hex mesh generation from `.tin` geometry, export to 143 solver formats (Fluent/CFX/MAPDL/Abaqus). |
 | `calculix/` | `calculix-sim` | Running CalculiX (CCX) via Abaqus-dialect `.inp` input decks — open-source static/frequency/thermal FEA through sim one-shot execution on Linux. |
 | `gmsh/` | `gmsh-sim` | Running Gmsh (finite-element mesh generator) via `.geo` DSL or Python API scripts — 2D/3D meshing, CAD import, export to CalculiX/OpenFOAM/FEniCS/SU2. |
 | `su2/` | `su2-sim` | Running SU2 (open-source multi-physics CFD solver) via `.cfg` config files + `.su2` meshes — Euler/RANS/LES/adjoint design on Linux. |
