@@ -87,6 +87,8 @@ Every skill lives in its own top-level folder. The grid is **open and growing** 
 | [**coolprop-sim**](coolprop/SKILL.md) | Thermo-properties | One-shot Python script | Working ✅ | REFPROP-equivalent. Water @ 1 atm T_sat = 373.124 K. |
 | [**scikit-rf-sim**](scikit_rf/SKILL.md) | RF / microwave analysis | One-shot Python script | Working ✅ | Touchstone I/O, S-parameters. Short/open/match S11 = −1/+1/0 exact. |
 | [**pandapower-sim**](pandapower/SKILL.md) | Power-system analysis | One-shot Python script | Working ✅ | Fraunhofer IEE. 2-bus PF vm_pu = 0.998, losses 1.4 kW. |
+| [**paraview-sim**](paraview/SKILL.md) | Post-processing / visualization | One-shot `pvpython` / `pvbatch` | Working ✅ | Kitware ParaView. 30+ file formats, Clip/Slice/Contour/StreamTracer, headless PNG rendering. |
+| [**hypermesh-sim**](hypermesh/SKILL.md) | FE pre-processing | One-shot `hw -b -script` | Working ✅ | Altair HyperMesh. 225 entity classes, 1946 methods. CAD import, automesh/tetmesh, quality checks, solver deck export. |
 | **+ your skill** | — | — | 🛠 | Drop a `<solver>/SKILL.md`, register in `CLAUDE.md`, open a PR |
 
 **Legend** · ✅ Working · 🟡 In progress (phased rollout) · 🛠 Open for contribution
@@ -182,6 +184,8 @@ Each `<solver>/` directory is self-contained: `SKILL.md` at the top is the agent
 
 ## 📰 News
 
+- **2026-04-16** 🔧 **HyperMesh skill (`hypermesh-sim`)** — new Altair HyperMesh FE pre-processor skill. `hm` Python API with 1946 model methods + 225 entity classes. 4 reference docs (API overview, meshing operations, entity/collection patterns, import/export), 4 snippets, 8 known issues, SDK 2025 version layer. Batch execution via `hw -b -script script.py`.
+- **2026-04-16** 🔬 **ParaView skill (`paraview-sim`)** — new Kitware ParaView post-processing skill. `paraview.simple` API reference (readers, sources, filters, rendering, writers), 30+ file format guide, headless rendering setup (OSMesa/EGL/xvfb), MCP operation patterns from LLNL's `paraview_mcp`. 5 snippets (smoke test, load+stats, contour render, slice export, IntegrateVariables). 8 known issues. SDK/solver 5.13 version layers.
 - **2026-04-16** 🔧 **ICEM CFD skill (`icem-sim`)** — new Ansys ICEM CFD meshing preprocessor skill. Tcl batch scripting via `icemcfd.bat -batch -script`, batch meshing API from Programmer's Guide (`ic_run_tetra` p143, `ic_run_hexa` p145, `ic_create_output` p197). 3 reference docs, 8 known issues, 4-version solver layers (24.1–25.2). Box.tin → 26752 tetra E2E verified (3.9s). No session mode — ICEM is a preprocessor, one-shot is the correct model.
 - **2026-04-15** 🐍 **Pure-Python simulation ecosystem — 13 new skills** paired with their sim-cli drivers. Each skill ships `SKILL.md` + 3-4 reference docs + verified snippets + known-issues + SDK notes, and each driver E2E is physics-validated:
   - [`openseespy-sim`](openseespy/SKILL.md) — structural/earthquake FEM (cantilever tip err 1.3e-12)

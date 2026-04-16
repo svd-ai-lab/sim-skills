@@ -1,0 +1,38 @@
+{
+  "test_date": "2026-04-17",
+  "hypermesh_version": "2026.0.0.27",
+  "platform": "Windows 11, hwx.exe via runhwx.exe",
+  "execution": "runhwx.exe -client HyperWorksDesktop -plugin HyperworksLauncher -profile HyperworksLauncher -l en -startwith HyperMesh -f probe3.py",
+  "requires_gui": true,
+  "requires_create_session": true,
+  "tests": {
+    "smoke_material_property": {
+      "status": "PASS",
+      "ok": true,
+      "n_materials": 1,
+      "n_properties": 1,
+      "mat_name": "Steel",
+      "E": 210000.0,
+      "Nu": 0.3,
+      "thickness": 2.0
+    },
+    "batch_mode_b_flag": {
+      "status": "FAIL",
+      "reason": "hm module requires initialized HyperMesh session; -b flag skips initialization, import hm raises 'HyperMesh is not initialized'"
+    },
+    "hmbatch_tcl_only": {
+      "status": "CONFIRMED",
+      "note": "hmbatch.exe only supports -tcl flag, no Python API"
+    }
+  },
+  "key_findings": {
+    "executable": "hwx.exe (launched by runhwx.exe)",
+    "process_name": "hwx.exe",
+    "shortcut_args": "-client HyperWorksDesktop -plugin HyperworksLauncher -profile HyperworksLauncher -l en -startwith HyperMesh",
+    "script_flag": "-f <script.py>",
+    "batch_flag": "-b does NOT work for Python (HyperMesh not initialized)",
+    "hm_init_check": "hm/__init__.py checks for IsHyperMeshLoaded in __main__",
+    "python_version": "3.10.18 bundled with HyperWorks"
+  },
+  "summary": "1/1 PASS (requires GUI + Create Session)"
+}

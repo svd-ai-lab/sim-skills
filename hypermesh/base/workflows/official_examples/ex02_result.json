@@ -1,0 +1,9 @@
+{
+  "ok": true,
+  "example": "02_modify_entities",
+  "model_file": "bumper.hm",
+  "mat_name": "center",
+  "mat_E": 210000.0,
+  "mat_Nu": 0.3,
+  "element_18_config": 104
+}

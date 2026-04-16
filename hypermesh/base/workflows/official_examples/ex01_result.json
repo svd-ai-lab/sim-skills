@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "example": "01_create_entities",
+  "model_file": "bumper.hm",
+  "n_nodes": 473,
+  "n_elements": 436,
+  "n_components": 5,
+  "new_node_id": 2154,
+  "material_name": "Steel",
+  "material_cardimage": "MAT1"
+}

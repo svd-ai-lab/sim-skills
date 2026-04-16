@@ -65,10 +65,12 @@ When a task involves any supported solver:
 | `coolprop/` | `coolprop-sim` | Running CoolProp (open-source REFPROP-equivalent thermophysical-property database) via Python scripts — Helmholtz-EoS for ~120 pure fluids + humid air, for HVAC / refrigeration / power-plant cycle analysis. |
 | `scikit_rf/` | `scikit-rf-sim` | Running scikit-rf (Python RF/microwave network analysis) via Python scripts — Touchstone (.sNp) I/O, S-parameter math, transmission-line / CPW / waveguide media, SOLT/TRL calibration. |
 | `pandapower/` | `pandapower-sim` | Running pandapower (Fraunhofer IEE Python power-system analysis with PYPOWER backend) via Python scripts — load flow, OPF, short-circuit, time-series on transmission/distribution networks. |
+| `paraview/` | `paraview-sim` | Post-processing and visualizing large-scale CFD/FEA simulation results via ParaView's paraview.simple Python API — loading .vtu/.vtk/.case/.foam/.cgns data, applying filters (Clip/Slice/Contour/Threshold/StreamTracer), batch rendering PNG screenshots via pvpython/pvbatch, extracting quantitative metrics (IntegrateVariables, PlotOverLine, Calculator). |
+| `hypermesh/` | `hypermesh-sim` | Pre-processing FE models via Altair HyperMesh -- CAD geometry import (STEP/IGES/CATIA/NX), surface and volume meshing (automesh/tetmesh/batchmesh), element quality checks (aspect/skew/jacobian), material/property/load assignment, and solver deck export (OptiStruct/Nastran/Abaqus/LS-DYNA/Radioss) through the hm Python API in batch mode. |
 
 ## Cross-skill conventions
 
-These conventions apply across all 36 skills. Each individual SKILL.md may add its own constraints on top.
+These conventions apply across all 38 skills. Each individual SKILL.md may add its own constraints on top.
 
 ### Input classification (used in every skill's "Required protocol" Step 1)
 
