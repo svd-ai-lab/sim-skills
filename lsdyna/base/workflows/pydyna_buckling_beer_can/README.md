@@ -95,4 +95,3 @@ The PyDyna documentation explicitly notes:
 
 Official: https://dyna.docs.pyansys.com/version/stable/examples/Buckling_Beer_Can/plot_beercan.html
 Origin: https://lsdyna.ansys.com/example-nonlinear-2/
-Raw doc: [`../../pydyna_raw/examples/Buckling_Beer_Can/plot_beercan.md`](../../pydyna_raw/examples/Buckling_Beer_Can/plot_beercan.md)

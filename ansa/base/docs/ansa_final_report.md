@@ -87,8 +87,6 @@ Uses official BETA CAE Inter-ANSA Protocol (TCP socket, pure Python stdlib).
 | `skills/ansa-sim/SKILL.md` | Agent skill definition + API reference |
 | `skills/ansa-sim/known_issues.md` | Resolved + open issues |
 | `skills/ansa-sim/tests/` | Execution test cases v1 (EX-01 to EX-13) |
-| `reference/official_docs/` | 11 official BETA CAE API docs (749KB) |
-| `reference/official_scripts/` | RemoteControl + Mesh official scripts |
 | `reference/ansa_api_reference.md` | Community-sourced API patterns |
 | `reference/ANSA-Scripts/` | GitHub community scripts |
 | `tests/test_ansa_driver.py` | 31 unit tests |

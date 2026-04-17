@@ -74,4 +74,3 @@ slipped completely through the bracket due to gravity-free angular momentum:
 
 Official: https://dyna.docs.pyansys.com/version/stable/examples/John_Reid_Pipe/plot_john_pipe.html
 Origin: https://lsdyna.ansys.com/pipe-d51/
-Raw doc: [`../../pydyna_raw/examples/John_Reid_Pipe/plot_john_pipe.md`](../../pydyna_raw/examples/John_Reid_Pipe/plot_john_pipe.md)

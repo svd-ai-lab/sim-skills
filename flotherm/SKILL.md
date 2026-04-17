@@ -114,18 +114,27 @@ for the inline driver. Not loaded during a normal session.
 
 ---
 
-## Example files provenance
+## Example files (reference only)
 
-Files under `base/reference/flotherm/2504/examples/` are copies of
-vendor-shipped demo models from the Flotherm installation directory:
+This skill's workflow scripts and `skill_tests/` reference vendor-shipped
+demo models by the paths where they live inside a local Flotherm install.
+The sim-skills repo does **not** bundle any of that content (it is
+proprietary Siemens / Mentor Graphics material and was removed under
+issue #2 for IP compliance). To reproduce the tests, point the helpers at
+your own Flotherm 2504 install — default on Windows is
+`C:\Program Files\Siemens\SimcenterFlotherm\2504\examples\` (override in
+`flotherm/tests/execution/run_helpers.ps1` if installed elsewhere).
 
-| Skill path | Source (Flotherm install) |
+| File referenced in this skill | Location inside `…\2504\examples\` |
 |---|---|
-| `examples/pack/Mobile_Demo-Steady_State.pack` | `examples\FloSCRIPT\Demonstration Examples\Transient Power Update\Mobile_Demo-Steady_State.pack` |
-| `examples/pack/SuperPosition.pack` | `examples\Demonstration Models\Superposition\SuperPosition.pack` |
+| `Mobile_Demo-Steady_State.pack` | `FloSCRIPT\Demonstration Examples\Transient Power Update\` |
+| `SuperPosition.pack` | `Demonstration Models\Superposition\` |
+| `Grid-HeatSinks-and-Fans.xml`, `Make_Tube.xml`, `linear-relaxation-setup.xml`, `Remove-All-Grid.xml`, `reset_solver_controls.xml` | `FloSCRIPT\Utilities\` and `FloSCRIPT\Demonstration Examples\Voxelization\` |
+| FloSCRIPT XSD schemas (`FloSCRIPTSchema.xsd`, `CommonCommands.xsd`, `CoreFloviewCommands.xsd`, …) | `FloSCRIPT\Schema\` |
+| `FloSCRIPT_Rack.cls` VBA module | `DCIM\` |
 
-These can be regenerated from any Flotherm 2504 installation at
-`C:\Program Files\Siemens\SimcenterFlotherm\2504\examples\`.
+For Flotherm 2410, the same subpaths apply under
+`C:\Program Files\Siemens\SimcenterFlotherm\2410\examples\`.
 
 ## Model generation (building from scratch)
 
