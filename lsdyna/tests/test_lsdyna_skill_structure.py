@@ -94,17 +94,6 @@ class TestPyDynaWorkflows:
         assert (SKILL_ROOT / "base" / "workflows" / "pydyna_jupyter_plotting" / "README.md").is_file()
 
 
-class TestPyDynaRawDocs:
-    def test_raw_docs_present(self):
-        raw = SKILL_ROOT / "base" / "pydyna_raw"
-        assert raw.is_dir()
-        # Must contain the canonical example
-        assert (raw / "examples" / "Taylor_Bar" / "plot_taylor_bar.md").is_file()
-        # Must contain the API getting-started
-        assert (raw / "getting-started" / "modules" / "keywords.md").is_file()
-        assert (raw / "getting-started" / "modules" / "run.md").is_file()
-
-
 class TestSnippets:
     def test_snippets_dir_exists(self):
         assert (SKILL_ROOT / "base" / "snippets").is_dir()

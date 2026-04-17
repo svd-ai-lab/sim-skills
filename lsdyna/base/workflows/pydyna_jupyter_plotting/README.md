@@ -14,8 +14,6 @@ geometry preview before solving.
 
 ## Source
 
-Full code: [`../../pydyna_raw/examples/jupyter_plotting_demo.md`](../../pydyna_raw/examples/jupyter_plotting_demo.md)
-
 Official docs: https://dyna.docs.pyansys.com/version/stable/examples/jupyter_plotting_demo.html
 
 ## Backend choices

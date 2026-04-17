@@ -95,7 +95,6 @@ crash test.
 ## Source
 
 Official: https://dyna.docs.pyansys.com/version/stable/examples/Taylor_Bar/plot_taylor_bar.html
-Raw doc: [`../../pydyna_raw/examples/Taylor_Bar/plot_taylor_bar.md`](../../pydyna_raw/examples/Taylor_Bar/plot_taylor_bar.md)
 
 ## Key code excerpts
 

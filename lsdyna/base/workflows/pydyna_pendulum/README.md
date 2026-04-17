@@ -84,4 +84,3 @@ oscillation is too slow to see at this output frequency):
 
 Official: https://dyna.docs.pyansys.com/version/stable/examples/John_Reid_Pendulum/plot_john_reid_pendulum.html
 Origin: https://lsdyna.ansys.com/pendlum/
-Raw doc: [`../../pydyna_raw/examples/John_Reid_Pendulum/plot_john_reid_pendulum.md`](../../pydyna_raw/examples/John_Reid_Pendulum/plot_john_reid_pendulum.md)
