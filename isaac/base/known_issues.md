@@ -39,4 +39,23 @@ Findings from E2E runs (Isaac Sim 4.5 on Windows 11 + NVIDIA GPU).
   (nested subdir per render_product), not flat.
 - Colors in distributions must be floats in `[0, 1]`, not `[0, 255]`.
 
+## `isaacsim.core.prims.Articulation` headless bug (4.5.0)
+
+Symptom: `arm.get_joint_positions()` returns `None` in headless runs,
+even after `world.reset()` and stepping.
+
+Root cause: `isaacsim.core.prims.Articulation._on_physics_ready` runs
+via callback, but `SimulationManager.get_physics_sim_view()._backend`
+is `None` in `headless=True` mode until a render pass occurs — and
+`render=False` physics-only stepping never triggers that path. Calling
+`arm.initialize()` explicitly does not help because `_physics_view` is
+created from the same broken simulation view.
+
+Workaround: use the legacy wrapper `omni.isaac.franka.Franka` which
+routes through `omni.isaac.core.articulations.ArticulationView` and
+does register a working physics view in headless. See the L2 snippet
+(`02_franka.py`) for the working pattern. The official 4.5 tutorial
+`standalone_examples/tutorials/getting_started_robot.py` requires
+`headless=False` and `render=True` to work reliably.
+
 ## Additional issues discovered during E2E will be appended here.
