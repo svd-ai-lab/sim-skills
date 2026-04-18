@@ -1,5 +1,25 @@
 # FloSCRIPT Modeling Reference
 
+> **⚠️ FOR AUTHORING NEW MODELS: USE FLOXML, NOT FLOSCRIPT.**
+> FloSCRIPT was designed as a record-and-replay format, not as an
+> authoring API. The `<create_geometry>` / `<create_attribute>` /
+> `<modify_attribute>` patterns mostly **do not work** for non-trivial
+> properties — their `property_name` enums are undocumented internals.
+>
+> See **[`floxml_authoring.md`](floxml_authoring.md)** for the
+> vendor-blessed `<xml_case>` authoring format — fully exemplified in
+> the install's `examples/FloXML/`, and verified end-to-end on
+> Flotherm 2504 (HBM smoke test, 2026-04-18).
+>
+> **Use FloSCRIPT for:** parametric sweeps over an imported `.pack`
+> (`<modify_geometry property_name="power" new_value="20"/>` works for
+> `pcbComponent`/`die` with intrinsic numeric properties), solve
+> orchestration (`<start start_type="solver"/>`, `<project_save_as>`,
+> `<project_load>`, `<project_import filename="..." import_type="FloXML"/>`),
+> and result extraction triggers.
+
+---
+
 Generate Flotherm models from natural language by producing FloSCRIPT
 XML that `sim exec` plays step by step. Each step is a separate file
 validated via `sim lint` before playback.
@@ -109,17 +129,26 @@ Set size, position, material, power, or any property:
 
 **Common properties:**
 
-| Property | Applies to | Example |
-|---|---|---|
-| `sizeX`, `sizeY`, `sizeZ` | All geometry | `"0.05"` (meters) |
-| `positionX`, `positionY`, `positionZ` | All geometry | `"0.01"` |
-| `material` | cuboid, resistance | `"Aluminum"` |
-| `power` | source | `"5.0"` (watts) |
-| `finHeight` | heatSink | `"0.02"` |
-| `numberOfFins` | heatSink | `"12"` |
-| `finThickness` | heatSink | `"0.001"` |
-| `flowRate` | fan | `"0.01"` (m³/s) |
-| `conductivity` | resistance | `"5.0"` (W/m·K) |
+> **⚠ Many property names in this table are UNVERIFIED against Flotherm 2504.**
+> The XSD declares `property_name` as `xs:string` — bad names pass `sim lint`
+> and only fail at runtime with `ERROR E/15002 - Command failed to find property`.
+> Verified on 2026-04-17: `sizeX/Y/Z` and `positionX/Y/Z` work on both `cuboid`
+> and `source`. Everything else below should be confirmed by recording FloSCRIPT
+> in the GUI (`Macro → Record FloSCRIPT`) before relying on it.
+
+| Property | Applies to | Example | Status (2504) |
+|---|---|---|---|
+| `sizeX`, `sizeY`, `sizeZ` | All geometry | `"0.05"` (meters) | ✓ verified |
+| `positionX`, `positionY`, `positionZ` | All geometry | `"0.01"` | ✓ verified |
+| `material` | cuboid, resistance | `"Aluminum"` | ✗ REJECTED E/15002 |
+| `power` | source | `"5.0"` (watts) | ✗ REJECTED E/15002 |
+| `finHeight` | heatSink | `"0.02"` | unverified |
+| `numberOfFins` | heatSink | `"12"` | unverified |
+| `finThickness` | heatSink | `"0.001"` | unverified |
+| `flowRate` | fan | `"0.01"` (m³/s) | unverified |
+| `conductivity` | resistance | `"5.0"` (W/m·K) | unverified |
+
+For setting material and power, the correct path is likely `<create_attribute>` + attach-to-geometry (not direct `modify_geometry`) — syntax to be confirmed by GUI-recording.
 
 ### Create attribute
 
@@ -461,3 +490,130 @@ doesn't.
 
 7. **XML comments are allowed** inside `<xml_log_file>` and are useful
    for documenting what each section does.
+
+---
+
+## Schema is structural only — check the Message Window dock for runtime errors
+
+**Critical gotcha:** `sim lint` validates the XSD, but the XSD declares
+`property_name` as `xs:string` — any string passes. Flotherm validates the
+actual property names at **runtime**, and on rejection prints to a dock
+widget inside the main window (not a top-level popup):
+
+```
+ERROR E/15002 - Command failed to find property: <name>
+WARN  W/15000 - Aborting XML due to previous error
+```
+
+**The `sim exec` response does NOT surface these errors.** `dismissed_popups`
+is empty because the Message Window is a `flohelp::DockWidget` embedded in
+`FloMainWindow`, not a top-level `Window`. So `[OK] elapsed=0s` can hide a
+total failure. **Always read the dock after every `sim exec` of a FloSCRIPT.**
+
+### Reading the Message Window dock via UIA
+
+After any FloSCRIPT exec, run this `#!python` probe to dump the dock's contents:
+
+```python
+#!python
+import subprocess, sys
+code = r'''
+import io, sys
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+from pywinauto import Desktop
+main = next((w for w in Desktop(backend="uia").windows()
+             if w.class_name() == "FloMainWindow"), None)
+if not main: sys.exit("no FloMainWindow")
+dock = next((d for d in main.descendants(control_type="Window")
+             if "Message Window" in (d.window_text() or "")), None)
+if not dock: sys.exit("no Message Window dock")
+seen = set()
+for d in dock.descendants():
+    t = (d.window_text() or "").strip()
+    if ("ERROR" in t or "WARN" in t) and t not in seen:
+        seen.add(t); print(t)
+'''
+proc = subprocess.run([sys.executable, "-c", code], capture_output=True, timeout=30)
+_result = proc.stdout.decode("utf-8", errors="replace")
+```
+
+Returns all `ERROR` / `WARN` lines currently in the dock. The dock accumulates
+across runs — clear it via the "Clear" button if you want per-run isolation.
+
+### Partial-execution gotcha
+
+When Flotherm aborts on E/15002, commands that played BEFORE the bad line
+are already applied (renames, creates, size/position changes). Re-running
+from the top without clearing state produces duplicate geometry.
+Either `sim disconnect` + reconnect, or `<delete_geometry>` the previous
+artifacts, before retrying.
+
+---
+
+## Probing for correct property names
+
+When the doc doesn't match Flotherm, or you're exploring a new command,
+test candidates rapid-fire via `#!python`:
+
+```python
+#!python
+import os, subprocess, sys, time
+TMP = r"C:\tmp\probe"; os.makedirs(TMP, exist_ok=True)
+
+# Candidates to test — from most-likely to least
+candidates = ["value", "power", "totalValue", "dissipation",
+              "heatDissipation", "totalHeatDissipation"]
+
+results = []
+for i, prop in enumerate(candidates):
+    path = os.path.join(TMP, f"p_{i}_{prop}.xml")
+    with open(path, "w") as f:
+        f.write(f'''<?xml version="1.0"?>
+<xml_log_file version="1.0">
+    <create_attribute attribute_type="source" id="p{i}"/>
+    <modify_attribute new_value="3.0" property_name="{prop}">
+        <attribute_name id="p{i}"/>
+    </modify_attribute>
+</xml_log_file>''')
+    driver._play_floscript(path)
+    time.sleep(1)
+    results.append(prop)
+
+_result = results  # then use the Message Window probe above to see which failed
+```
+
+The same `#!python` session can drive play + readback — loop over many
+candidates in one run without round-tripping to the CLI.
+
+---
+
+## Ground-truth oracle: `<start_record_script>` + `<stop_record_script>`
+
+When you need the authoritative syntax for something, have Flotherm
+log it. FloSCRIPT has built-in commands to control recording:
+
+```xml
+<xml_log_file version="1.0">
+    <start_record_script filename="C:\tmp\recorded.xml"/>
+</xml_log_file>
+```
+
+Then perform the action of interest (via UIA, or by having a human do it
+in RDP), then:
+
+```xml
+<xml_log_file version="1.0">
+    <stop_record_script/>
+</xml_log_file>
+```
+
+Read back `recorded.xml` — it contains the exact FloSCRIPT Flotherm would
+have emitted for the GUI action. This is the definitive way to learn
+syntax for attribute creation, material assignment, power values, BCs, etc.
+
+Related commands:
+- `<pause_record_script/>` — pause without stopping
+- `<resume_record_script/>` — resume a paused recording
+
+**Prefer this over guessing.** If a property name doesn't work from the
+doc, record the equivalent GUI action and compare.
