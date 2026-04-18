@@ -1,9 +1,11 @@
 """L2: Load Franka articulation, read joint positions, print JSON."""
 import json
+import os
 
 from isaacsim import SimulationApp
 
-simulation_app = SimulationApp({"headless": True})
+_EXP = os.path.join(os.environ["EXP_PATH"], "isaacsim.exp.full.kit")
+simulation_app = SimulationApp({"headless": True}, experience=_EXP)
 
 from omni.isaac.core import World
 from omni.isaac.franka import Franka

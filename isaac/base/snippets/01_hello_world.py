@@ -1,9 +1,13 @@
 """L1: Headless Isaac Sim — drop a cube, step 60 frames, print JSON."""
 import json
+import os
 
 from isaacsim import SimulationApp
 
-simulation_app = SimulationApp({"headless": True})
+# Use full experience; base.python.kit has a missing-ext bug in 4.5.0
+# (omni.kit.usd.layers not loaded before SimulationApp.utils imports it).
+_EXP = os.path.join(os.environ["EXP_PATH"], "isaacsim.exp.full.kit")
+simulation_app = SimulationApp({"headless": True}, experience=_EXP)
 
 from omni.isaac.core import World
 from omni.isaac.core.objects import DynamicCuboid

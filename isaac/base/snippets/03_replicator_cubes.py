@@ -5,7 +5,10 @@ from pathlib import Path
 
 from isaacsim import SimulationApp
 
-simulation_app = SimulationApp({"headless": True, "renderer": "RayTracedLighting"})
+_EXP = os.path.join(os.environ["EXP_PATH"], "isaacsim.exp.full.kit")
+simulation_app = SimulationApp(
+    {"headless": True, "renderer": "RayTracedLighting"}, experience=_EXP,
+)
 
 import omni.replicator.core as rep
 
