@@ -110,6 +110,28 @@ Optional fields per XSD: `x_input_method`/`y_input_method`/`z_input_method` (cur
 </thermal_att>
 ```
 
+**Unit gotcha** (verified 2026-04-19 on Flotherm 2504): `<fixed_temperature>` value is in **°C**, not K. This is inconsistent with `<ambient_att><temperature>` which IS in K. Concretely:
+
+```xml
+<!-- correct: 60 °C cold plate -->
+<thermal_att>
+  <name>ColdPlate</name>
+  <thermal_model>fixed_temperature</thermal_model>
+  <fixed_temperature>60</fixed_temperature>
+</thermal_att>
+
+<!-- correct: 25 °C ambient -->
+<ambient_att>
+  <name>Ambient</name>
+  <temperature>298.15</temperature>    <!-- Kelvin! -->
+  ...
+</ambient_att>
+```
+
+If you put `333.15` in `<fixed_temperature>` thinking it's Kelvin, you get 333.15 °C = ~606 K, way too hot.
+
+**End-to-end validation on Flotherm 2504 (2026-04-19):** both `<orthotropic_material_att>` and `<thermal_att thermal_model="fixed_temperature">` were verified via import + solve on a modified HBM 3-block model. The pad cuboid (material Aluminum, thermal ColdPlate, fixed at 60 °C) ended up at exactly 60.00 °C with heat flowing into it from the stack above; BottomBump_Aniso cuboid correctly resolved to orthotropic material by name. Reference test case: [examples/xsd_element_validation.xml](examples/xsd_element_validation.xml).
+
 (HBM Phase 1b used a high-HTC ambient_att as a workaround — that was unnecessary. `thermal_model=fixed_temperature` is the canonical path. Phase 2a should switch.)
 
 ## Vendor templates (working examples, 8 files)
