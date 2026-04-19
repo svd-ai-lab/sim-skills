@@ -27,21 +27,39 @@ parametric sweeps over an existing model. See
 
 ## Reference templates (in install)
 
-```
-C:\Program Files\Siemens\SimcenterFlotherm\2504\examples\FloXML\FloXML Files\
-├── Assembly FloXML Examples\
-│   ├── Block.xml                      # 31 lines: minimal cuboid + material
-│   ├── 2R-Model.xml                   # network resistance assembly
-│   └── Nested-Assemblies.xml          # nested geometry tree
-└── Project FloXML Examples\
-    ├── Default.xml                    # bare project (no geometry)
-    ├── Heatsink-Windtunnel-FullModel.xml   # full case: heatsink + fixed flow + source ★
-    └── All-Objects-Attributes-Settings-FullModel.xml  # every supported element
-```
+Location: `C:\Program Files\Siemens\SimcenterFlotherm\2504\examples\FloXML\FloXML Files\`
 
-**Start from `Heatsink-Windtunnel-FullModel.xml`** for any new
-authored model — it's the smallest complete project FloXML with
-geometry + attributes + boundaries + solver settings.
+### Coverage matrix (audited 2026-04-19)
+
+| Template | Lines | `_att` types covered | Geometry types covered |
+|---|---:|---|---|
+| `Assembly FloXML Examples/Block.xml` | 31 | `isotropic_material_att` | `cuboid` |
+| `Assembly FloXML Examples/Nested-Assemblies.xml` | 72 | `isotropic_material_att` | `cuboid`, `assembly` (nested) |
+| `Assembly FloXML Examples/2R-Model.xml` | 118 | `thermal_att` (name+power, no thermal_model) | `resistance`, `assembly`, `monitor_point` |
+| `Assembly FloXML Examples/Advanced-Resistance.xml` | 38 | `resistance_att` | `resistance` |
+| `Project FloXML Examples/Default.xml` | 96 | none | none — bare project skeleton (model/grid/solve/solution_domain) |
+| `Project FloXML Examples/PDML-Referencing-FullModel.xml` | 170 | `ambient_att`, `fluid_att` | `fixed_flow`, `monitor_point` |
+| `Project FloXML Examples/Heatsink-Windtunnel-FullModel.xml` ★ | 994 | `isotropic_material_att`, `surface_att`, `ambient_att`, `fluid_att`, `source_att` | `cuboid`, `source`, `fixed_flow`, `monitor_point`, `assembly` |
+| `Project FloXML Examples/All-Objects-Attributes-Settings-FullModel.xml` ★★ | 2400+ | `isotropic_material_att`, `surface_att`, `ambient_att`, `fluid_att`, `source_att`, `thermal_att` (with `thermal_model=conduction`), `radiation_att`, `resistance_att`, `grid_constraint_att`, `transient_att`, `control_att`, `fan_att`, `occupancy_att`, `surface_exchange_att` | 18 types: `cuboid`, `source`, `cylinder`, `prism`, `tet`, `fan`, `fixed_flow`, `hole`, `monitor_point`, `pcb`, `resistance`, `cooler`, `enclosure`, `cutout`, `controller`, `tec`, `die`, `assembly` |
+
+★ Recommended starting point for full thermal cases.
+★★ Reference for any unfamiliar element type — pull the relevant block and adapt.
+
+### Templates do NOT cover
+
+The vendor templates above are missing some elements you may need. Audit gaps as of 2504:
+
+| Need | Status in templates | Where to look instead |
+|---|---|---|
+| `<orthotropic_material_att>` (anisotropic k_x/k_y/k_z, e.g. for HBM μbumps) | **Not in any template** — searched all 8 examples | Read `examples/DCIM Development Toolkit/Schema Files/FloXML/*.xsd`, or drive GUI to create one + save project |
+| `<thermal_att>` with `thermal_model=fixed_temperature` | **Not in any template** — only `conduction` shown | Same: XSD or GUI record-and-save |
+| `<thermal_att>` minimal form | 2R-Model has just `<name>+<power>` (no thermal_model) | 2R-Model.xml |
+| Boolean geometry ops (e.g. mold compound wrapping a die stack with cutouts) | Not in FloXML templates (these come from FloMCAD CAD import) | FloMCAD examples, or model as separate cuboids |
+| Power maps, transient power vs. time | All-Objects shows attribute schemas but not connected to geometry | All-Objects.xml + recording |
+
+**Workaround for missing elements:** in Flotherm GUI, create the element via the property panel, then `Project → Export → FloXML` to read the canonical syntax. Ground-truth oracle pattern.
+
+**Start from `Heatsink-Windtunnel-FullModel.xml`** for any new authored model — it's the smallest complete project FloXML with geometry + attributes + boundaries + solver settings.
 
 ## Project FloXML structure
 
