@@ -25,7 +25,116 @@ parametric sweeps over an existing model. See
 5. Read .pack solution dir for results
 ```
 
-## Reference templates (in install)
+## Reference hierarchy
+
+When you need an element you haven't used before, consult sources in this order:
+
+| Order | Source | What it gives you | Where |
+|---|---|---|---|
+| 1 | **FloXML XSD** | Canonical declaration of every element/attribute/enum | `examples/DCIM Development Toolkit/Schema Files/FloXML/*.xsd` (5 files, ~190 KB) |
+| 2 | **Vendor templates** | Working examples of common cases | `examples/FloXML/FloXML Files/` (8 files, ~120 KB) |
+| 3 | **lixiekun/flotherm-automation** | Real-world full models (~95 KB Heatsink_final.xml etc.) | https://github.com/lixiekun/flotherm-automation |
+| 4 | **GUI export oracle** | Last-resort: build it in GUI, export, read syntax | `Project → Export → FloXML` |
+
+**Rule:** start with XSD. The templates are tutorials, not specifications — they show ~10 of the 18 `_att` types and ~18 of the ~30 geometry types. The XSD has all of them.
+
+## FloXML XSD (canonical reference, 5 files)
+
+```
+C:\Program Files\Siemens\SimcenterFlotherm\2504\examples\DCIM Development Toolkit\Schema Files\FloXML\
+├── XmlAttributes.xsd       36 KB    All <*_att> definitions (18 types — see below)
+├── XmlGeometry.xsd        111 KB    All geometry types (cuboid, source, pcb, network_*, etc.)
+├── XmlEntities.xsd         28 KB    Shared sub-types (color, position, transparency, electrical_resistivity, ...)
+├── XmlDefinitions.xsd      11 KB    Numeric base types (doubleGTZero, percentage, trueFalse, ...)
+└── xmlSchema.xsd            7 KB    Top-level schema bindings
+```
+
+### All `_att` types declared in XmlAttributes.xsd
+
+```
+ambient_att              biaxial_material_att     control_att              control_curve_att
+fan_att                  fluid_att                grid_constraint_att      isotropic_material_att
+occupancy_att            orthotropic_material_att radiation_att            resistance_att
+source_att               surface_att              surface_exchange_att     temperature_dependant_material_att
+thermal_att              transient_att
+```
+
+### Concrete examples for elements not in vendor templates
+
+**`<orthotropic_material_att>`** (anisotropic material — needed for HBM μbumps).
+From XmlAttributes.xsd line 88-109:
+```xml
+<orthotropic_material_att>
+  <name>Bump_Composite</name>
+  <x_conductivity>1.0</x_conductivity>          <!-- in-plane k_xy -->
+  <y_conductivity>25.0</y_conductivity>         <!-- through-stack k_z -->
+  <z_conductivity>1.0</z_conductivity>          <!-- in-plane k_xy -->
+  <density>5000</density>
+  <specific_heat>400</specific_heat>
+  <electrical_resistivity>
+    <type>constant</type>
+    <resistivity_value>0</resistivity_value>
+  </electrical_resistivity>
+</orthotropic_material_att>
+```
+Optional fields per XSD: `x_input_method`/`y_input_method`/`z_input_method` (curve vs constant), `x_conductivity_curve`/`y_conductivity_curve`/`z_conductivity_curve`, `transparent`, `transparency`, `phase_change`, `surface`, `notes`.
+
+**`<thermal_att>` with all 4 thermal_model enums** (XmlAttributes.xsd line 242-263). Templates only show `conduction`; the XSD declares 4:
+```xml
+<!-- conduction (heat flux into solid via conductivity contact) -->
+<thermal_att>
+  <name>...</name>
+  <thermal_model>conduction</thermal_model>
+  <power>3.0</power>
+</thermal_att>
+
+<!-- fixed_temperature (Dirichlet BC — what we wanted in HBM Phase 1b) -->
+<thermal_att>
+  <name>ColdPlate</name>
+  <thermal_model>fixed_temperature</thermal_model>
+  <fixed_temperature>333.15</fixed_temperature>
+</thermal_att>
+
+<!-- fixed_heat_flow (Neumann BC) -->
+<thermal_att>
+  <name>...</name>
+  <thermal_model>fixed_heat_flow</thermal_model>
+  <fixed_heat_flow>...</fixed_heat_flow>
+</thermal_att>
+
+<!-- joule_heating (electrical heating) -->
+<thermal_att>
+  <name>...</name>
+  <thermal_model>joule_heating</thermal_model>
+  <joule_heating>...</joule_heating>
+</thermal_att>
+```
+
+**Unit gotcha** (verified 2026-04-19 on Flotherm 2504): `<fixed_temperature>` value is in **°C**, not K. This is inconsistent with `<ambient_att><temperature>` which IS in K. Concretely:
+
+```xml
+<!-- correct: 60 °C cold plate -->
+<thermal_att>
+  <name>ColdPlate</name>
+  <thermal_model>fixed_temperature</thermal_model>
+  <fixed_temperature>60</fixed_temperature>
+</thermal_att>
+
+<!-- correct: 25 °C ambient -->
+<ambient_att>
+  <name>Ambient</name>
+  <temperature>298.15</temperature>    <!-- Kelvin! -->
+  ...
+</ambient_att>
+```
+
+If you put `333.15` in `<fixed_temperature>` thinking it's Kelvin, you get 333.15 °C = ~606 K, way too hot.
+
+**End-to-end validation on Flotherm 2504 (2026-04-19):** both `<orthotropic_material_att>` and `<thermal_att thermal_model="fixed_temperature">` were verified via import + solve on a modified HBM 3-block model. The pad cuboid (material Aluminum, thermal ColdPlate, fixed at 60 °C) ended up at exactly 60.00 °C with heat flowing into it from the stack above; BottomBump_Aniso cuboid correctly resolved to orthotropic material by name. Reference test case: [examples/xsd_element_validation.xml](examples/xsd_element_validation.xml).
+
+(HBM Phase 1b used a high-HTC ambient_att as a workaround — that was unnecessary. `thermal_model=fixed_temperature` is the canonical path. Phase 2a should switch.)
+
+## Vendor templates (working examples, 8 files)
 
 Location: `C:\Program Files\Siemens\SimcenterFlotherm\2504\examples\FloXML\FloXML Files\`
 
@@ -45,21 +154,28 @@ Location: `C:\Program Files\Siemens\SimcenterFlotherm\2504\examples\FloXML\FloXM
 ★ Recommended starting point for full thermal cases.
 ★★ Reference for any unfamiliar element type — pull the relevant block and adapt.
 
-### Templates do NOT cover
+### Templates don't show — XSD does
 
-The vendor templates above are missing some elements you may need. Audit gaps as of 2504:
+Several common elements aren't in any vendor template but ARE fully declared in the XSD. **Don't conclude "unsupported" from template absence — check the XSD first.** Audited 2026-04-19:
 
-| Need | Status in templates | Where to look instead |
-|---|---|---|
-| `<orthotropic_material_att>` (anisotropic k_x/k_y/k_z, e.g. for HBM μbumps) | **Not in any template** — searched all 8 examples | Read `examples/DCIM Development Toolkit/Schema Files/FloXML/*.xsd`, or drive GUI to create one + save project |
-| `<thermal_att>` with `thermal_model=fixed_temperature` | **Not in any template** — only `conduction` shown | Same: XSD or GUI record-and-save |
-| `<thermal_att>` minimal form | 2R-Model has just `<name>+<power>` (no thermal_model) | 2R-Model.xml |
-| Boolean geometry ops (e.g. mold compound wrapping a die stack with cutouts) | Not in FloXML templates (these come from FloMCAD CAD import) | FloMCAD examples, or model as separate cuboids |
-| Power maps, transient power vs. time | All-Objects shows attribute schemas but not connected to geometry | All-Objects.xml + recording |
+| Element | In templates? | In XSD? | Where in XSD |
+|---|---|---|---|
+| `<orthotropic_material_att>` | No | **Yes** | XmlAttributes.xsd:88-109 |
+| `<biaxial_material_att>` | No | **Yes** | XmlAttributes.xsd:130+ |
+| `<temperature_dependant_material_att>` | No | **Yes** | XmlAttributes.xsd:112-127 |
+| `<thermal_att thermal_model="fixed_temperature">` | No (only `conduction`) | **Yes** (4 enum values) | XmlAttributes.xsd:242-263 |
+| `<thermal_att thermal_model="fixed_heat_flow">` | No | **Yes** | same |
+| `<thermal_att thermal_model="joule_heating">` | No | **Yes** | same |
 
-**Workaround for missing elements:** in Flotherm GUI, create the element via the property panel, then `Project → Export → FloXML` to read the canonical syntax. Ground-truth oracle pattern.
+For elements legitimately outside FloXML scope (boolean geometry ops like mold-compound wrapping a die stack with cutouts), use the GUI: create in `FloMCAD Bridge`, then `Project → Export → FloXML`. Or model as separate cuboids and accept the slightly cruder geometry.
 
-**Start from `Heatsink-Windtunnel-FullModel.xml`** for any new authored model — it's the smallest complete project FloXML with geometry + attributes + boundaries + solver settings.
+**Workflow for any unfamiliar element:**
+1. `grep -n "complexType name=\"<thing>\"" XmlAttributes.xsd XmlGeometry.xsd` — find the declaration
+2. Read the `<xs:all>` block — these are the child elements + their types
+3. For enum-restricted attributes, the values are right there in `<xs:enumeration>`
+4. If still ambiguous, build it in the GUI and `Project → Export → FloXML` for ground truth
+
+**Start from `Heatsink-Windtunnel-FullModel.xml`** for any new authored model — it's the smallest complete project FloXML with geometry + attributes + boundaries + solver settings. Then layer in XSD-derived elements as needed.
 
 ## Project FloXML structure
 
