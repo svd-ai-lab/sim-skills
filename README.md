@@ -50,6 +50,7 @@ Every skill lives in its own top-level folder. The grid is **open and growing** 
 
 | Skill | Domain | Execution model | Phase | What it's for |
 |---|---|---|---|---|
+| [**sim-cli**](sim-cli/SKILL.md) | *Shared contract* | Both (persistent + one-shot) | Working ✅ | The runtime contract every driver skill depends on — session lifecycle, command surface, input classification, Step-0 version probe, acceptance, escalation. **Load alongside any driver skill below.** |
 | [**fluent-sim**](fluent/SKILL.md) | CFD | Persistent meshing / solver session (PyFluent 0.38) | v0 ✅ | Incremental `sim exec` snippets or single-file workflows against a live Fluent session |
 | [**comsol-sim**](comsol/SKILL.md) | Multiphysics | Persistent JPype Java API session | Working ✅ | Long multiphysics runs with optional human GUI oversight |
 | [**openfoam-sim**](openfoam/SKILL.md) | CFD (OSS) | Remote `sim serve` on Linux via SSH tunnel | Working ✅ | Meshing, MPI parallel, classifier-based pass/fail on OpenFOAM v2206 |
@@ -117,16 +118,18 @@ The human workflow is even simpler: an engineer points the LLM at `sim-skills`, 
 
 ## 📏 Cross-skill conventions
 
-These apply to every skill in the grid. Details live in [`CLAUDE.md`](CLAUDE.md); the summary:
+These apply to every driver skill in the grid. They live canonically in
+the **[`sim-cli/`](sim-cli/SKILL.md)** shared skill — summary here:
 
-| Convention | One-line rule |
-|---|---|
-| **Category A inputs** | Physical decisions (geometry, materials, BCs, acceptance criteria). **Ask the user** if absent — pressure to "just use defaults" does NOT override this. |
-| **Category B inputs** | Operational defaults (processors, ui_mode, smoke-test iterations). May default; must disclose. |
-| **Category C inputs** | File-derivable (cell zones, surface names, solver version). Infer via a diagnostic snippet, not from reference examples. |
-| **Acceptance criteria** | `exit_code == 0` is **not** sufficient. Every task needs an outcome-based criterion (outlet temp in 28–35 °C, min mesh quality > 0.2, etc.). |
-| **Reference examples ≠ defaults** | Values in `<skill>/reference/examples/` describe a specific published test case. Offer them, never silently adopt them. |
-| **When to stop** | Solver fails to launch, snippet raises or returns `ok=false`, session state drifts from expectation, acceptance cannot be verified → report, don't silently retry. |
+| Convention | One-line rule | Full |
+|---|---|---|
+| **Category A inputs** | Physical decisions (geometry, materials, BCs, acceptance criteria). **Ask the user** if absent. | [input_classification.md](sim-cli/reference/input_classification.md) |
+| **Category B inputs** | Operational defaults (processors, ui_mode, smoke-test iterations). May default; must disclose. | [input_classification.md](sim-cli/reference/input_classification.md) |
+| **Category C inputs** | File-derivable (cell zones, surface names). Infer via a diagnostic snippet, not from reference examples. | [input_classification.md](sim-cli/reference/input_classification.md) |
+| **Acceptance criteria** | `exit_code == 0` is **not** sufficient. Every task needs an outcome-based criterion. | [acceptance.md](sim-cli/reference/acceptance.md) |
+| **Step-0 version probe** | Mandatory. `sim inspect session.versions` after connect; pick layered-folder content from the returned profile. | [version_awareness.md](sim-cli/reference/version_awareness.md) |
+| **Reference examples ≠ defaults** | Values in `<skill>/reference/examples/` describe a specific published test case. Offer them, never silently adopt them. | [input_classification.md](sim-cli/reference/input_classification.md) |
+| **When to stop** | Solver fails to launch, snippet raises or returns `ok=false`, session drifts, acceptance fails → report, don't silently retry. | [escalation.md](sim-cli/reference/escalation.md) |
 
 ---
 
