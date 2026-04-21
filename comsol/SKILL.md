@@ -55,6 +55,61 @@ Empty stubs by default; per-release deltas land here as discovered.
 - `solver/6.1/notes.md`
 - `solver/6.0/notes.md`
 
+### `doc-search/` — local documentation lookup
+
+When a physics feature name, API method, or module capability is unknown,
+do **not** guess. Query the local COMSOL documentation that ships with
+every install:
+
+```bash
+uv run --project <sim-skills>/comsol/doc-search sim-comsol-doc search "<term>" [--module <substring>]
+```
+
+One-time setup on any host that has COMSOL installed:
+
+```bash
+cd <sim-skills>/comsol/doc-search && uv sync
+```
+
+(No index build step — each query scans the doc tree in parallel; typical
+latency is 1–3 s on a local SSD.)
+
+Tips for good queries:
+- Use **2–3 keywords**, not questions. COMSOL search is keyword-matched.
+- Filter by `--module battery` / `--heat` / `--cfd` / `--plasma` to bias
+  toward a module's plugin folder (matched as a substring of the
+  `com.comsol.help.*` name).
+- Progressive broadening: if `"C-rate battery"` returns nothing, try
+  `"discharge rate"`, then `"battery performance"`.
+- For **API / coding** questions, filter `--module programming` or
+  `--module api`. Plugin names follow `com.comsol.help.*` — inspect a
+  few results and adjust.
+
+To read the full text of a hit:
+
+```bash
+uv run sim-comsol-doc retrieve com.comsol.help.battery/battery_aging.03.01.html
+```
+
+See `doc-search/README.md` for discovery details and the install-root
+override (`--comsol-root`) if auto-detection fails.
+
+#### Application Gallery: local vs. web
+
+The local index also covers the **Application Gallery** content for every
+module the user has installed — those plugins are named
+`com.comsol.help.models.*` (e.g. `com.comsol.help.models.battery.li_battery_1d`).
+Filter with `--module models` to scope a search to example-model docs:
+
+```bash
+uv run sim-comsol-doc search "thermal runaway" --module models.battery
+```
+
+For models that belong to **modules not installed** on the user's host
+(or for browsing by image/category), point the user at
+<https://www.comsol.com/models>. Don't scrape it from the skill — just
+link.
+
 ---
 
 ## COMSOL-specific hard constraints
