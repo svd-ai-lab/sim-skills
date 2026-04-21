@@ -62,6 +62,72 @@ named files.
 
 - `solver/25.2/` — Fluent 25R2 (v252) quirks (currently empty stub).
 
+### `doc-search/` — local documentation lookup
+
+The `sdk/pyfluent-0.38/user_guide/` and `sdk/pyfluent-0.38/examples/`
+folders bundled above cover **PyFluent API** usage — they are your first
+stop for "how do I call X from Python?" questions.
+
+They do **not** cover the Fluent User's Guide, Theory Guide, Tutorial
+Guide, UDF Manual, or Meshing Manual. That content is **only** available
+in the doc tree Ansys installs on disk, and `doc-search/` is your first
+stop for Fluent-specific **solver / physics / UDF / meshing** questions.
+Do not guess at model names, TUI commands, UDF macros, or physics
+defaults — query the local docs:
+
+```bash
+uv run --project <sim-skills>/fluent/doc-search sim-fluent-doc search "<term>" [--module <substring>]
+```
+
+One-time setup on any host that has Ansys installed:
+
+```bash
+cd <sim-skills>/fluent/doc-search && uv sync
+```
+
+(No index build step — each query scans the doc tree in parallel; typical
+latency is 1–3 s on a local SSD.)
+
+Tips for good queries:
+- Use **2–3 keywords**, not questions. It's plain substring matching.
+- Filter by `--module` to bias toward a specific guide. The filter is a
+  substring of the topic-folder name under the help root.
+- Progressive broadening: if `"k-omega sst menter"` returns nothing, try
+  `"k-omega sst"`, then `"omega sst"`.
+
+Common topic folders:
+
+| `--module`  | Contents                                   |
+|-------------|--------------------------------------------|
+| `flu_ug`    | Fluent User's Guide                        |
+| `flu_th`    | Theory Guide                               |
+| `flu_tg`    | Tutorial Guide                             |
+| `flu_udf`   | UDF Manual                                 |
+| `flu_ml`    | Meshing Manual                             |
+| `pyfluent`  | PyFluent API docs (when bundled on disk)   |
+
+Examples:
+
+```bash
+# Physics / theory — Theory Guide
+uv run --project <sim-skills>/fluent/doc-search sim-fluent-doc search "k-omega sst" --module flu_th
+
+# UDF macros
+uv run --project <sim-skills>/fluent/doc-search sim-fluent-doc search "define_profile" --module flu_udf
+
+# Meshing workflow
+uv run --project <sim-skills>/fluent/doc-search sim-fluent-doc search "watertight workflow" --module flu_ml
+```
+
+To read the full text of a hit:
+
+```bash
+uv run sim-fluent-doc retrieve flu_ug/flu_ug_turbulence.html
+```
+
+See `doc-search/README.md` for discovery details and the install-root
+override (`--ansys-root`) if auto-detection fails.
+
 ### `skill_tests/` and `tests/` (top-level, QA-only)
 
 Not loaded during a normal session. These are natural-language and
