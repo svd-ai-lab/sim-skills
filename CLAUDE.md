@@ -4,7 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What is this directory?
 
-`sim-skills/` is a collection of **per-solver agent skills** for the [`sim`](../sim-cli/) simulation runtime. Each subdirectory (`abaqus/`, `ansa/`, `cfx/`, `comsol/`, `flotherm/`, `fluent/`, `lsdyna/`, `mapdl/`, `matlab/`, `mechanical/`, `openfoam/`, `pybamm/`, `starccm/`, `workbench/`) is **one skill** in the Anthropic skill format:
+`sim-skills/` is a collection of agent skills for the [`sim`](../sim-cli/) simulation runtime. It contains two kinds of skill:
+
+- **[`sim-cli/`](sim-cli/SKILL.md)** — the shared runtime-contract skill. Owns session lifecycle, command surface, input classification, Step-0 version awareness, acceptance, and escalation. Load alongside any driver skill.
+- **Per-solver skills** (`abaqus/`, `ansa/`, `cfx/`, `comsol/`, `flotherm/`, `fluent/`, `lsdyna/`, `mapdl/`, `matlab/`, `mechanical/`, `openfoam/`, `pybamm/`, `starccm/`, `workbench/`, …). Each is one Anthropic-format skill that layers solver-specific rules on top of the shared contract.
 
 ```
 <solver>/
@@ -18,13 +21,19 @@ The skills tell an LLM agent **how to drive a given solver through `sim`** — i
 
 When a task involves any supported solver:
 
-1. Identify the solver from the user's request
-2. Read `<solver>/SKILL.md` — its YAML `description` field describes exactly when it applies, and the body has the required protocol
-3. Follow the protocol step by step (input validation → connect → execute → verify → report)
-4. Reach for supporting files when SKILL.md instructs: `reference/` for patterns and templates, `workflows/` for end-to-end examples, `snippets/` for ready-made `sim exec` payloads, `skill_tests/` for acceptance test cases
-5. **Never invent solver-specific defaults for Category A (physical-decision) inputs** — ask the user
+1. **Load [`sim-cli/SKILL.md`](sim-cli/SKILL.md)** for the shared runtime contract.
+2. Identify the solver from the user's request.
+3. Read `<solver>/SKILL.md` — its YAML `description` field describes exactly when it applies, and the body has the solver-specific overlay on top of the sim-cli contract.
+4. Follow the protocol step by step (input validation → connect / run → execute → verify → report).
+5. Reach for supporting files when SKILL.md instructs: `reference/` for patterns and templates, `workflows/` for end-to-end examples, `snippets/` for ready-made `sim exec` payloads, `skill_tests/` for acceptance test cases.
+6. **Never invent solver-specific defaults for Category A (physical-decision) inputs** — ask the user.
 
-## The 36 skills
+## Skills
+
+The shared-contract skill ([`sim-cli/`](sim-cli/SKILL.md)) is listed
+above. The per-solver skills follow.
+
+
 
 | Directory | Skill name | Use when |
 |---|---|---|
@@ -70,60 +79,22 @@ When a task involves any supported solver:
 
 ## Cross-skill conventions
 
-These conventions apply across all 38 skills. Each individual SKILL.md may add its own constraints on top.
+The shared runtime contract — input classification (Category A/B/C),
+acceptance semantics, Step-0 version probe, escalation triggers,
+command surface, session lifecycle — lives in the **[`sim-cli/`](sim-cli/SKILL.md)** skill.
 
-### Input classification (used in every skill's "Required protocol" Step 1)
+That skill is the source of truth for every rule that applies to more
+than one driver. Load it alongside any driver skill. Per-driver
+SKILL.mds own only the solver-specific layer.
 
-- **Category A — Physical decision inputs:** must ask the user if absent. These define what the simulation physically represents (geometry, materials, boundary conditions, acceptance criteria). User pressure to "just use defaults" does NOT override this.
-- **Category B — Operational inputs:** may default, must disclose. These affect runtime/performance only (processors, ui_mode, smoke-test iteration counts).
-- **Category C — File-derivable:** infer from the actual provided files via a diagnostic snippet, not from reference examples. Confirm with the user if critical.
+Quick pointers into the shared skill:
 
-### Acceptance criteria are required inputs
-
-For every skill: `exit_code == 0` ALONE does **not** satisfy acceptance. Always validate against an outcome-based criterion ("outlet temperature in 28–35°C", "150 iterations completed", "min mesh quality > 0.2"). Phrases like "just run it" / "跑完就好" describe an operation, not an outcome — treat them as a missing input and ask.
-
-### Reference example values are NOT defaults
-
-Values in any `reference/.../examples/` directory describe a specific published test case. They are **not** silently applicable to a different user's task. You may *offer* them ("the mixing_elbow example uses 0.4 m/s — would you like to use those values?") but must wait for explicit confirmation before adopting them as Category A inputs.
-
-### Runtime version awareness (Step 0 of every skill)
-
-**Mandatory.** The first thing every skill protocol does after `sim connect` succeeds is:
-
-```bash
-sim --host <ip> inspect session.versions
-```
-
-This returns:
-
-```json
-{
-  "sdk":     {"name": "ansys-fluent-core", "version": "0.38.1"},
-  "solver":  {"name": "fluent",            "version": "25.2"},
-  "profile": "pyfluent_0_38_modern",
-  "skill_revision": "v2",
-  "env_path": "/.../.sim/envs/fluent-pyfluent-0-38"
-}
-```
-
-The agent **must** use the returned `profile` (or `skill_revision`) to choose which subfolder to load:
-
-- **Snippets:** read only from `<skill>/snippets/<profile>/*.py` and `<skill>/snippets/common/*.py`. Never load a snippet from a different profile folder.
-- **Reference docs:** anything in `<skill>/reference/<profile>/` overrides anything in `<skill>/reference/common/` for that profile.
-- **Workflows:** same profile-folder rule as snippets.
-
-If `profile` is empty, unknown, or marked deprecated in the driver's `compatibility.yaml`, **stop and surface the version table to the user**. Do not guess. The contract for this whole mechanism is in [`sim-cli/docs/architecture/version-compat.md`](https://github.com/svd-ai-lab/sim-cli/blob/main/docs/architecture/version-compat.md).
-
-Why this matters: a snippet written for PyFluent 0.38 (uses `.general.material`) silently produces `AttributeError` on PyFluent 0.37 (which expects `.material` directly). Without Step 0 the agent has no way to tell which dialect it should write — it would have to guess from the SDK version, which is exactly the bug Step 0 fixes.
-
-### When to stop and escalate
-
-Across all skills, stop and report (don't silently retry) when:
-- The solver / driver is unavailable or fails to launch
-- The runtime profile is empty, unknown, or deprecated (see "Runtime version awareness" above)
-- A snippet returns non-zero exit / `ok=false` / raises an exception
-- Session state is inconsistent with expectations after a step
-- The acceptance checklist cannot be satisfied
+- [`sim-cli/reference/input_classification.md`](sim-cli/reference/input_classification.md) — Category A / B / C
+- [`sim-cli/reference/acceptance.md`](sim-cli/reference/acceptance.md) — `exit_code == 0` is not acceptance
+- [`sim-cli/reference/version_awareness.md`](sim-cli/reference/version_awareness.md) — mandatory Step-0 `sim inspect session.versions` probe
+- [`sim-cli/reference/lifecycle.md`](sim-cli/reference/lifecycle.md) — persistent and one-shot control patterns
+- [`sim-cli/reference/command_surface.md`](sim-cli/reference/command_surface.md) — canonical `sim serve | run | connect | exec | inspect | disconnect`
+- [`sim-cli/reference/escalation.md`](sim-cli/reference/escalation.md) — stop-and-report triggers
 
 ## Runtime dependency
 
