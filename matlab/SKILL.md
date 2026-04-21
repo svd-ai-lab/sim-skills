@@ -53,6 +53,65 @@ Empty stubs by default; per-engine deltas land here as discovered.
 - `sdk/24.1/notes.md` — matlabengine 24.1 / R2024a
 - `sdk/23.2/notes.md` — matlabengine 23.2 / R2023b
 
+### Documentation lookup
+
+Primary route for every MATLAB doc question is **MATLAB's own `help()`
+/ `doc` via the engine**. The filesystem scanner in `doc-search/` is a
+narrow fallback — on R2024+ it finds almost nothing because MathWorks
+now ships reference docs as a Lucene binary index, not static HTML.
+
+#### Primary: `help()` / `doc` via the engine
+
+From a live sim session:
+
+```bash
+sim exec "disp(help('fft'))"
+sim exec "disp(help('ode45'))"
+sim exec "disp(help('fmincon'))"        # Optimization Toolbox
+sim exec "disp(help('solve'))"          # Symbolic Math Toolbox
+```
+
+Without a session (and without paying matlabengine startup cost), use
+the MATLAB launcher directly:
+
+```bash
+matlab -batch "disp(help('fft'))"
+```
+
+This is authoritative — it reflects the toolboxes actually loaded,
+respects shadowing, and handles overloaded methods correctly. Works
+identically across all MATLAB releases. Verified end-to-end against
+R2025b: returns structured syntax + arguments + examples + see-also.
+
+For a longer write-up (the `doc` command's content), use
+`sim exec "open(which('fft'));"` only when a desktop is available;
+otherwise query the online docs at `https://www.mathworks.com/help/`.
+
+#### Fallback: `sim-matlab-doc` filesystem scanner
+
+**Known limitation:** on MATLAB R2024a and later, the per-toolbox
+folders under `<matlabroot>/help/` (`optim/`, `simulink/`, `stats/`,
+`signal/`, `control/`, `symbolic/`, …) contain **no HTML reference
+pages** — only Lucene binary indexes (`.cfs`/`.cfe`/`.si`) that the
+regex scanner can't read. The `matlab/` folder does have ~500 HTML
+files, but they're Code Analyzer diagnostics, not function refs.
+
+What the scanner still catches on modern installs:
+- `derived/toolbox/learning/…` — Simulink tutorial / learning content.
+- Pockets of HTML under `customdoc/`, `coder/`, and a few other dirs.
+- The core MATLAB help on **R2023b and earlier** (full static HTML).
+
+If you're on R2023b or older, or you're grepping for tutorial-style
+content, it's still useful:
+
+```bash
+cd <sim-skills>/matlab/doc-search && uv sync   # one-time install
+uv run --project <sim-skills>/matlab/doc-search \
+    sim-matlab-doc search "<keywords>" [--module <toolbox>]
+```
+
+For any function / API question on R2024+, go straight to `help()`.
+
 ### `tests/` (top-level, QA-only)
 
 Not loaded during a normal session.
