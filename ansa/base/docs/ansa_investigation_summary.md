@@ -16,17 +16,20 @@
 
 ### 2. ANSA安装目录官方脚本 (E:\Program Files (x86)\ANSA\ansa_v25.0.0\scripts\)
 
-总计 **130+ 个 .py 脚本**，已复制关键脚本到 `reference/official_scripts/`：
+ANSA 安装目录下有 **130+ 个 .py 脚本** (RemoteControl、Mesh、CFD、Properties 等)，可在本地 ANSA 环境中作为实现参考查阅。
 
-| 目录 | 数量 | 代表脚本 | 说明 |
-|------|------|----------|------|
-| **RemoteControl/** | 7 | drive_ansa.py, serve_ansa.py, AnsaProcessModule.py | **重大发现: 官方远程控制API** |
-| Mesh/ | 2 | SampleBatchMesh.py, SampleProject.py | 官方批量网格示例 |
-| CFD/ | ~30 | BatchAutomation.py, SetupIncompressibleCase.py | CFD前处理工具 |
-| Properties/ | 12 | PshellDataToText.py, CreatePropsFromElThick.py | 属性管理工具 |
-| Nodes/ | 10 | ShellsPerNode.py, FindCommonIds.py | 节点操作 |
-| File/ | 5 | AnsaToIges.py, MergeInDir.py | 文件转换 |
-| 其他 | 60+ | Connections, Elements, Loads, Optimization... | 各类工具 |
+> **注:** 早期调查曾将部分官方脚本与 API 文档复制到 `reference/official_docs/` 和 `reference/official_scripts/`。这两个目录已在 issue #2 的 IP 合规清理中整体删除 — BETA CAE 的 API 文档与示例脚本受 EULA 约束，不能在 Apache-2.0 公共仓库中再分发。
+>
+> 原始内容在**已授权的本地 ANSA 安装**中可直接查阅（默认 Windows 路径 `E:\Program Files (x86)\ANSA\ansa_v25.0.0\` — 其他安装版本/位置请相应调整）：
+>
+> | 曾经镜像的 skill 路径 | ANSA 安装内对应位置 |
+> |---|---|
+> | `reference/official_docs/*.md` (11 份 API 文档) | `docs\extending\python_api\` |
+> | `reference/official_scripts/RemoteControl/ansa/AnsaProcessModule.py` | `scripts\RemoteControl\ansa\AnsaProcessModule.py` |
+> | `reference/official_scripts/RemoteControl/ansa_examples/` (drive_ansa.py, serve_ansa.py, exconfig.py, test_script_ansa.py, test_script_bytes_ansa.py) | `scripts\RemoteControl\ansa_examples\` |
+> | `reference/official_scripts/Mesh/` (SampleProject.py, SampleBatchMesh.py) | `scripts\Mesh\` |
+>
+> `ansa/tests/test_runtime.py::test_official_test_script` 已经引用其中的 `test_script_ansa.py` —— 运行该测试会就地触发本地安装中的脚本，无需仓库再分发。
 
 ---
 
@@ -144,8 +147,6 @@ connection.goodbye(PostConnectionAction.shut_down)       # 关闭ANSA
 | `reference/ansa_api_reference.md` | ANSA Python API综合参考 |
 | `reference/ANSA-Scripts/` | 社区开源脚本 (git clone) |
 | `reference/Basic_Python_Script_*/` | 偏斜网格修复示例 (git clone) |
-| `reference/official_scripts/RemoteControl/` | **官方IAP远程控制API** |
-| `reference/official_scripts/Mesh/` | 官方批量网格示例 |
 | `tests/fixtures/ex_hello.py` | 冒烟测试 |
 | `tests/fixtures/ex_create_mesh.py` | 实体收集测试 |
 | `tests/fixtures/ex_deck_info.py` | Deck查询测试 |

@@ -126,4 +126,3 @@ The `encoding='utf-8'` is required on Chinese Windows where Python's
 ## Source
 
 Official: https://dyna.docs.pyansys.com/version/stable/examples/Optimization/Plate_Thickness_Optimization.html
-Raw doc: [`../../pydyna_raw/examples/Optimization/Plate_Thickness_Optimization.md`](../../pydyna_raw/examples/Optimization/Plate_Thickness_Optimization.md)

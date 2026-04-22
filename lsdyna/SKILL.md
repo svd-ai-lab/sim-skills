@@ -242,11 +242,6 @@ $    EID     PID      N1      N2      N3      N4      N5      N6      N7      N8
 | `base/workflows/pydyna_optimization/` | Parametric sweep template | DOE / optimization studies |
 | `base/workflows/pydyna_jupyter_plotting/` | Geometry preview in Jupyter | Notebook-based workflows |
 
-### Raw upstream docs
-| Path | What |
-|---|---|
-| `base/pydyna_raw/` | Mirror of dyna.docs.pyansys.com — full PyDyna documentation including all examples |
-
 ### Other
 | Path | What | When to read |
 |---|---|---|

@@ -50,6 +50,7 @@ Every skill lives in its own top-level folder. The grid is **open and growing** 
 
 | Skill | Domain | Execution model | Phase | What it's for |
 |---|---|---|---|---|
+| [**sim-cli**](sim-cli/SKILL.md) | *Shared contract* | Both (persistent + one-shot) | Working ✅ | The runtime contract every driver skill depends on — session lifecycle, command surface, input classification, Step-0 version probe, acceptance, escalation. **Load alongside any driver skill below.** |
 | [**fluent-sim**](fluent/SKILL.md) | CFD | Persistent meshing / solver session (PyFluent 0.38) | v0 ✅ | Incremental `sim exec` snippets or single-file workflows against a live Fluent session |
 | [**comsol-sim**](comsol/SKILL.md) | Multiphysics | Persistent JPype Java API session | Working ✅ | Long multiphysics runs with optional human GUI oversight |
 | [**openfoam-sim**](openfoam/SKILL.md) | CFD (OSS) | Remote `sim serve` on Linux via SSH tunnel | Working ✅ | Meshing, MPI parallel, classifier-based pass/fail on OpenFOAM v2206 |
@@ -89,6 +90,8 @@ Every skill lives in its own top-level folder. The grid is **open and growing** 
 | [**pandapower-sim**](pandapower/SKILL.md) | Power-system analysis | One-shot Python script | Working ✅ | Fraunhofer IEE. 2-bus PF vm_pu = 0.998, losses 1.4 kW. |
 | [**paraview-sim**](paraview/SKILL.md) | Post-processing / visualization | One-shot `pvpython` / `pvbatch` | Working ✅ | Kitware ParaView. 30+ file formats, Clip/Slice/Contour/StreamTracer, headless PNG rendering. |
 | [**hypermesh-sim**](hypermesh/SKILL.md) | FE pre-processing | One-shot `hw -b -script` | Working ✅ | Altair HyperMesh. 225 entity classes, 1946 methods. CAD import, automesh/tetmesh, quality checks, solver deck export. |
+| [**isaac-sim**](isaac/SKILL.md) | Embodied-AI simulation | One-shot `sim run <script.py> --solver isaac` | Working ✅ | NVIDIA Isaac Sim 4.5 (Omniverse Kit). SimulationApp bootstrap contract, AST lint for import-order, `official_hello_world` + Franka + Replicator + warehouse_sdg snippets. |
+| [**newton-sim**](newton/SKILL.md) | GPU physics / embodied AI | Two routes: Route A (recipe JSON) or Route B (`.py` run-script) | Working ✅ | NVIDIA Newton 1.x on Warp. Declarative recipe schema, 6 solver backends (XPBD/VBD/MuJoCo/MPM/Style3D/SemiImplicit), basic_pendulum + robot_g1 + cable_twist E2E workflows. |
 | **+ your skill** | — | — | 🛠 | Drop a `<solver>/SKILL.md`, register in `CLAUDE.md`, open a PR |
 
 **Legend** · ✅ Working · 🟡 In progress (phased rollout) · 🛠 Open for contribution
@@ -115,16 +118,18 @@ The human workflow is even simpler: an engineer points the LLM at `sim-skills`, 
 
 ## 📏 Cross-skill conventions
 
-These apply to every skill in the grid. Details live in [`CLAUDE.md`](CLAUDE.md); the summary:
+These apply to every driver skill in the grid. They live canonically in
+the **[`sim-cli/`](sim-cli/SKILL.md)** shared skill — summary here:
 
-| Convention | One-line rule |
-|---|---|
-| **Category A inputs** | Physical decisions (geometry, materials, BCs, acceptance criteria). **Ask the user** if absent — pressure to "just use defaults" does NOT override this. |
-| **Category B inputs** | Operational defaults (processors, ui_mode, smoke-test iterations). May default; must disclose. |
-| **Category C inputs** | File-derivable (cell zones, surface names, solver version). Infer via a diagnostic snippet, not from reference examples. |
-| **Acceptance criteria** | `exit_code == 0` is **not** sufficient. Every task needs an outcome-based criterion (outlet temp in 28–35 °C, min mesh quality > 0.2, etc.). |
-| **Reference examples ≠ defaults** | Values in `<skill>/reference/examples/` describe a specific published test case. Offer them, never silently adopt them. |
-| **When to stop** | Solver fails to launch, snippet raises or returns `ok=false`, session state drifts from expectation, acceptance cannot be verified → report, don't silently retry. |
+| Convention | One-line rule | Full |
+|---|---|---|
+| **Category A inputs** | Physical decisions (geometry, materials, BCs, acceptance criteria). **Ask the user** if absent. | [input_classification.md](sim-cli/reference/input_classification.md) |
+| **Category B inputs** | Operational defaults (processors, ui_mode, smoke-test iterations). May default; must disclose. | [input_classification.md](sim-cli/reference/input_classification.md) |
+| **Category C inputs** | File-derivable (cell zones, surface names). Infer via a diagnostic snippet, not from reference examples. | [input_classification.md](sim-cli/reference/input_classification.md) |
+| **Acceptance criteria** | `exit_code == 0` is **not** sufficient. Every task needs an outcome-based criterion. | [acceptance.md](sim-cli/reference/acceptance.md) |
+| **Step-0 version probe** | Mandatory. `sim inspect session.versions` after connect; pick layered-folder content from the returned profile. | [version_awareness.md](sim-cli/reference/version_awareness.md) |
+| **Reference examples ≠ defaults** | Values in `<skill>/reference/examples/` describe a specific published test case. Offer them, never silently adopt them. | [input_classification.md](sim-cli/reference/input_classification.md) |
+| **When to stop** | Solver fails to launch, snippet raises or returns `ok=false`, session drifts, acceptance fails → report, don't silently retry. | [escalation.md](sim-cli/reference/escalation.md) |
 
 ---
 
@@ -184,6 +189,7 @@ Each `<solver>/` directory is self-contained: `SKILL.md` at the top is the agent
 
 ## 📰 News
 
+- **2026-04-19** 🤖 **Isaac Sim + Newton skills — embodied-AI category** — two new skill bundles paired with the matching sim-cli drivers. [`isaac-sim`](isaac/SKILL.md): SKILL.md + 4 reference docs (`simulation_app.md` bootstrap contract, `robots.md`, `replicator.md`, `usd_basics.md`) + 5 TDD-validated snippets (official 4.5 hello-world, custom hello-world, Franka, Replicator cubes, warehouse SDG) + `sdk/4_5/notes.md` + `solver/4_5/notes.md` + `known_issues.md`. [`newton-sim`](newton/SKILL.md): SKILL.md + 4 reference docs (recipe schema catalog, solver list, Route A vs B decision tree, newton-cli→sim CLI mapping) + 3 canonical workflows (basic_pendulum / robot_g1 / cable_twist — mirroring the driver's E2E fixtures) + `solver/1_x/notes.md` + structural tests. Each demo is validated against the solver via the companion driver E2E.
 - **2026-04-16** 🔧 **HyperMesh skill (`hypermesh-sim`)** — new Altair HyperMesh FE pre-processor skill. `hm` Python API with 1946 model methods + 225 entity classes. 4 reference docs (API overview, meshing operations, entity/collection patterns, import/export), 4 snippets, 8 known issues, SDK 2025 version layer. Batch execution via `hw -b -script script.py`.
 - **2026-04-16** 🔬 **ParaView skill (`paraview-sim`)** — new Kitware ParaView post-processing skill. `paraview.simple` API reference (readers, sources, filters, rendering, writers), 30+ file format guide, headless rendering setup (OSMesa/EGL/xvfb), MCP operation patterns from LLNL's `paraview_mcp`. 5 snippets (smoke test, load+stats, contour render, slice export, IntegrateVariables). 8 known issues. SDK/solver 5.13 version layers.
 - **2026-04-16** 🔧 **ICEM CFD skill (`icem-sim`)** — new Ansys ICEM CFD meshing preprocessor skill. Tcl batch scripting via `icemcfd.bat -batch -script`, batch meshing API from Programmer's Guide (`ic_run_tetra` p143, `ic_run_hexa` p145, `ic_create_output` p197). 3 reference docs, 8 known issues, 4-version solver layers (24.1–25.2). Box.tin → 26752 tetra E2E verified (3.9s). No session mode — ICEM is a preprocessor, one-shot is the correct model.
@@ -204,7 +210,7 @@ Each `<solver>/` directory is self-contained: `SKILL.md` at the top is the agent
 - **2026-04-15** 🐧 **Open-source Linux CAE — 9 new skills** paired with Linux-native drivers. CFD/FEM/mesh/post-processing stack now covered end-to-end with OSS tools: [`calculix-sim`](calculix/SKILL.md), [`gmsh-sim`](gmsh/SKILL.md), [`su2-sim`](su2/SKILL.md), [`lammps-sim`](lammps/SKILL.md), [`scikit-fem-sim`](scikit_fem/SKILL.md), [`elmer-sim`](elmer/SKILL.md), [`meshio-sim`](meshio/SKILL.md), [`pyvista-sim`](pyvista/SKILL.md), [`pymfem-sim`](pymfem/SKILL.md). Each with verified physics benchmark (cantilever, Poisson, NACA0012, LJ NVT, etc.) and headless PNG evidence where relevant.
 - **2026-04-14** 🔩 **MAPDL skill (`mapdl-sim`)** — new Ansys MAPDL skill covering both one-shot and session-mode driving. 4 reference docs (PyMAPDL API, command conventions, postprocessing, analysis-workflow skeletons for static/modal/thermal/harmonic), 7 hard constraints, 4-version solver layers (24.1–25.2), 1 SDK layer (0.72), 8 known issues. 3 vendor verification workflows: `mapdl_beam` (2D BEAM188 simply-supported, max UZ −0.0265 cm via `sim run`), `notch_3d` (3D SOLID186 stress concentration K_t=1.98 vs Roark 1.60), and `mapdl_beam_session` (same beam re-driven through 10-step `sim connect/exec/inspect/disconnect` lifecycle, identical physics). All workflows ship `physics_summary.json` + headless PyVista contour PNGs as evidence — no GUI scripting.
 - **2026-04-14** 🌡 **Flotherm 2410 (2024.3) version layer** — added `flotherm/solver/2410/` with version notes mirroring 2504. XSD schema for FloSCRIPT validated; the headless solve crash documented in known issues (same 0xC0000005 as 2504).
-- **2026-04-14** 🔬 **LS-DYNA skill — 5 official PyDyna examples driven end-to-end via real `sim` CLI**. Each workflow ships a PowerShell driver (`run_*.ps1`), a DPF rendering script, a JSON transcript of every `sim connect/exec/inspect` call, and PNG visual evidence: **Taylor Bar** (impact mushroom-head, 25 steps), **Pendulum** (Newton's cradle, 22 steps), **Pipe** (rigid-body rotation, 21 steps), **Beer Can** (Yoshimura buckling diamond pattern, 17 steps, snap-down at t=0.33), **Optimization** (4-iteration thickness sweep with monotonic stiffness trend). Plus dual-path SKILL.md (handwritten `.k` vs PyDyna `keywords` API), `session_workflow.md`, 4 PyDyna API references, 6 example READMEs, full `pydyna_raw/` mirror of the official docs.
+- **2026-04-14** 🔬 **LS-DYNA skill — 5 official PyDyna examples driven end-to-end via real `sim` CLI**. Each workflow ships a PowerShell driver (`run_*.ps1`), a DPF rendering script, a JSON transcript of every `sim connect/exec/inspect` call, and PNG visual evidence: **Taylor Bar** (impact mushroom-head, 25 steps), **Pendulum** (Newton's cradle, 22 steps), **Pipe** (rigid-body rotation, 21 steps), **Beer Can** (Yoshimura buckling diamond pattern, 17 steps, snap-down at t=0.33), **Optimization** (4-iteration thickness sweep with monotonic stiffness trend). Plus dual-path SKILL.md (handwritten `.k` vs PyDyna `keywords` API), `session_workflow.md`, 4 PyDyna API references, and 6 example READMEs.
 - **2026-04-14** 💥 **LS-DYNA skill** — new Ansys LS-DYNA solver skill for explicit/implicit nonlinear FEA. 4 reference docs (keyword format, material models, control cards, output files), single hex tension E2E with 7129-cycle normal termination evidence. 7 known issues documented including exit-code-0-on-error trap and DLL dependency auto-discovery.
 - **2026-04-14** 🌀 **CFX skill** — new Ansys CFX solver skill with persistent session support. Hybrid architecture: `cfx5post -line` for instant numerical queries (Perl `evaluate()`), auto-delegated `cfx5post -batch` for contour rendering. 6 reference docs (CCL language, CLI tools, BCs, solver control, post-processing, session workflow), 4 snippets, VMFL015 E2E with 17-step session transcript + pressure/velocity contour evidence. 11 known issues documented.
 - **2026-04-13** 🏭 **Abaqus + Star-CCM+ skills** — two new solver skills with E2E evidence. Abaqus: cantilever beam FEA with Abaqus/CAE deformation contour export. Star-CCM+: Java macro API reference, pipe flow mesh generation with Trimmer scene render. Both include known issues, version notes, and physics-based acceptance criteria.

@@ -1,5 +1,7 @@
 # VMFL015 — Working Fluid Pipe Flow
 
+> **Attribution.** This workflow is inspired by the publicly documented Ansys Verification Manual case *VMFL015 — Working Fluid Pipe Flow*. The CCL setup, post-processing session, and evidence artifacts in this directory were independently reconstructed from public problem descriptions; no Ansys-proprietary files are redistributed.
+
 ## Case description
 
 | Property | Value |

@@ -240,3 +240,95 @@ Or use `--solver flotherm` to skip auto-detection:
 ```bash
 sim lint --solver flotherm my_project.pack
 ```
+
+## ISSUE-004: FloSCRIPT runtime errors surface in a dock, not a popup
+
+**Date discovered**: 2026-04-17
+**Severity**: High — invisible failures in `sim exec`
+**Status**: Workaround documented; driver-side fix proposed
+
+### Symptom
+
+A FloSCRIPT with a bad `property_name` (or any runtime error) fails silently
+as far as `sim exec` is concerned:
+
+```json
+{"ok": true, "action": "play_floscript", "gui": {"ok": true,
+ "method": "subprocess_uia_win32", "dismissed_popups": []}}
+```
+
+But the model state is corrupted — commands before the bad line applied,
+nothing after did. The actual error is visible only in a dock widget
+embedded inside the Flotherm main window:
+
+```
+ERROR E/15002 - Command failed to find property: power
+WARN  W/15000 - Aborting XML due to previous error
+```
+
+### Root cause
+
+The dock is `class="flohelp::DockWidget"` with `window_text="Message Window"`,
+living as a descendant of `FloMainWindow`. It is **not** a top-level window,
+so the driver's `Desktop.windows()` enumeration and the `dismissed_popups`
+mechanism both miss it.
+
+### Workaround (skill-side)
+
+After every FloSCRIPT exec, read the dock via UIA. See the "Schema is
+structural only — check the Message Window dock for runtime errors" section
+in [reference/floscript_modeling.md](base/reference/floscript_modeling.md)
+for a copy-pasteable `#!python` probe.
+
+### Proposed driver fix
+
+In `sim-cli/src/sim/drivers/flotherm/driver.py`, have `_play_floscript()`
+call a helper after the subprocess returns that enumerates the dock's
+descendants, filters for `ERROR`/`WARN` lines not present before the call,
+and returns them as `gui.errors` / `gui.warnings`. When non-empty, flip
+the top-level `ok` to `false` so `[OK]` doesn't mislead.
+
+## ISSUE-005: `property_name` values in reference doc are unverified — many rejected
+
+**Date discovered**: 2026-04-17
+**Severity**: Medium — blocks authoring flows relying on those names
+**Status**: Reference doc updated with verified/rejected status
+
+### Symptom
+
+`property_name` is `xs:string` in the FloSCRIPT XSD. Structural lint passes,
+but Flotherm rejects unknown names at runtime with E/15002 (see ISSUE-004).
+
+### Confirmed rejected on Flotherm 2504 (2026-04-17)
+
+| Command | property_name | value | Notes |
+|---|---|---|---|
+| `modify_geometry` on `source` | `power` | `"3.0"` | rejected |
+| `modify_geometry` on `cuboid` | `material` | `"Aluminum"` | rejected |
+| `modify_attribute` on `attribute_type="source"` | `value` | `"3.0"` | rejected |
+| `modify_attribute` on `attribute_type="source"` | `totalValue` | `"3.0"` | rejected |
+| `modify_attribute` on `attribute_type="source"` | `totalPower` | `"3.0"` | rejected |
+| `modify_attribute` on `attribute_type="source"` | `power` | `"3.0"` | rejected |
+| `modify_attribute` on `attribute_type="source"` | `dissipation` | `"3.0"` | rejected |
+| `modify_attribute` on `attribute_type="source"` | `heatDissipation` | `"3.0"` | rejected |
+| `modify_attribute` on `attribute_type="source"` | `heat` | `"3.0"` | rejected |
+| `modify_attribute` on `attribute_type="source"` | `totalHeatDissipation` | `"3.0"` | rejected |
+| `modify_attribute` on `attribute_type="source"` | `sourceValue` | `"3.0"` | rejected |
+
+### Verified working on Flotherm 2504
+
+| Command | property_name | Applies to | Notes |
+|---|---|---|---|
+| `modify_geometry` | `sizeX`, `sizeY`, `sizeZ` | cuboid, source | meters |
+| `modify_geometry` | `positionX`, `positionY`, `positionZ` | cuboid, source | meters |
+| `modify_geometry` | `gridConstraintAttachment` | any geometry | value = gridConstraint id |
+| `create_attribute` | (element `attribute_type="source"`) | — | attribute is created, but its property names are unknown |
+
+### How to discover real property names
+
+Use `<start_record_script filename="..."/>` to open a recording, perform
+the action in the GUI (or via UIA), then `<stop_record_script/>` and read
+the file. The recording contains the exact syntax Flotherm uses internally.
+See the "Ground-truth oracle" section in
+[reference/floscript_modeling.md](base/reference/floscript_modeling.md).
+
