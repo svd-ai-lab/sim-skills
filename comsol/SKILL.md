@@ -137,3 +137,33 @@ numbered snippets in order via `sim exec`, checking `sim inspect
 last.result` after each step for `ok=true`. After the final step,
 evaluate against the workflow's acceptance criteria (typically a probe
 value with a tolerance) per the shared skill's `acceptance.md`.
+
+---
+
+## GUI actuation
+
+When launched with `ui_mode=gui` (the default), a `gui` object is
+injected into the `sim exec` namespace. `/connect` advertises it under
+`data.tools = ["gui"]`. See
+[`sim-skills/_tools/gui/SKILL.md`](../_tools/gui/SKILL.md) for the full
+API.
+
+COMSOL-specific dialogs you will run into:
+
+- **"连接到 COMSOL Multiphysics Server"** — pops every launch. Cortex
+  waits at the login page until dismissed even though the JPype
+  backend is already connected. **Dismiss in the first `sim exec`
+  after `sim connect`**:
+  `gui.find("连接到").click("确定")`. English-locale installs show
+  *"Connect to COMSOL"* — see
+  `_tools/gui/snippets/dismiss_login_dialog.py` for a locale-robust
+  variant.
+- **"是否保存更改?"** / **"Save changes?"** — appears on disconnect
+  if the model has unsaved edits. Click **保存 / Save** or
+  **不保存 / Don't save** depending on intent before
+  `sim disconnect`.
+
+Prefer the JPype path (`model.*`, `ModelUtil.*`) for anything
+programmable — `gui` is only for the desktop client's UI surface
+that has no Java equivalent (file pickers, license dialogs, the
+login prompt).

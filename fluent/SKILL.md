@@ -173,3 +173,31 @@ sequence is `01_read_case` → `02_mesh_check` → `03_setup_physics` →
 `04_setup_material` → `05a_setup_bcs_ex01_ex05` → `06_hybrid_init` →
 `07_run_150_iter` → `08a_extract_outlet_temp`, followed by acceptance
 evaluation against the EX-01 row of `acceptance_checklists.md`.
+
+---
+
+## GUI actuation
+
+When launched with `ui_mode=gui`, a `gui` object is injected into the
+`sim exec` namespace. `/connect` advertises it under
+`data.tools = ["gui"]`. See
+[`sim-skills/_tools/gui/SKILL.md`](../_tools/gui/SKILL.md) for the full
+API (`gui.find`, `dlg.click`, `dlg.send_text`, `dlg.screenshot`, …).
+
+Fluent-specific dialogs you may want to dismiss or answer:
+
+- **"Question"** — Fluent's generic modal confirmer (overwrite
+  prompts, unsaved-changes prompt). Dismiss with
+  `gui.find("Question").click("OK")`.
+- **"Select File"** — standard Windows file picker used by File >
+  Read/Write > Case. Prefer the API path
+  (`session.file.read_case(...)`, `session.file.write_case(...)`);
+  only drive the dialog manually for demos or when the API path is
+  unavailable. See `_tools/gui/snippets/fill_file_save_dialog.py`.
+- **"ANSYS Fluent Launcher"** — the pre-session dialog. `sim connect`
+  launches Fluent directly past it, so a sim session should not normally
+  encounter it.
+
+Always try the programmatic path first (`session.tui.*`,
+`solver.settings.*`, `meshing.workflow.*`) — `gui` is for the UI-only
+surface the SDK doesn't cover.

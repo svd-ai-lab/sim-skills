@@ -179,3 +179,30 @@ typos and structural errors with line numbers.
 3. `sim exec 'solve'` — plays `<start start_type="solver"/>` FloSCRIPT
 4. Verify solve completed: check Message Window for `I/9001 - Solver stopped: steady solution converged`
 5. `sim disconnect` — kills floserv, floview, flotherm
+
+---
+
+## GUI actuation
+
+Flotherm's driver is the original user of the UIA subprocess +
+Win32 file-dialog pattern. Starting with Phase 3 that pattern lives in
+[`sim.gui._win32_dialog`](../../sim-cli/src/sim/gui/_win32_dialog.py)
+and [`sim.gui._pywinauto_tools`](../../sim-cli/src/sim/gui/_pywinauto_tools.py),
+shared with every other driver. Flotherm's `_win32_backend.py` now
+imports from there — behaviour is unchanged, the code is no longer
+duplicated.
+
+A `gui` object is **not** injected for Flotherm sessions because the
+driver's `play_floscript` helper already owns the UI interaction. If
+you need generic window actions (screenshot of the Message Window
+dock, a quick `list_windows()` to debug a launch), import the
+primitives directly:
+
+```python
+from sim.gui import GuiController
+controller = GuiController(process_name_substrings=("flotherm", "flomain"))
+print(controller.list_windows())
+```
+
+See [`sim-skills/_tools/gui/SKILL.md`](../_tools/gui/SKILL.md) for the
+full API reference.
