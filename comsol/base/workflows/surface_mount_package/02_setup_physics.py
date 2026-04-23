@@ -1,7 +1,8 @@
 """Set up Heat Transfer in Solids physics with all boundary conditions.
 
 Physics features:
-  - Heat source: Q = 2e8 W/m^3 on silicon chip (~20 mW total)
+  - Heat source: Q = 4.44e7 W/m^3 on silicon chip (~20 mW total)
+    Chip volume = 3 x 1.5 x 0.1 mm = 4.5e-10 m^3; P = Q*V = 20 mW
   - Convective heat flux: h = 50 W/(m^2*K), T_amb = 30 degC on exterior
   - Fixed temperature: T = 50 degC on voltage regulator boundary
   - Thin Layer 1: ground plate (copper, 0.1 mm thick)
@@ -19,7 +20,7 @@ ht = comp.physics().create("ht", "HeatTransfer", "geom1")
 # --- Heat source on the silicon chip (domain) ----------------------------
 hs1 = ht.create("hs1", "HeatSource", 3)
 hs1.selection().named("sel_chip")  # Ball selection created in materials step
-hs1.set("Q0", "2e8[W/m^3]")
+hs1.set("Q0", "4.44e7[W/m^3]")
 hs1.label("Chip Heat Source")
 
 # --- Convective heat flux on all exterior boundaries ---------------------
@@ -67,7 +68,7 @@ _result = {
     "step": "physics",
     "physics": "Heat Transfer in Solids",
     "features": [
-        "Heat source Q=2e8 W/m^3 on chip",
+        "Heat source Q=4.44e7 W/m^3 on chip (~20 mW)",
         "Convection h=50 W/(m^2*K), T_amb=30 degC",
         "Fixed T=50 degC (voltage regulator)",
         "Thin layer: ground plate 0.1 mm Cu",
