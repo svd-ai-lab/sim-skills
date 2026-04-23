@@ -145,7 +145,7 @@ value with a tolerance) per the shared skill's `acceptance.md`.
 When launched with `ui_mode=gui` (the default), a `gui` object is
 injected into the `sim exec` namespace. `/connect` advertises it under
 `data.tools = ["gui"]`. See
-[`sim-skills/_tools/gui/SKILL.md`](../_tools/gui/SKILL.md) for the full
+[`sim-skills/sim-cli/gui/SKILL.md`](../sim-cli/gui/SKILL.md) for the full
 API.
 
 COMSOL-specific dialogs you will run into:
@@ -156,7 +156,7 @@ COMSOL-specific dialogs you will run into:
   after `sim connect`**:
   `gui.find("连接到").click("确定")`. English-locale installs show
   *"Connect to COMSOL"* — see
-  `_tools/gui/snippets/dismiss_login_dialog.py` for a locale-robust
+  `../sim-cli/gui/snippets/dismiss_login_dialog.py` for a locale-robust
   variant.
 - **"是否保存更改?"** / **"Save changes?"** — appears on disconnect
   if the model has unsaved edits. Click **保存 / Save** or

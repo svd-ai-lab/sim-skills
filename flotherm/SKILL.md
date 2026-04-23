@@ -204,5 +204,5 @@ controller = GuiController(process_name_substrings=("flotherm", "flomain"))
 print(controller.list_windows())
 ```
 
-See [`sim-skills/_tools/gui/SKILL.md`](../_tools/gui/SKILL.md) for the
+See [`sim-skills/sim-cli/gui/SKILL.md`](../sim-cli/gui/SKILL.md) for the
 full API reference.

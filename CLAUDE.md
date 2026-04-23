@@ -23,27 +23,31 @@ contract every driver skill depends on).
 |---|---|---|
 | Shared runtime contract (lifecycle, commands, version probe, acceptance, escalation, input classification) | [`sim-cli/`](sim-cli/SKILL.md) + `sim-cli/reference/*.md` | End users' agents |
 | Solver-specific protocol (physics, APIs, quirks per version) | `<solver>/SKILL.md` + `<solver>/{reference,workflows,snippets}/` | End users' agents |
-| Cross-driver tool skills (actuation objects injected into `sim exec` — `gui`, future `fs` / `shell` / etc.) | [`_tools/<tool>/SKILL.md`](_tools/) | End users' agents |
+| Runtime-injected tool skills (actuation objects sim-cli puts into `sim exec` — `gui`, future `fs` / `shell` / etc.) | [`sim-cli/<tool>/SKILL.md`](sim-cli/) | End users' agents |
 | Human-facing overview, skill grid, news | [`README.md`](README.md) | Humans browsing GitHub |
 | Contributor guide (this file) | `CLAUDE.md` | You, right now |
 
 **Rule of thumb while editing:** if a change belongs in more than one
 driver, it belongs in `sim-cli/`. If it is solver-specific, it belongs
-in `<solver>/`. If it describes a cross-cutting runtime object
-(something sim-cli injects into the session namespace alongside
-`session` / `model`), it belongs in `_tools/`. Never duplicate across
-drivers.
+in `<solver>/`. Runtime-injected objects (`gui`, future `fs` / `shell`,
+…) — anything sim-cli puts into the `sim exec` namespace alongside
+`session` / `model` — belong under `sim-cli/<tool>/`. Never duplicate
+across drivers.
 
-### `_tools/` — cross-driver tool skills
+### `sim-cli/<tool>/` — runtime-injected tool skills
 
 Some capabilities are not a solver at all but a **runtime-injected
-tool** that every GUI-capable driver exposes in the `sim exec`
-namespace. `gui` is the first example:
+tool** that sim-cli exposes in the `sim exec` namespace for every
+GUI-capable driver. They live under `sim-cli/` because they are
+owned by sim-cli (not by any individual solver). `gui` is the first
+example:
 
 ```
-_tools/
-  gui/
-    SKILL.md          Full API reference — find / click / send_text / snapshot
+sim-cli/
+  SKILL.md            Runtime contract (session lifecycle, commands, …)
+  reference/          Shared references
+  gui/                Runtime-injected actuation object
+    SKILL.md          Full API — find / click / send_text / snapshot
     snippets/
       dismiss_login_dialog.py
       fill_file_save_dialog.py
@@ -51,9 +55,10 @@ _tools/
 ```
 
 Agents discover these via `/connect`'s `tools: [...]` + `tool_refs:
-{...}` fields. Per-solver `SKILL.md` files add **short** sections
-pointing at `_tools/<tool>/SKILL.md` and noting solver-specific
-dialogs; the API itself is not repeated per solver.
+{...}` fields (e.g. `tool_refs.gui = "sim-skills/sim-cli/gui/SKILL.md"`).
+Per-solver `SKILL.md` files add **short** sections pointing at
+`../sim-cli/<tool>/SKILL.md` and noting solver-specific dialogs; the
+API itself is not repeated per solver.
 
 ---
 

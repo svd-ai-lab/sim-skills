@@ -20,7 +20,7 @@ skill serves every GUI-capable driver.
   "data": {
     "...": "...",
     "tools": ["gui"],
-    "tool_refs": {"gui": "sim-skills/_tools/gui/SKILL.md"}
+    "tool_refs": {"gui": "sim-skills/sim-cli/gui/SKILL.md"}
   }
 }
 ```
