@@ -105,14 +105,17 @@ Always read `base/reference/`, then the relevant snippets + workflows.
 |---|---|
 | `base/reference/spice_directives.md` | Cheat sheet: `.tran`, `.ac`, `.dc`, `.op`, `.noise`, `.meas`, `.step`, `.param`, `.ic`, `.nodeset`, `.save` |
 | `base/reference/element_syntax.md` | R / C / L / V / I / D / Q / M / X instance syntax + common model options |
-| `base/reference/result_extraction.md` | How `.meas` values map to `sim logs last --field measures`; reading `.raw` trace names |
+| `base/reference/result_extraction.md` | Three layers (`.meas` → `RawRead` cursors → arrays) + `eval` / `to_csv` / `to_dataframe`. Read before reaching for `.raw` |
 | `base/reference/platform_dispatch.md` | When to use `--host <win1>`; macOS flat-asc-only constraint |
 | `base/snippets/rc_lowpass.net` | Minimal RC transient with one `.meas` |
-| `base/snippets/rlc_ac.net` | RLC AC sweep with `.meas` for resonance |
+| `base/snippets/rlc_ac.net` | Series-RLC band-pass AC sweep — complex `.raw` traces, resonance `.meas` |
 | `base/snippets/inverting_amp.net` | Inverting op-amp with `.include LTC.lib` and gain `.meas` |
 | `base/snippets/param_sweep.net` | `.step param R 1k 100k dec 5` + acceptance via `.meas` max/min |
 | `base/workflows/meas_based_acceptance.md` | End-to-end: define acceptance → write `.meas` → `sim run` → read JSON → verify |
-| `base/workflows/monte_carlo.md` | Monte-Carlo via `.step` + `mc()` + Python loop with `sim run` per seed |
+| `base/workflows/regression_diff.md` | Two-run `.raw` comparison with `sim_ltspice.diff(a, b)`. Pin a golden `.raw`, gate refactor PRs on waveform equivalence |
+| `base/workflows/gui_review_handoff.md` | Python builds `.asc` → spawn LTspice GUI → human reviews / edits → re-read. Waveform viewer handoff. `sim.gui` pywinauto notes for Windows dialogs |
+| `base/workflows/param_sweep_postprocess.md` | `.step param` sweep → extract per-step scalars (`.meas`) or slice full traces (`RawRead.to_dataframe()` + axis-seam split) for plotting / custom math |
+| `base/workflows/monte_carlo.md` *(planned — not yet written)* | Monte-Carlo via `.step` + `mc()` + Python loop with `sim run` per seed |
 
 ### Documentation lookup
 

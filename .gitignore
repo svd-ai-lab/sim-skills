@@ -26,6 +26,8 @@ Thumbs.db
 # Solver run output
 *.log
 *.trn
+*.raw
+*.op.raw
 flprt.*
 cleanup-fluent-*.bat
 
