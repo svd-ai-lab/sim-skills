@@ -39,6 +39,43 @@ Results appear in the `.log` and in `sim logs last --field measures`:
 {"vout_pk": {"expr": "MAX(V(out))", "value": 4.97, "from": 0, "to": 0.005}}
 ```
 
+### AC `.meas` quirk: prefer `mag(...)` over `db(...)` / `Vdb(...)`
+
+In AC analysis, `FIND db(V(out)) AT <freq>` can return wildly wrong
+values (observed −17 dB vs. actual −0.09 dB on a flat-band probe at
+5 kHz of a series-RLC band-pass centered at 5.03 kHz). The same
+measurement written with `mag(V(out))` returns the expected magnitude
+and `20*log10(mag)` matches the displayed `db()` trace.
+
+Mechanism (empirical, not documented by Analog Devices): `db(...)`
+inside a `.meas FIND ... AT` expression interpolates across the decade
+grid on the log-scale result of `db()` instead of the linear magnitude,
+which amplifies the interpolation error near a peak. `mag(...)` uses
+the underlying complex sample and is stable.
+
+**Rule of thumb.** When writing AC `.meas` directives, prefer:
+
+```
+.meas AC gain_5k  FIND mag(V(out)) AT 5.03k          ; stable (linear)
+```
+
+over:
+
+```
+.meas AC gain_5k  FIND db(V(out))  AT 5.03k          ; can be wildly wrong
+.meas AC gain_5k  FIND Vdb(out)    AT 5.03k          ; same issue
+```
+
+For thresholded corner frequencies (WHEN form), both work, because
+LTspice searches for the crossing on the sample grid directly:
+
+```
+.meas AC fc_lo WHEN db(V(out)) = -3                  ; OK
+```
+
+If you need dB in the result, capture linear magnitude and convert
+post-hoc: `value_db = 20 * log10(abs(m.value))`.
+
 ## Parameters and sweeps
 
 ```
