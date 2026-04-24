@@ -1,6 +1,6 @@
 ---
 name: matlab-sim
-description: Use when running MATLAB scripts through the sim runtime — currently one-shot via `sim run --solver matlab`, with persistent local sessions planned for v1. Covers explicit JSON result extraction and conservative handling of MATLAB desktop state.
+description: Use when running MATLAB `.m` scripts or Simulink `.slx` / `.mdl` models through sim-cli's MATLAB driver — one-shot via `sim run --solver matlab`, with explicit JSON result extraction and conservative handling of MATLAB desktop and Simulink model state. Persistent local sessions are planned for v1; shared / remote Simulink sessions are a non-goal.
 ---
 
 # matlab-sim
@@ -115,6 +115,40 @@ For any function / API question on R2024+, go straight to `help()`.
 ### `tests/` (top-level, QA-only)
 
 Not loaded during a normal session.
+
+---
+
+## Simulink
+
+The MATLAB driver dispatches on input suffix. `.slx` and `.mdl` models
+route through a package helper shipped with the driver at
+`src/sim/drivers/matlab/resources/+sim_shim/run.m`, not through the
+generic `matlab -batch run('<script>')` wrapper used for `.m` files.
+The driver adds the `resources/` parent to the MATLAB path, opens the
+model with `load_system`, registers an `onCleanup` that calls
+`close_system(<name>, 0)`, calls `sim_shim.run(<name>, '{}', <out_dir>)`,
+and parses the final JSON line from stdout. `sim_shim.run` runs `sim()`,
+tries to flatten the `Simulink.SimulationOutput` to a `timetable`, and
+writes either `<out_dir>/<model>_out.parquet` (preferred) or
+`<out_dir>/<model>_out.mat` (fallback), then emits a single line of the
+form `{"ok":true,"result_file":"<path>","format":"parquet|mat","signals":[...]}`.
+`out_dir` defaults to `<script_parent>/.sim/<model_name>/`. The
+`sim check matlab` probe additionally surfaces `simulink: installed |
+not found on disk` per install, driven by a filesystem check for
+`<matlabroot>/toolbox/simulink/simulink/`. Full contract in
+[`base/reference/simulink.md`](base/reference/simulink.md).
+
+What is **not** wired yet (deferred per [sim-cli issue
+#27](https://github.com/svd-ai-lab/sim-cli/issues/27)): the rest of the
+`+sim_shim/` package helpers beyond `run` (Phase B — `models`,
+`blocks`, `signals`, `set`, and `sweep` / `parsim` parameter sweeps);
+`models.summary` / `blocks.summary` / `signals.summary` /
+`figures.summary` inspect verbs (Phase C); a typed `SimulationResult`
+/ `SweepResult` dataclass wrapping the pointer JSON (Phase D); sample
+`.slx` regression fixtures in sim-datasets (Phase F); and shared /
+persistent Simulink sessions (listed under Non-goals in issue #27).
+Today you get one `sim run <model.slx>` per simulation and read the
+result file yourself; do not assume any of the deferred surface exists.
 
 ---
 
