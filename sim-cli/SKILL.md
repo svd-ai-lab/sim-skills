@@ -38,6 +38,40 @@ which one applies:
 
 ---
 
+## Where `sim serve` runs (Windows session-context foot-gun)
+
+If you reach a remote `sim` host via `sim --host <host>` or `SIM_HOST`,
+**how the operator started `sim serve` on that host changes which
+drivers actually work.** This is purely a Windows concern — Linux and
+macOS don't isolate display sessions the same way.
+
+| `sim serve` started from… | Headless drivers (matlab `-batch`, ltspice `-b`, OpenFOAM, all CLI-only) | GUI drivers (Flotherm, COMSOL desktop, Fluent desktop, Mechanical GUI, MATLAB `--ui-mode desktop`) |
+|---|---|---|
+| Logged-in Windows desktop (Windows Terminal / RDP / Task Scheduler with **"run only when user is logged on" + interactive**) | ✅ works | ✅ works — windows are visible, `gui` actuation can find / click / screenshot them |
+| SSH session (`ssh win1` then `sim serve …`) | ✅ works | ❌ silent breakage — windows launch in a non-interactive Windows session with no display surface; `gui` finds zero windows; screenshots come back black; `sim exec`s that touch the GUI hang or no-op |
+
+**What this means for you, the agent:**
+
+- If the host advertises `tools: ["gui"]` on `/connect` (driver in
+  `ui_mode=gui|desktop`) but `gui.find(...)` returns nothing for
+  windows you have strong reason to believe exist, **do not retry**.
+  Surface "the server may have been started from a non-interactive
+  session" as a likely cause and ask the operator to restart `sim
+  serve` from a desktop session. See `escalation.md`.
+- For headless drivers (matlab `-batch` / `.slx` via `sim_shim.run`,
+  OSS solvers, anything that the driver skill explicitly classifies
+  as one-shot batch) the session context does not matter — you can
+  proceed without checking.
+- The agent never starts `sim serve` itself. Server lifecycle is the
+  operator's responsibility; this section exists only so you can
+  diagnose the specific failure mode where the server is up and
+  reachable but GUI ops silently no-op.
+
+See [`gui/SKILL.md`](gui/SKILL.md) for the full GUI actuation API and
+its window-not-found troubleshooting.
+
+---
+
 ## Reference files
 
 | Path | Read when |
