@@ -209,6 +209,8 @@ Things that commonly make `ok` false:
 | `click` says `no control titled ... in hwnd=...` | the button label in the UI is not what you think | snapshot the window, read `controls[*].name` |
 | `screenshot` returns minimal PNG | window is minimized (pywinauto captures the window rect; min'd windows live at `(-32000, -32000, …)`) | `dlg.activate()` first, then screenshot |
 | `gui.available` is `False` | off-Windows host, or pywinauto not installed | don't use `gui` — fall back to SDK-only path |
+| `list_windows()` returns `[]` even though the solver clearly launched | `sim serve` was started from an SSH / non-interactive Windows session — the GUI exists in a session with no display surface and pywinauto can't see it | ask the operator to restart `sim serve` from a desktop session (RDP, Windows Terminal, or Task Scheduler with **"run only when user is logged on" + interactive**). See [`../SKILL.md` → "Where `sim serve` runs"](../SKILL.md). Do **not** retry. |
+| `screenshot` returns a uniformly black PNG | same as above — non-interactive session has no compositor | same fix |
 
 ## Pitfalls
 
@@ -221,9 +223,16 @@ Things that commonly make `ok` false:
 - **Don't rely on `gui` for SDK-shaped work.** Solver objects (`session`,
   `model`) are always faster and more reliable than UI clicks. `gui` is
   the fallback for the UI-only surface.
-- **Remote servers need a real desktop.** If `sim serve` runs in a
-  Windows service or SSH session 0, pywinauto finds zero windows.
-  Launch `sim serve` from inside an RDP login session.
+- **Remote servers need a real desktop.** If `sim serve` runs from an
+  SSH session, a Windows service, or any non-interactive context, the
+  spawned solver process inherits a session with no display surface.
+  pywinauto then finds zero windows, screenshots come back uniformly
+  black, and `find(...)` silently times out — the server itself is up
+  and reachable, only the GUI half is dead. Restart `sim serve` from a
+  desktop session (Windows Terminal on the console, RDP, or Task
+  Scheduler with "run only when user is logged on" + interactive). See
+  [`../SKILL.md` → "Where `sim serve` runs"](../SKILL.md) for the full
+  driver-by-driver matrix.
 
 ## Related skills
 
