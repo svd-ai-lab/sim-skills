@@ -327,8 +327,17 @@ flouser/<project_name>.<32-hex-hash>/DataSets/BaseSolution/
 Mesh dimensions (`nx`, `ny`, `nz`) are in the logit file:
 `domain 0 no. in x =NN no. in y =NN no. in z =NN`.
 
-Field cells are in Fortran/C-order; verify by sampling a known cell
-(e.g. far-field ambient should match the ambient_att temperature).
+Binary layout verified 2026-04-26 across 4 solved projects: header is a
+4-byte sentinel (observed `00 00 00 00`), body is exactly `nx·ny·nz`
+IEEE-754 float32 little-endian values, file size = `4 + 4·nx·ny·nz`,
+no Fortran trailing record marker.
+
+Cell ordering (x-fastest vs z-fastest) and temperature units (°C vs K)
+are still unverified — sample a Dirichlet-pinned cell (e.g. a
+`<thermal_att thermal_model="fixed_temperature">` cuboid) before trusting
+absolute values. See [`postprocessing.md`](postprocessing.md) for the
+full reader sketch + the FloSCRIPT export commands that bypass binary
+parsing entirely.
 
 ## End-to-end example
 

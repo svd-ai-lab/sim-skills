@@ -93,6 +93,7 @@ via `GetDlgItem(1148)` + `SendMessage(WM_SETTEXT)` + `BM_CLICK`.
 | Path | What's there |
 |---|---|
 | `base/reference/floscript_modeling.md` | **FloSCRIPT model generation reference** — command vocabulary, patterns, step templates for building models from scratch via Claude. |
+| `base/reference/postprocessing.md` | **Result extraction reference** — FloSCRIPT export commands (Path A), direct binary read of `msp_*/end/<Field>` files (Path B, format verified), GUI export (Path C), plus copy-paste verification probes. |
 | `base/reference/` | FloSCRIPT XML patterns, GUI control sequences, Win32 message recipes. |
 | `base/workflows/` | End-to-end demo runs of typical Phase A `.pack` cases. |
 | `base/docs/` | Background on the GUI-automation approach and why headless batch is broken upstream. |
