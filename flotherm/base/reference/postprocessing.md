@@ -68,11 +68,35 @@ sim disconnect
 
 **Constraint**: a project must already be open and solved. Export commands operate on the in-memory project state, not on a file path argument — there's no `<load_project>` + `<export_*>` chained-from-cold workflow.
 
+> **Driver gap (2026-04-26):** `sim exec` on a FloSCRIPT currently fails with empty dock readback during long solves — see [svd-ai-lab/sim-skills#22](https://github.com/svd-ai-lab/sim-skills/issues/22). For unattended re-solve workflows, use the headless path below instead — it bypasses both the GUI and floserv.
+
+### Headless re-solve (the GUI-free postprocessing path)
+
+For workflows that just need to re-solve an existing project (e.g. parameter sweeps, batch evaluation), call `translator.exe` and `solexe.exe` directly. **No GUI, no floserv, no dock readback**:
+
+```batch
+call "<install>\WinXP\bin\flotherm.bat" -env
+translator.exe -p "<flouser>\<Project>.<GUID>" -n1
+solexe.exe    -p "<flouser>\<Project>.<GUID>"
+```
+
+Verified 2026-04-26 on Mobile_Demo_Steady_State (1:41 wall) and HBM_XSD_validation (~25s wall). `solexe.exe` exits with the model's status code — `3` is "normal exit from main program MAINUU" (= converged steady solution).
+
+`tests/inspect/probe_headless_solve.py` in sim-cli automates this round-trip and verifies that field mtime advances + values round-trip through `read_msp_field()`.
+
+**Constraint**: the project must already be in `FLOUSERDIR` (created by a prior GUI session or `project_import`). Initial `.pack` import still requires the GUI today — see `dev-docs/playbook.md` "Flotherm headless batch solve" for the registration prereqs.
+
 ---
 
 ## Path B — Direct binary read
 
 The solver writes per-field 3D arrays to disk as straightforward little-endian float32 with a 4-byte sentinel header. **Verified 2026-04-26** across four solved projects on Flotherm 2504 (HBM_3block_smoke_v1b, HBM_XSD_validation, HBM_3block_v1b_plus, Mobile_Demo_Steady_State).
+
+> **Use `sim.drivers.flotherm.lib.msp_field` rather than parsing by hand.** Shipped in [svd-ai-lab/sim-cli#43](https://github.com/svd-ai-lab/sim-cli/pull/43):
+> ```python
+> from sim.drivers.flotherm.lib import read_msp_field, list_fields, read_mesh_dims
+> T = read_msp_field(workspace_dir, "Temperature")    # (nz, ny, nx) float32
+> ```
 
 ### File layout
 
@@ -83,9 +107,14 @@ flouser/<project_name>.<32-hex-hash>/DataSets/BaseSolution/
   msp_0/end/Pressure                   same layout
   msp_0/end/{X,Y,Z}Velocity            same layout
   msp_0/end/Speed                      |velocity|, same layout
+  msp_0/end/{X,Y,Z}Conductivity        same layout (anisotropic cell conductivities)
+  msp_0/end/FluidConductivity          same layout
+  msp_0/end/TurbVis                    same layout (turbulent viscosity field)
 ```
 
 (`msp_0` = mesh-solve-pass 0, the steady-state or final transient pass; `end` = end-of-pass values.)
+
+**11 fields per case on Flotherm 2504** — confirmed 2026-04-26 across HBM_XSD_validation, HBM_3block_v1b_plus. Earlier versions of this doc listed only 6; the additions are the X/Y/Z/Fluid Conductivities and TurbVis.
 
 ### Format details (verified)
 
