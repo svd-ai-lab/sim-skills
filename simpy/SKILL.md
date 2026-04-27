@@ -27,7 +27,7 @@ env.process(car(env))
 env.run(until=20)
 ```
 
-Same subprocess driver mode as PyBaMM / PyMFEM / Cantera.
+Same subprocess driver mode as PyBaMM / PyMFEM.
 
 ---
 

@@ -26,7 +26,7 @@ prob.run_driver()
 print(prob['x'], prob['y'])
 ```
 
-Same subprocess driver mode as PyBaMM / SfePy / Cantera.
+Same subprocess driver mode as PyBaMM / SfePy.
 
 ---
 
