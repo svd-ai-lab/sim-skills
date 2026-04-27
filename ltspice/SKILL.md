@@ -35,7 +35,7 @@ Python. The file format understanding and platform quirks are the same.
 |---|---|---|
 | `.net` / `.cir` / `.sp` netlist | ✅ today | SPICE3 syntax; first line is title (ignored by solver); must contain at least one analysis directive |
 | `.asc` schematic (flat, library-local) | 🟡 sim-ltspice v0.1+ — on macOS goes through our native asc2net; on Windows/wine goes through LTspice's own `-netlist` | Schematic opens in LTspice GUI for human review |
-| `.asc` schematic (hierarchical or custom lib) | 🟡 Windows / wine only | Requires LTspice's own `-netlist` pass; on macOS raises `MacOSCannotFlatten` with guidance to run `sim --host <win1>` |
+| `.asc` schematic (hierarchical or custom lib) | 🟡 Windows / wine only | Routed through `sim_ltspice.schematic_to_netlist` (the in-process Python flattener, since LTspice 26.0.1's `-netlist` flag is broken). On macOS raises `MacOSCannotFlatten` with guidance to route via a Windows host. |
 | `.raw` / `.log` inputs | ❌ outputs only | Do not pass these to `sim run` |
 
 When you produce a netlist for an agent workflow, **always use `.net`**.
@@ -44,19 +44,31 @@ driver has the fewest edge cases for it.
 
 ## Platform capabilities
 
-| Capability | macOS 17.x native | Windows 26.x | Linux + wine |
-|---|---|---|---|
-| `-b <netlist>` batch run | ✅ | ✅ | ✅ |
-| `-Run -b` | ❌ (ignored) | ✅ | ✅ |
-| `-ascii` raw output | ❌ | ✅ | ✅ |
-| `-netlist <asc>` schematic→netlist | ❌ | ✅ | ✅ |
-| `.asc` direct input to sim run | native asc2net only (flat + library-local) | full | full |
-| `.log` encoding | UTF-16 LE (no BOM) | UTF-8 | UTF-16 LE |
-| `.raw` header encoding | UTF-16 LE | UTF-16 LE | UTF-16 LE |
+| Capability | macOS 17.x native | macOS 26.x native | Windows 26.x | Linux + wine |
+|---|---|---|---|---|
+| `-b <netlist>` batch run | ✅ | ✅ | ✅ | ✅ |
+| `-Run -b` | ❌ (ignored) | ✅ | ✅ | ✅ |
+| `-ascii` raw output | ❌ | ✅ | ✅ | ✅ |
+| `-netlist <asc>` schematic→netlist | ❌ | ✅ † | ⚠️ broken on 26.0.1 | ✅ |
+| `-ini <path>` reproducible-state run | ✅ | ✅ | ✅ | ✅ |
+| `-I<path>` symbol path injection | ✅ | ✅ | ✅ | ✅ |
+| `-FastAccess` `.raw` reformat | ❌ | ✅ | ✅ | ✅ |
+| `-sync` re-extract bundled libs | ❌ | ✅ | ✅ | ✅ |
+| `-version` print version (stderr) | ✅ | ✅ | ✅ | ✅ |
+| `.asc` direct input to sim run | native asc2net only (flat + library-local) | native asc2net | full | full |
+| `.log` encoding | UTF-16 LE (no BOM) | UTF-8 | UTF-8 | UTF-16 LE |
+| `.raw` header encoding | UTF-16 LE | UTF-16 LE | UTF-16 LE | UTF-16 LE |
 
-If you need a feature Windows has and macOS lacks, route through
-`sim --host <win1>`. See `../sim-cli/SKILL.md` for the HTTP dispatch
-model.
+† On macOS 26 the `-netlist` flag works but `sim-ltspice`'s preferred
+path is the in-process `schematic_to_netlist` flattener — no LTspice
+binary touched. Use `-netlist` only when the flattener can't handle a
+hierarchy or custom-symbol case.
+
+If you need a feature macOS lacks (or to dodge the 26.0.1 `-netlist`
+regression), route through `sim --host <windows-host>`. See
+`../sim-cli/SKILL.md` for the HTTP dispatch model. The full
+flag-by-flag table lives in
+[`base/reference/command_line_switches.md`](base/reference/command_line_switches.md).
 
 ## Hard constraints (LTspice-specific)
 
@@ -106,7 +118,11 @@ Always read `base/reference/`, then the relevant snippets + workflows.
 | `base/reference/spice_directives.md` | Cheat sheet: `.tran`, `.ac`, `.dc`, `.op`, `.noise`, `.meas`, `.step`, `.param`, `.ic`, `.nodeset`, `.save` |
 | `base/reference/element_syntax.md` | R / C / L / V / I / D / Q / M / X instance syntax + common model options |
 | `base/reference/result_extraction.md` | Three layers (`.meas` → `RawRead` cursors → arrays) + `eval` / `to_csv` / `to_dataframe`. Read before reaching for `.raw` |
-| `base/reference/platform_dispatch.md` | When to use `--host <win1>`; macOS flat-asc-only constraint |
+| `base/reference/platform_dispatch.md` | When to route to a Windows host; macOS flat-asc-only constraint |
+| `base/reference/command_line_switches.md` | Complete LTspice CLI flag table (16 flags + 2 env vars) — verbatim from the shipped help bundle. Read before constructing any non-default `LTspice.exe` invocation |
+| `base/reference/search_path_resolution.md` | `-I<path>` → ini → schematic dir → `lib/sym/` → `lib/sub/`. The order LTspice walks when resolving symbols and `.lib` includes |
+| `base/reference/log_channel_limits.md` | What `<deck>.log` does and doesn't capture. No GUI session journal — agents must triage hangs vs. solver errors differently |
+| `base/reference/component_models.md` | The 8 generic-model files (`lib/cmp/standard.{bjt,mos,dio,jft,cap,ind,res,bead}`). UTF-16 closed enum used by `Value <model>` references on primitives |
 | `base/snippets/rc_lowpass.net` | Minimal RC transient with one `.meas` |
 | `base/snippets/rlc_ac.net` | Series-RLC band-pass AC sweep — complex `.raw` traces, resonance `.meas` |
 | `base/snippets/inverting_amp.net` | Inverting op-amp with `.include LTC.lib` and gain `.meas` |
@@ -120,14 +136,18 @@ Always read `base/reference/`, then the relevant snippets + workflows.
 ### Documentation lookup
 
 LTspice ships an extensive offline help set on Windows at
-`%LOCALAPPDATA%\Programs\ADI\LTspice\LTspiceHelp\` (~145 HTML files,
-comprehensive SPICE + analysis reference). macOS ships no HTML help
-(the native app has an in-GUI help only).
+`%LOCALAPPDATA%\Programs\ADI\LTspice\LTspiceHelp\` (~738 HTML files
+in 26.x — comprehensive SPICE + analysis reference). macOS 17 ships
+no HTML help (in-GUI help only); macOS 26 has parity with Windows.
 
-For authoritative syntax questions when on Windows:
+The community mirror at [ltwiki.org](https://ltwiki.org/) indexes the
+same content and is searchable from any platform without LTspice
+installed locally.
+
+For authoritative syntax questions on a Windows host:
 
 ```bash
-sim --host 100.90.110.79 exec 'cat "%LOCALAPPDATA%\Programs\ADI\LTspice\LTspiceHelp\<topic>.html"'
+sim --host <windows-host> exec 'cat "%LOCALAPPDATA%\Programs\ADI\LTspice\LTspiceHelp\<topic>.htm"'
 ```
 
 For anyone else, consult the LTspice Users' Guide PDF (search
@@ -164,4 +184,26 @@ convention.
 5. **macOS `.asc` refusal.** If `sim run my.asc --solver ltspice`
    errors with `MacOSCannotFlatten`, either (a) ensure the schematic
    uses only shipped-library symbols and no hierarchy, or (b) route
-   via `sim --host <win1>`.
+   via `sim --host <windows-host>`.
+
+6. **`-netlist` is broken on LTspice 26.0.1 (Windows).** The flag
+   silently hangs — no `.net` written, no exit code, no signal.
+   Don't shell out to `LTspice.exe -netlist`; use
+   `sim_ltspice.schematic_to_netlist` instead. See
+   [`base/reference/command_line_switches.md`](base/reference/command_line_switches.md)
+   for the full regression note.
+
+7. **No GUI session log.** Unlike Flotherm, LTspice writes nothing
+   for GUI events (popups, schematic-load failures, updater
+   dialogs). The only file channel is the per-deck `<deck>.log`,
+   which only covers solver-time errors. For hangs and GUI-only
+   failures, the `sim_ltspice.runner` 300 s timeout is the
+   triage primitive — see
+   [`base/reference/log_channel_limits.md`](base/reference/log_channel_limits.md).
+
+8. **Generic-model lookup is closed.** `Q1 c b e 2N9999` will fail
+   at solve time unless `2N9999` is in `lib/cmp/standard.bjt` or
+   pulled in via `.lib`/`.include`. The 8 `lib/cmp/standard.*`
+   files are the closed enum — see
+   [`base/reference/component_models.md`](base/reference/component_models.md)
+   for offline lint via `ComponentModelCatalog`.
