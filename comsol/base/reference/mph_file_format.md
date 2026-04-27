@@ -53,7 +53,7 @@ The `T="33"` siblings inside `<ModelParamGroup>` are the global parameters. **Ma
 The driver ships `sim.drivers.comsol.lib.mph_inspect` with a stdlib-only API:
 
 ```python
-from sim.drivers.comsol.lib.mph_inspect import inspect_mph, MphArchive, mph_diff
+from sim.drivers.comsol.lib import inspect_mph, MphArchive, mph_diff
 
 # One-shot dict summary
 summary = inspect_mph("model.mph")
