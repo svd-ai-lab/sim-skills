@@ -92,8 +92,10 @@ via `GetDlgItem(1148)` + `SendMessage(WM_SETTEXT)` + `BM_CLICK`.
 
 | Path | What's there |
 |---|---|
-| `base/reference/floscript_modeling.md` | **FloSCRIPT model generation reference** — command vocabulary, patterns, step templates for building models from scratch via Claude. |
+| `base/reference/floscript_modeling.md` | **FloSCRIPT model generation reference** — command vocabulary, patterns, step templates for building models from scratch via Claude. Includes the `project_run_script` chaining pattern and a pointer to the full 620-command catalogue. |
 | `base/reference/postprocessing.md` | **Result extraction reference** — FloSCRIPT export commands (Path A), direct binary read of `msp_*/end/<Field>` files (Path B, format verified), GUI export (Path C), plus copy-paste verification probes. |
+| `base/reference/error_codes.md` | **Triage table** for `E/<NNNNN>` / `W/<NNNNN>` / `I/<NNNNN>` codes seen in `floerror.log` and `WinXP\bin\LogFiles\logFile*.xml`. Read this when an `ok=false` result needs a retry-vs-fatal decision. |
+| `base/reference/headless_bootstrap_investigation.md` | **What's ruled out, what's open** for headless project authoring (overlay approach is dead; GUI bootstrap is the next experiment) and `<load_from_library>` `E/15001` (9 syntactic forms ruled out; recording oracle deferred). |
 | `base/reference/` | FloSCRIPT XML patterns, GUI control sequences, Win32 message recipes. |
 | `base/workflows/` | End-to-end demo runs of typical Phase A `.pack` cases. |
 | `base/docs/` | Background on the GUI-automation approach and why headless batch is broken upstream. |
