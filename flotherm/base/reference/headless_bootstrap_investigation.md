@@ -99,4 +99,4 @@ A cheaper autonomous probe to try first: prepend `<refresh_library/>` (or `<impo
 | Re-solve an existing project headlessly | Direct `translator.exe -p <ws> -n1` + `solexe.exe -p <ws>`, after `flotherm.bat -env`. **Works.** See `SKILL.md` "Direct batch" section. |
 | Create a new project from scratch | GUI automation (Macro → Play FloSCRIPT). Headless-bootstrap is still blocked; the next experiment is GUI bootstrap + headless re-translate. |
 | Author materials / sources | `<create_attribute>` + `<modify_attribute>`. Don't try `<load_from_library>` — see ISSUE-006. |
-| Chain N FloSCRIPTs after one GUI click | `<project_run_script file_name="…"/>` is in the schema and may work — see the unverified pointer in `floscript_modeling.md` "Script chaining" section. Verify with a 2-line probe before relying on it. |
+| Chain N FloSCRIPTs after one GUI click | `<project_run_script file_name="…"/>` — **verified on 2504** (2026-04-27). See `floscript_modeling.md` "Script chaining" for the orchestrator pattern and the three-probe verification. |

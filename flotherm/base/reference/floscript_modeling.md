@@ -73,9 +73,9 @@ The patterns below cover the day-to-day modeling vocabulary. For the **complete*
 
 Use it when the patterns here don't have what you need (e.g. `csv_export_attribute`, `start_record_script`, `refresh_library`, `project_run_script`). Each entry lists the command name and its XSD complex-type so you can grep the schema for the attribute set.
 
-## Script chaining: `project_run_script` (unverified pointer)
+## Script chaining: `project_run_script` (verified on 2504)
 
-`<project_run_script file_name="…"/>` is documented in the schema as a way to run another FloSCRIPT from inside the running script context — in principle, this would collapse N `Macro → Play FloSCRIPT` clicks into one orchestrator script:
+`<project_run_script file_name="…"/>` runs another FloSCRIPT from inside the running script context. **Verified on Flotherm 2504 (2026-04-27)** — see "Verification" below for the probe artifacts. This collapses N `Macro → Play FloSCRIPT` clicks into one orchestrator script:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -88,9 +88,24 @@ Use it when the patterns here don't have what you need (e.g. `csv_export_attribu
 </xml_log_file>
 ```
 
-> ⚠ **Not verified on Flotherm 2504 yet.** Surfaced via [lixiekun/flotherm-automation#1](https://github.com/lixiekun/flotherm-automation/issues/1#issuecomment-4324008578) (2026-04-27) by a third party. The command appears in all 7 schema roots, but schema presence ≠ playback support — `<load_from_library>` (ISSUE-006) and `flotherm.bat -f` (ISSUE-003) are both schema-valid but runtime no-ops. Until someone records a 2-line probe (`<project_load>` + `<quit>`) and confirms it actually quits Flotherm, treat this as a *pointer to investigate*, not an established pattern.
+The outer orchestrator still needs **one** GUI invocation (Macro → Play FloSCRIPT, automated by sim-cli's UIA driver). After that, every `<project_run_script>` runs in-process; no further UI clicks required. `<quit/>` is the FloSCRIPT primitive to close Flotherm cleanly at the end — also verified to work in playback.
 
-A cheap verification probe: write a 2-line orchestrator that just loads a project and quits. Play it via `Macro → Play FloSCRIPT`. If Flotherm closes, chaining works in principle and you can extend with `<project_run_script>` calls. If Flotherm stays open, the directive is record-only and this whole pattern is dead.
+`project_run_script` is available in all 7 schema roots — surfaced via [lixiekun/flotherm-automation#1](https://github.com/lixiekun/flotherm-automation/issues/1#issuecomment-4324008578) (2026-04-27).
+
+### Verification (Flotherm 2504, 2026-04-27)
+
+Three independent probes settled the question:
+
+1. **`<quit/>`-only probe.** A 1-command orchestrator with just `<quit/>`. Flotherm GUI closes after play. Confirms `<quit>` works in playback.
+2. **Typo probe.** Outer calls inner via `<project_run_script>`; inner has a deliberate XSD-invalid `<start_record_script filename="…"/>` (wrong attribute name — should be `file_name`). The GUI session log captured `E/15013 - FloSCRIPT validation error: attribute 'filename' is not declared … On line 3` — and **line 3 is in the inner script**. Flotherm parsed and validated the inner, which would not happen if `<project_run_script>` were record-only.
+3. **Inner-quit probe.** Outer calls inner via `<project_run_script>`; inner contains only `<quit/>`. After play, the `flomain` GUI process is gone (only `floserv`/`floview` remain). Since the outer has no `<quit/>`, the close came from the inner — final confirmation that the chain runs in-process.
+
+The "schema-valid but runtime-no-op" risk that sank `<load_from_library>` (ISSUE-006) and `flotherm.bat -f` (ISSUE-003) doesn't apply here.
+
+### Caveats from verification
+
+- **`<project_load project_name="…"/>` requires the project to already be registered in `group.cat`** (per the canonical `base/workflows/solve_mobile_demo.xml` note). Loading a brand-new project from a fresh `sim connect` session produces `E/15105 - Failed to load project`. If you want the orchestrator to load a project, use `<project_import>` first or pre-register via the GUI.
+- **The driver's `ok` flag flips false on `<quit/>`-bearing scripts** because Flotherm closes underneath the session. Expected — re-`connect` for follow-up commands.
 
 ## Error triage
 
