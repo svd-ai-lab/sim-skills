@@ -52,16 +52,7 @@ Every skill lives in its own top-level folder. The grid is **open and growing** 
 |---|---|---|---|---|
 | [**sim-cli**](sim-cli/SKILL.md) | *Shared contract* | Both (persistent + one-shot) | Working ✅ | The runtime contract every driver skill depends on — session lifecycle, command surface, input classification, Step-0 version probe, acceptance, escalation. **Load alongside any driver skill below.** |
 | [**openfoam-sim**](openfoam/SKILL.md) | CFD (OSS) | Remote `sim serve` on Linux via SSH tunnel | Working ✅ | Meshing, MPI parallel, classifier-based pass/fail on OpenFOAM v2206 |
-| [**ansa-sim**](ansa/SKILL.md) | Structural pre-processing | Headless batch (`ansa_win64 -execscript -nogui`) | Phase 1 🟡 | BETA CAE ANSA v25 scripts; no persistent session yet |
-| [**workbench-sim**](workbench/SKILL.md) | CAE orchestration | Persistent PyWorkbench SDK + RunWB2 fallback | Working ✅ | Ansys Workbench project/system/journal orchestration; cells 1-3 of Static Structural |
-| [**mechanical-sim**](mechanical/SKILL.md) | Structural physics | Persistent PyMechanical gRPC session (GUI) | Working ✅ | Ansys Mechanical BCs/solve/results; cells 4-6 of Static Structural. E2E tested with official example. |
-| [**starccm-sim**](starccm/SKILL.md) | CFD / Multiphysics | One-shot batch Java macros (`starccm+ -batch`) | Working ✅ | Simcenter STAR-CCM+ 2602 geometry, meshing, solver execution via Java macros. E2E tested. |
-| [**abaqus-sim**](abaqus/SKILL.md) | Structural FEA | One-shot `.inp` decks or Abaqus/CAE Python scripts | Working ✅ | Dassault Systemes SIMULIA Abaqus static/dynamic/thermal FEA; cantilever beam E2E with deformation contour evidence. |
 | [**pybamm-sim**](pybamm/SKILL.md) | Battery modeling | One-shot `sim run --solver pybamm` | Working ✅ | PyBaMM DFN / SPM / SPMe battery models; no separate solver binary — the pybamm package version *is* the solver version. |
-| [**cfx-sim**](cfx/SKILL.md) | CFD (turbomachinery) | Persistent hybrid (`cfx5post -line` + batch render) | Working ✅ | Ansys CFX via CCL definition files, interactive post-processing, hybrid contour rendering. E2E verified with VMFL015. |
-| [**lsdyna-sim**](lsdyna/SKILL.md) | Explicit FEA | One-shot `lsdyna i=<file.k>` | Working ✅ | Ansys LS-DYNA explicit/implicit nonlinear FEA; keyword file validation, auto DLL discovery. Single hex tension E2E. |
-| [**mapdl-sim**](mapdl/SKILL.md) | Implicit FEA | Both: one-shot `sim run` + persistent PyMAPDL gRPC session (`sim connect/exec/inspect`) | Working ✅ | Ansys MAPDL static / modal / thermal / harmonic. 2D I-beam + 3D notched-plate Phase 1 E2E; same 2D beam re-driven through 10-step session (Phase 2). Headless PyVista contour PNGs. |
-| [**icem-sim**](icem/SKILL.md) | Meshing preprocessor | One-shot `icemcfd.bat -batch -script <file.tcl>` | Working ✅ | Ansys ICEM CFD Tcl batch meshing. Box.tin → 26752 tetra E2E (3.9s). 143 solver export interfaces. |
 | [**calculix-sim**](calculix/SKILL.md) | Static / frequency / thermal FEA | One-shot `ccx -i <file>` | Working ✅ | Open-source Abaqus-dialect `.inp` on Linux. Cantilever tip U2 = −2002 (0.1 % err). |
 | [**gmsh-sim**](gmsh/SKILL.md) | Mesh generation | One-shot `gmsh -3 <file.geo>` / Python API | Working ✅ | 2D/3D meshing with CAD import; exports for CalculiX/OpenFOAM/FEniCS/SU2. |
 | [**su2-sim**](su2/SKILL.md) | Open-source CFD | One-shot `SU2_CFD <file.cfg>` | Working ✅ | NACA0012 inviscid, RMS[Rho] dropped 3.5 orders. |
@@ -84,7 +75,6 @@ Every skill lives in its own top-level folder. The grid is **open and growing** 
 | [**scikit-rf-sim**](scikit_rf/SKILL.md) | RF / microwave analysis | One-shot Python script | Working ✅ | Touchstone I/O, S-parameters. Short/open/match S11 = −1/+1/0 exact. |
 | [**pandapower-sim**](pandapower/SKILL.md) | Power-system analysis | One-shot Python script | Working ✅ | Fraunhofer IEE. 2-bus PF vm_pu = 0.998, losses 1.4 kW. |
 | [**paraview-sim**](paraview/SKILL.md) | Post-processing / visualization | One-shot `pvpython` / `pvbatch` | Working ✅ | Kitware ParaView. 30+ file formats, Clip/Slice/Contour/StreamTracer, headless PNG rendering. |
-| [**hypermesh-sim**](hypermesh/SKILL.md) | FE pre-processing | One-shot `hw -b -script` | Working ✅ | Altair HyperMesh. 225 entity classes, 1946 methods. CAD import, automesh/tetmesh, quality checks, solver deck export. |
 | [**isaac-sim**](isaac/SKILL.md) | Embodied-AI simulation | One-shot `sim run <script.py> --solver isaac` | Working ✅ | NVIDIA Isaac Sim 4.5 (Omniverse Kit). SimulationApp bootstrap contract, AST lint for import-order, `official_hello_world` + Franka + Replicator + warehouse_sdg snippets. |
 | [**newton-sim**](newton/SKILL.md) | GPU physics / embodied AI | Two routes: Route A (recipe JSON) or Route B (`.py` run-script) | Working ✅ | NVIDIA Newton 1.x on Warp. Declarative recipe schema, 6 solver backends (XPBD/VBD/MuJoCo/MPM/Style3D/SemiImplicit), basic_pendulum + robot_g1 + cable_twist E2E workflows. |
 | **+ your skill** | — | — | 🛠 | Drop a `<solver>/SKILL.md`, register in `CLAUDE.md`, open a PR |
@@ -155,19 +145,9 @@ sim-skills/
 ├── CLAUDE.md          AI-facing index, protocol, cross-skill conventions
 ├── LICENSE            Apache-2.0
 │
-├── fluent/            Ansys Fluent via PyFluent (persistent sessions)
-├── comsol/            COMSOL Multiphysics via JPype Java API
-├── openfoam/          OpenFOAM v2206 via SSH-tunneled sim serve
-├── ansa/              BETA CAE ANSA v25 pre-processor (batch, Phase 1)
-├── flotherm/          Simcenter Flotherm 2504 (GUI + Win32, Phase A)
-├── matlab/            MATLAB via sim run (v0 one-shot)
-├── workbench/         Ansys Workbench orchestration via PyWorkbench (cells 1-3)
-├── mechanical/        Ansys Mechanical BCs/solve/results via PyMechanical (cells 4-6)
-├── starccm/           Simcenter STAR-CCM+ 2602 via Java macros (batch)
-├── abaqus/            Dassault Systemes SIMULIA Abaqus via .inp decks / Abaqus/CAE Python
-├── pybamm/            PyBaMM battery models (pure Python, one-shot)
-├── cfx/               Ansys CFX turbomachinery/general-purpose CFD via CCL + cfx5solve
-├── lsdyna/            Ansys LS-DYNA explicit/implicit nonlinear FEA via .k keyword files
+├── openfoam/          OSS solver skill (one example among many)
+├── pybamm/            …
+├── …/                 one directory per skill — see "Skill Grid" above
 │
 └── assets/            banner and related graphics
 ```
