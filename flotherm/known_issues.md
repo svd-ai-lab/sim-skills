@@ -332,3 +332,52 @@ the file. The recording contains the exact syntax Flotherm uses internally.
 See the "Ground-truth oracle" section in
 [reference/floscript_modeling.md](base/reference/floscript_modeling.md).
 
+## ISSUE-006: `<load_from_library>` returns `E/15001` regardless of `<library_name>` form
+
+**Date discovered**: 2026-04-27
+**Severity**: Medium — blocks one path for material assignment; workaround exists
+**Status**: Narrowed but open. 9 syntactic forms ruled out; recording-oracle probe required to settle.
+
+### Symptom
+
+`<load_from_library>` always returns:
+
+```
+ERROR   E/15001 - Command failed to find library node
+WARN    W/15000 - Aborting XML due to previous error
+```
+
+The XSD declares `<library_name>` as a recursive `<library>` chain (`libraryIDNode`), so we tested 9 syntactic variations:
+
+1. filesystem names throughout
+2. filesystem ancestors, display name leaf
+3. display names throughout
+4. leaf-only, filesystem name
+5. leaf-only, display name
+6. prepend `Libraries/` top
+7. with `count` attribute at every level
+8. skip the `FloTHERM_Libraries` root
+9. display leaf, filesystem ancestors
+
+All 9 fail identically. The failure cause is **environmental, not syntactic** — none of the schema-driven axes we vary make a difference.
+
+### Three remaining hypotheses
+
+1. **Missing precondition** — library tree may be lazy-loaded; needs `<refresh_library/>` or `<import_library>` first, or a geometry `<select_geometry>` selection, or other implicit GUI state.
+2. **Record-only command** — the playback path may not actually wire it up (similar to ISSUE-003's `flotherm.bat -f`).
+3. **UUID addressing** — `library.catalog` entries carry a 6-tuple integer suffix that may be the canonical node ID.
+
+### Workaround
+
+Build attribute-by-hand with `<create_attribute>` + `<modify_attribute>`. Don't try `<load_from_library>` until the recording oracle settles which precondition is missing.
+
+### Resolution path
+
+```
+Macro → Record FloSCRIPT → drag-drop a material from the GUI library onto a geometry → Stop → read recording
+```
+
+The recorded XML is the canonical form. Until then, see `base/reference/headless_bootstrap_investigation.md` for the closed-vs-open question map.
+
+Reproduction artifacts: [`sim-proj/dev-docs/flotherm/experiments/2026-04-27-library-paths/`](https://github.com/svd-ai-lab/sim-proj/tree/main/dev-docs/flotherm/experiments/2026-04-27-library-paths).
+
