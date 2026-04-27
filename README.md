@@ -77,7 +77,6 @@ Every skill lives in its own top-level folder. The grid is **open and growing** 
 | [**pymfem-sim**](pymfem/SKILL.md) | High-order FEM | One-shot Python script | Working ✅ | LLNL MFEM bindings. Poisson u_max = 0.07353 (0.2 % err via UMFPackSolver). |
 | [**openseespy-sim**](openseespy/SKILL.md) | Structural / earthquake FEM | One-shot Python script | Working ✅ | PEER's OpenSees. Cantilever tip err 1.3e-12. |
 | [**sfepy-sim**](sfepy/SKILL.md) | Pure-Python FEM (weak forms) | One-shot Python script | Working ✅ | Term / Problem API. Poisson 1.3 % err on 8×8 mesh. |
-| [**cantera-sim**](cantera/SKILL.md) | Combustion / kinetics | One-shot Python script | Working ✅ | LBNL / Caltech. CH4/air adiabatic flame T = 2225.5 K. |
 | [**openmdao-sim**](openmdao/SKILL.md) | Multi-disciplinary optimization | One-shot Python script | Working ✅ | NASA MDAO. Sellar coupled MDA y1 = 25.59, y2 = 12.06. |
 | [**fipy-sim**](fipy/SKILL.md) | Finite-volume PDE | One-shot Python script | Working ✅ | NIST FVM. 1D steady Poisson err 1.6e-15. |
 | [**pymoo-sim**](pymoo/SKILL.md) | Multi-objective optimization | One-shot Python script | Working ✅ | NSGA-II/III, MOEA/D, CMAES. ZDT1 36 Pareto solutions. |
@@ -199,7 +198,6 @@ Each `<solver>/` directory is self-contained: `SKILL.md` at the top is the agent
 - **2026-04-15** 🐍 **Pure-Python simulation ecosystem — 13 new skills** paired with their sim-cli drivers. Each skill ships `SKILL.md` + 3-4 reference docs + verified snippets + known-issues + SDK notes, and each driver E2E is physics-validated:
   - [`openseespy-sim`](openseespy/SKILL.md) — structural/earthquake FEM (cantilever tip err 1.3e-12)
   - [`sfepy-sim`](sfepy/SKILL.md) — pure-Python FEM (Poisson 1.3% err)
-  - [`cantera-sim`](cantera/SKILL.md) — combustion / chemical kinetics (CH4/air T_ad = 2225 K)
   - [`openmdao-sim`](openmdao/SKILL.md) — NASA MDAO framework (Sellar MDA)
   - [`fipy-sim`](fipy/SKILL.md) — NIST finite-volume PDE (Poisson err 1.6e-15)
   - [`pymoo-sim`](pymoo/SKILL.md) — NSGA-II/III multi-objective (ZDT1 36 Pareto)

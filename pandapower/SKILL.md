@@ -25,7 +25,7 @@ pp.runpp(net)
 print(net.res_bus.vm_pu)            # bus voltage magnitudes (p.u.)
 ```
 
-Same subprocess driver mode as PyBaMM / Cantera.
+Same subprocess driver mode as PyBaMM.
 
 ---
 

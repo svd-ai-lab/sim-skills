@@ -22,7 +22,7 @@ print(ntwk.s.shape, ntwk.f.shape)             # (n_freq, 2, 2), (n_freq,)
 ntwk_db = 20 * np.log10(np.abs(ntwk.s))
 ```
 
-Same subprocess driver mode as PyBaMM / Cantera / CoolProp.
+Same subprocess driver mode as PyBaMM / CoolProp.
 
 ---
 

@@ -22,7 +22,7 @@ h     = PropsSI('H', 'T', 300, 'P', 1e5, 'R134a')
 mu    = PropsSI('V', 'T', 300, 'P', 1e5, 'Air')      # viscosity
 ```
 
-Same subprocess driver mode as PyBaMM / Cantera.
+Same subprocess driver mode as PyBaMM.
 
 ---
 
