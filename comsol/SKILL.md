@@ -40,6 +40,7 @@ single `mph` line (1.2.x). Always read `base/`, then your active
 |---|---|
 | `base/workflows/block_with_hole/` | Steady-state thermal of a heated block with a cylindrical hole. 6 numbered Python steps (`00_create_geometry.py` … `05_plot_temperature.py`). The canonical "smallest end-to-end" reference for this driver. |
 | `base/workflows/surface_mount_package/` | More realistic SMD package thermal model. 6 numbered steps + a `README.md` describing the geometry and acceptance criteria. |
+| `base/reference/mph_file_format.md` | `.mph` is a ZIP archive — internal layout, the three `nodeType` variants (compact/solved/preview), the Global Parameter `T="33"` contract, and the stdlib `mph_inspect` reader. Read this when you need to introspect a `.mph` *without* spinning up `comsolmphserver`. |
 
 Each numbered step is a self-contained snippet you submit via
 `sim exec` after `sim connect --solver comsol`. The snippets use the
@@ -109,6 +110,41 @@ For models that belong to **modules not installed** on the user's host
 (or for browsing by image/category), point the user at
 <https://www.comsol.com/models>. Don't scrape it from the skill — just
 link.
+
+---
+
+## MPH file introspection (stdlib path — no JVM)
+
+For "what's in this `.mph`?" queries — parameters, physics tags,
+nodeType, mesh/solution sizes — prefer the stdlib reader over a live
+JVM:
+
+```python
+from sim.drivers.comsol.lib.mph_inspect import inspect_mph
+summary = inspect_mph(path)   # one-shot dict
+```
+
+`MphArchive` (context manager) and `mph_diff` (two-file delta) are
+also available. `MphFileProbe` is wired into the driver's default
+probe list, so any `.mph` produced by a `sim` run is auto-described
+in `sim inspect last.result` — no extra call needed.
+
+See [`base/reference/mph_file_format.md`](base/reference/mph_file_format.md)
+for the archive layout, the `nodeType` variants, and the Global
+Parameter `T="33"` extraction contract.
+
+---
+
+## Headless `comsolbatch` (not yet implemented)
+
+`comsolbatch.exe -inputfile in.mph -outputfile out.mph -batchlog log.txt`
+is the canonical non-interactive entry point and would let an agent
+smoke-test models without the long-lived `comsolmphserver` setup. The
+driver currently always goes through `comsolmphserver` + JPype.
+Tracked in [sim-proj#51](https://github.com/svd-ai-lab/sim-proj/issues/51)
+/ [sim-cli#47](https://github.com/svd-ai-lab/sim-cli/pull/47); when it
+lands the workflow snippets above will pick up a one-shot path that
+skips GUI actuation entirely.
 
 ---
 
