@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+.pytest_cache/
+.ruff_cache/
+
+# Virtual envs
+.venv/
+venv/
+env/
+
+# sim runtime artifacts
+.sim/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Solver run output
+*.log
+*.trn
+*.raw
+*.op.raw
+flprt.*
+cleanup-fluent-*.bat
+
+# Local-only files (sensitive info, vendor assets — never push)
+.local/
+
+# Local Claude Code skills (project-private, do not publish)
+.claude/
+
+# Flotherm vendor files (Siemens IP — keep local only)
+flotherm/base/reference/flotherm/*/examples/
+flotherm/base/reference/flotherm/*/user_guide/*.xlsm
+
+# Solver binary outputs (too large for git)
+*.odb
+*.sim
+*.prt
+*.com
+*.sta
+*.msg
+*.rpy
+*.rpy.*
+__pycache__/
