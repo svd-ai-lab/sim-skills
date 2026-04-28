@@ -126,13 +126,16 @@ These skills are useless without the [`sim-cli`](https://github.com/svd-ai-lab/s
 - `sim run` for one-shot scripts
 - `sim lint`, `sim logs`, `sim ps` for the operational layer around both
 
-For each solver there is a matching driver at `sim-cli/src/sim/drivers/<solver>/`. The skill in this repo is the agent-facing protocol; the driver is the Python-facing implementation. Neither works well alone.
+For each solver there is a matching driver, distributed as an out-of-tree plugin package: [`sim-plugin-<solver>`](https://github.com/svd-ai-lab/sim-plugin-index) (browse via `sim plugin list` after installing `sim-runtime`). The skill in this repo is the agent-facing protocol; the plugin is the Python-facing implementation. Neither works well alone.
 
 ```bash
-# Install the runtime (has all seven drivers available today):
-uv pip install "git+https://github.com/svd-ai-lab/sim-cli.git"
+# 1. Install the runtime (solver-agnostic core):
+uv pip install sim-runtime
 
-# Then point your LLM agent at this repo and let it read the SKILL.md files.
+# 2. Install the plugin for the solver you want:
+sim plugin install <name>          # e.g. sim plugin install pybamm
+
+# 3. Then point your LLM agent at this repo and let it read the SKILL.md files.
 ```
 
 ---
@@ -152,13 +155,14 @@ sim-skills/
 └── assets/            banner and related graphics
 ```
 
-Each `<solver>/` directory is self-contained: `SKILL.md` at the top is the agent entry point; the rest (`reference/`, `workflows/`, `snippets/`, `tests/`, `skill_tests/`, `docs/`) is supporting material the SKILL.md links to as needed. Folder shapes vary by skill and by phase — Fluent and Flotherm are the most built-out today.
+Each `<solver>/` directory is self-contained: `SKILL.md` at the top is the agent entry point; the rest (`reference/`, `workflows/`, `snippets/`, `tests/`, `skill_tests/`, `docs/`) is supporting material the SKILL.md links to as needed. Folder shapes vary by skill and by phase.
 
 ---
 
 ## 🔗 Related projects
 
 - **[`sim-cli`](https://github.com/svd-ai-lab/sim-cli)** — the paired runtime. One CLI, one HTTP protocol, an open driver registry. This repo is its agent-facing twin.
+- **[`sim-plugin-index`](https://github.com/svd-ai-lab/sim-plugin-index)** — curated registry of out-of-tree solver plugins (`sim plugin list / install`).
 
 ---
 
