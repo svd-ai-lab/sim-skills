@@ -25,9 +25,16 @@ vendor Python API** — unlike Fluent (pyfluent), COMSOL (mph), or MATLAB
 [**sim-ltspice**](https://github.com/svd-ai-lab/sim-ltspice), a
 standalone Python library that IS the Python API for LTspice.
 
-Implication: everything in this skill stays identical whether you call
-`sim run foo.net --solver ltspice`, or import `sim_ltspice` directly in
-Python. The file format understanding and platform quirks are the same.
+**Drive LTspice through `sim run`, not `sim_ltspice` directly.** Both
+end up calling the same subprocess and producing the same `.raw` /
+`.log`, but `sim run` records the run into `~/.sim/history.jsonl`, so
+`sim logs`, `sim --json logs`, downstream graders, and other agents
+can see what happened. Importing `sim_ltspice` in Python skips that
+record — the simulation runs but is invisible to anything that reads
+sim-cli's history. Use the Python library only when you need an API
+sim-cli doesn't expose (e.g. waveform-level `RawRead` cursors); even
+then, run the simulation through `sim run` first and `RawRead` the
+`.raw` path that `sim --json logs last` reports.
 
 ## Input classification
 
@@ -69,6 +76,9 @@ regression), route through `sim --host <windows-host>`. See
 `../sim-cli/SKILL.md` for the HTTP dispatch model. The full
 flag-by-flag table lives in
 [`base/reference/command_line_switches.md`](base/reference/command_line_switches.md).
+**`--host` is only for routing across machines** — in a Linux container
+with wine + LTspice installed locally (including all sim-benchmark trial
+environments), just call `sim run`, no `--host`.
 
 ## Hard constraints (LTspice-specific)
 
