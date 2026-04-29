@@ -3,31 +3,12 @@ Copyright 2026 sim contributors
 
 This product is licensed under the Apache License, Version 2.0 (see LICENSE).
 
-Third-party commercial solver products are referenced in this repository by
-name for descriptive identification only (Apache-2.0 §6). The referenced
-products remain the trademarks and property of their respective owners:
+sim-skills contains shared agent-facing protocols for the sim runtime. Solver
+and tool-specific skills are expected to live with their corresponding plugin
+packages. Plugins may depend on third-party software, services, SDKs, or local
+executables that are not bundled with this repository.
 
-  - Ansys Fluent, Ansys Mechanical, Ansys MAPDL, Ansys LS-DYNA, Ansys CFX,
-    Ansys Workbench — ANSYS, Inc.
-  - Abaqus, SIMULIA — Dassault Systèmes SE
-  - ANSA — BETA CAE Systems S.A.
-  - Simcenter Flotherm, Simcenter STAR-CCM+ — Siemens Digital Industries
-    Software (formerly Mentor Graphics)
-  - HyperMesh — Altair Engineering, Inc.
-  - COMSOL Multiphysics — COMSOL AB
-  - MATLAB — The MathWorks, Inc.
-
-This repository contains no redistributed source, documentation, or binary
-content from any of the above commercial products. Workflow smoke tests and
-evidence artifacts (input decks, screenshots, result extracts) were authored
-from scratch by sim-skills contributors against publicly documented benchmark
-problems.
-
-The skills in this repository drive the following open-source Python packages
-at runtime; each is governed by its own upstream license:
-
-  ansys-dyna-core, ansys-fluent-core, ansys-mechanical-core,
-  ansys-mapdl-core, ansys-workbench-core, pybamm, openfoam-adapter,
-  calculix, gmsh, su2, lammps, scikit-fem, elmer, meshio, pyvista,
-  pymfem, openseespy, sfepy, cantera, openmdao, fipy, pymoo, pyomo,
-  simpy, trimesh, devito, coolprop, scikit-rf, pandapower
+Users are responsible for complying with the license, copyright, and end-user
+terms that apply to any third-party software they install or use with a plugin.
+Commercial plugin availability depends on third-party license conditions.
+Contact <contact@svd-ai-lab.com> to discuss commercial plugin access.

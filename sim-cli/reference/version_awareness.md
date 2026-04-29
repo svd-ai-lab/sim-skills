@@ -8,11 +8,11 @@ subfolder inside the driver skill.
 
 ## Why this exists
 
-A snippet written for PyFluent 0.38 (uses `.general.material`) silently
-produces `AttributeError` on PyFluent 0.37 (which expects `.material`
-directly). A COMSOL 6.4 API call may not exist in 6.2. Without an
-explicit version check, the agent has to guess from the SDK package
-version — which is exactly the failure mode this probe eliminates.
+A snippet written for one SDK or solver release can silently fail on
+another release, or worse, appear to run while using the wrong API
+surface. Without an explicit version check, the agent has to guess from
+package versions and local paths — exactly the failure mode this probe
+eliminates.
 
 ---
 
@@ -29,12 +29,12 @@ Returns:
 
 ```json
 {
-  "sdk":                 {"name": "ansys-fluent-core", "version": "0.38.1"},
-  "solver":              {"name": "fluent",            "version": "25.2"},
-  "profile":             "pyfluent_0_38_modern",
-  "active_sdk_layer":    "pyfluent-0.38",
-  "active_solver_layer": "25.2",
-  "env_path":            "/.../.sim/envs/fluent-pyfluent-0-38"
+  "sdk":                 {"name": "example-sdk", "version": "1.2.3"},
+  "solver":              {"name": "example",     "version": "4.5"},
+  "profile":             "example_sdk_1_2",
+  "active_sdk_layer":    "sdk-1.2",
+  "active_solver_layer": "solver-4.5",
+  "env_path":            "/.../.sim/envs/example-sdk-1-2"
 }
 ```
 
@@ -60,11 +60,11 @@ Use the probe's fields to pick the right `<slug>`:
 
 Later layers override earlier ones on identically-named files.
 
-Example (Fluent):
+Example:
 
 ```
-active_sdk_layer = "pyfluent-0.38"  → read sdk/pyfluent-0.38/
-active_solver_layer = "25.2"        → read solver/25.2/
+active_sdk_layer = "sdk-1.2"     → read sdk/sdk-1.2/
+active_solver_layer = "solver-4.5" → read solver/solver-4.5/
 ```
 
 If a driver skill has snippets in both `base/snippets/` and
@@ -93,8 +93,7 @@ Full contract: [`sim-cli/docs/architecture/version-compat.md`](https://github.co
 
 ## Notes for SDK-less drivers
 
-Some drivers (flotherm, ansa, openfoam, CLI-native OSS solvers) have no
-Python SDK — they drive the solver via batch executables. For these,
-`active_sdk_layer` is typically `null` and only `active_solver_layer`
-(the release pin) matters. The probe shape is the same; just ignore
-the null fields.
+Some drivers have no Python SDK and drive tools through batch
+executables or other local interfaces. For these, `active_sdk_layer` is
+typically `null` and only `active_solver_layer` matters. The probe shape
+is the same; just ignore the null fields.

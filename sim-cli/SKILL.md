@@ -1,6 +1,6 @@
 ---
 name: sim-cli
-description: Use whenever driving any solver through sim-cli — shared session lifecycle, command surface, input classification, version awareness, acceptance, and escalation. Load alongside the solver-specific SKILL.md (fluent-sim, matlab-sim, comsol-sim, …) — this skill owns the runtime contract; the driver skill owns the solver-specific parts.
+description: Use whenever driving any solver through sim-cli — shared session lifecycle, command surface, input classification, version awareness, acceptance, and escalation. Load alongside the relevant plugin-specific SKILL.md — this skill owns the runtime contract; the plugin skill owns the solver-specific parts.
 ---
 
 # sim-cli
@@ -10,11 +10,11 @@ owns the runtime contract that applies to **every** solver — session
 lifecycle, command surface, input validation, version awareness,
 acceptance semantics, escalation triggers.
 
-Each driver-specific skill (`fluent-sim`, `matlab-sim`, `comsol-sim`, …)
-layers on top of this one. The driver skill owns only:
+Each plugin-specific skill layers on top of this one. The plugin skill
+owns only:
 
-- Solver-specific hard constraints (e.g. "never call `pyfluent.launch_fluent()`")
-- Solver-specific dependency chains (e.g. Fluent meshing `InitializeWorkflow → ImportGeometry → …`)
+- Solver-specific hard constraints
+- Solver-specific dependency chains
 - Solver-specific artifacts (snippets, workflows, reference, SDK/solver layer notes)
 
 If a rule applies to more than one driver, it belongs here.
@@ -33,8 +33,8 @@ which one applies:
 
 | Model | Used by | Lifecycle |
 |---|---|---|
-| **Persistent session** | fluent-sim, comsol-sim, mechanical-sim, mapdl-sim (session mode), workbench-sim, cfx-sim | `connect → exec × N → inspect → disconnect` |
-| **One-shot batch** | matlab-sim, starccm-sim, abaqus-sim, pybamm-sim, ansa-sim, flotherm-sim (GUI/FloSCRIPT variant), most OSS solvers | `run → parse_output → evaluate` |
+| **Persistent session** | Drivers that keep a live process/session open | `connect → exec × N → inspect → disconnect` |
+| **One-shot batch** | Drivers that execute one script/input deck and exit | `run → parse_output → evaluate` |
 
 ---
 
@@ -45,7 +45,7 @@ If you reach a remote `sim` host via `sim --host <host>` or `SIM_HOST`,
 drivers actually work.** This is purely a Windows concern — Linux and
 macOS don't isolate display sessions the same way.
 
-| `sim serve` started from… | Headless drivers (matlab `-batch`, ltspice `-b`, OpenFOAM, all CLI-only) | GUI drivers (Flotherm, COMSOL desktop, Fluent desktop, Mechanical GUI, MATLAB `--ui-mode desktop`) |
+| `sim serve` started from… | Headless / CLI-only drivers | GUI-capable drivers |
 |---|---|---|
 | Logged-in Windows desktop (Windows Terminal / RDP / Task Scheduler with **"run only when user is logged on" + interactive**) | ✅ works | ✅ works — windows are visible, `gui` actuation can find / click / screenshot them |
 | SSH session (`ssh win1` then `sim serve …`) | ✅ works | ❌ silent breakage — windows launch in a non-interactive Windows session with no display surface; `gui` finds zero windows; screenshots come back black; `sim exec`s that touch the GUI hang or no-op |
@@ -58,10 +58,8 @@ macOS don't isolate display sessions the same way.
   Surface "the server may have been started from a non-interactive
   session" as a likely cause and ask the operator to restart `sim
   serve` from a desktop session. See `escalation.md`.
-- For headless drivers (matlab `-batch` / `.slx` via `sim_shim.run`,
-  OSS solvers, anything that the driver skill explicitly classifies
-  as one-shot batch) the session context does not matter — you can
-  proceed without checking.
+- For headless or one-shot batch drivers, the session context does not
+  matter — you can proceed without checking.
 - The agent never starts `sim serve` itself. Server lifecycle is the
   operator's responsibility; this section exists only so you can
   diagnose the specific failure mode where the server is up and
@@ -107,8 +105,7 @@ its window-not-found troubleshooting.
    move. See `reference/escalation.md`.
 5. **Reference example values are not defaults.** Values in any
    `.../examples/` directory describe a specific published test case.
-   You may offer them ("the mixing_elbow example uses 0.4 m/s — would
-   you like to use those values?") but must wait for explicit
+   You may offer them as examples, but must wait for explicit
    confirmation before adopting them.
 
 ---

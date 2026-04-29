@@ -1,6 +1,6 @@
 ---
 name: gui
-description: Cross-driver GUI actuation for CAE solvers running under sim-cli. Use to click buttons, fill fields, dismiss dialogs, and capture window screenshots against Fluent / COMSOL / Mechanical / Flotherm windows through `sim exec`.
+description: Cross-driver GUI actuation for CAE solvers running under sim-cli. Use to click buttons, fill fields, dismiss dialogs, and capture window screenshots against GUI-capable driver windows through `sim exec`.
 type: tool
 ---
 
@@ -32,15 +32,11 @@ the object is absent — don't call it.
 
 Three scenarios dominate:
 
-1. **A blocking dialog is wedging the workflow.** COMSOL's Cortex shows
-   "连接到 COMSOL Multiphysics Server" on every connect. Fluent's
-   "File exists, overwrite?" appears on `session.file.write_case()`.
-   Mechanical pops "Script Error" when IronPython evaluation fails.
-   The solver process is alive but agent work is paused until someone
-   clicks a button — that someone is you, via `gui`.
-2. **You need to drive the GUI where the SDK can't.** Flotherm has no
-   scripting API for `File > Play FloSCRIPT`; it's a menu pick. Fluent's
-   legacy Ansys ribbon has settings unreachable from `solver.tui`.
+1. **A blocking dialog is wedging the workflow.** A login prompt,
+   overwrite confirmation, or script-error dialog can pause agent work
+   until someone clicks a button — that someone is you, via `gui`.
+2. **You need to drive the GUI where the SDK can't.** Some workflows
+   expose a UI-only surface that the driver API does not cover.
 3. **You need a per-window screenshot.** `sim screenshot` captures the
    whole desktop. `SimWindow.screenshot()` captures just the window you
    care about — cheaper to read, less visual clutter for the LLM.
@@ -69,7 +65,7 @@ Requirement on the server host: `sim serve` must run in a **real
 interactive desktop session** (normal login or RDP). Windows
 service / SSH session 0 has no desktop, so pywinauto can't enumerate
 any windows even though the solver processes are running. This is the
-same constraint `flotherm` already documents.
+same constraint GUI-capable drivers document.
 
 ## API
 
@@ -139,7 +135,7 @@ actually exposes.
 ```python
 dlg.hwnd     # int
 dlg.pid      # int
-dlg.proc     # str, e.g. "comsol.exe"
+dlg.proc     # str, process name
 dlg.title    # current window title
 dlg.as_dict() # {hwnd, pid, proc, title, rect}
 ```
@@ -160,7 +156,7 @@ _result = {"dismissed": dlg is not None}
 ### Pattern 2 — confirm a "file exists, overwrite?" dialog
 
 ```python
-dlg = gui.find(title_contains="Question", timeout_s=3)  # Fluent
+dlg = gui.find(title_contains="Question", timeout_s=3)
 if dlg is None:
     dlg = gui.find(title_contains="overwrite", timeout_s=3)  # other
 if dlg:
@@ -186,7 +182,7 @@ _result = {"control_names": names[:50]}
 ### Pattern 4 — capture only the solver window for the agent to read
 
 ```python
-dlg = gui.find(title_contains="COMSOL Multiphysics", timeout_s=3)
+dlg = gui.find(title_contains="Main", timeout_s=3)
 if dlg:
     shot = dlg.screenshot(label="after_solve")
     _result = shot  # contains {ok, path, width, height}
@@ -236,10 +232,8 @@ Things that commonly make `ok` false:
 
 ## Related skills
 
-- Per-solver skills under `sim-skills/<solver>/` list the dialogs that
-  specific driver is known to pop (COMSOL's "连接到", Fluent's
-  "Question", Mechanical's "Script Error"). Check those for recipes
-  before inventing your own.
+- Plugin-specific skills list the dialogs that a given driver is known
+  to pop. Check those for recipes before inventing your own.
 - `sim.inspect` probes (issue #8a `window_observed`, #8b screenshots)
   tell you **what is on screen** — read them first, then reach for
   `gui` to act.

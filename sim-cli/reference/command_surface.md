@@ -29,13 +29,12 @@ driver's `parse_output(stdout)` extracts the JSON payload, which is
 returned on the `parsed_output` field in `--json` mode.
 
 ```bash
-sim run analysis.m --solver matlab
-sim run job.k      --solver lsdyna
+sim run analysis.py --solver example
+sim run job.in     --solver example_batch
 ```
 
 **Exit code**: 0 if the driver reports `ok=true`, non-zero otherwise.
-**Use for**: drivers that have no persistent-session model (MATLAB v0,
-most OSS solvers, Abaqus `.inp`, LS-DYNA `.k`).
+**Use for**: drivers that have no persistent-session model.
 
 ---
 
@@ -54,8 +53,8 @@ Solver-specific flags:
 
 | Flag | Drivers that use it |
 |---|---|
-| `--mode meshing \| solver` | `fluent` |
-| `--ui-mode gui \| headless` | `fluent`, `mechanical`, `comsol` |
+| `--mode <mode>` | drivers with multiple runtime modes |
+| `--ui-mode gui \| headless` | GUI-capable drivers |
 | `--processors N` | any MPI-capable solver |
 
 The driver skill documents which flags its driver accepts and what the
@@ -85,12 +84,11 @@ Queries live session state. Common targets across all drivers:
 | `session.versions` | `sdk`, `solver`, `profile`, `active_sdk_layer`, `active_solver_layer`, `env_path` — **use at Step 0** |
 | `session.mode` | Current session mode (driver-dependent) |
 | `last.result` | `ok`, `label`, `result`, `stdout`, `stderr` from the most recent `exec` |
-| `workflow.summary` | Workflow task states (Fluent meshing) |
-| `field.catalog` | Available fields for post-processing (Fluent) |
+| `workflow.summary` | Workflow task states, when exposed by a driver |
+| `field.catalog` | Available fields for post-processing, when exposed by a driver |
 
 Driver-specific targets are documented in each driver skill's SKILL.md
-(e.g. `ls_dyna: deck.summary, deck.text`; `mechanical:
-mechanical.project_directory`).
+and may include additional namespaces.
 
 ### `sim disconnect [--stop-server]`
 
@@ -118,5 +116,5 @@ These are mistakes found in existing driver skills — do not repeat:
   the current CLI does not expose `query` as a subcommand.
 - `sim exec --code-file PATH` → it is **`sim exec --file PATH`**. There
   is no `--code-file` flag.
-- `sim run … --solver matlab` **cannot take `--mode`**. Mode is a
+- `sim run … --solver <name>` **cannot take `--mode`**. Mode is a
   persistent-session concept (`sim connect --mode …`).
