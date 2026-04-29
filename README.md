@@ -6,11 +6,11 @@
 
 **Teach your agent to drive engineering tools through sim.**
 
-*[`sim-runtime`](https://github.com/svd-ai-lab/sim-cli) provides the runtime.*
-*`sim-skills` provides the agent playbooks.*
+*[`sim-cli-core`](https://github.com/svd-ai-lab/sim-cli) provides the runtime.*
+*`sim-skills` provides the shared agent protocol.*
 
 <p align="center">
-  <a href="#-current-skills"><img src="https://img.shields.io/badge/Skills-lean_core-8b5cf6?style=for-the-badge" alt="Skills library"></a>
+  <a href="#-current-skills"><img src="https://img.shields.io/badge/Skills-shared_core-8b5cf6?style=for-the-badge" alt="Shared skills"></a>
   <a href="https://github.com/svd-ai-lab/sim-plugin-index"><img src="https://img.shields.io/badge/Drivers-plugin_repos-3b82f6?style=for-the-badge" alt="Plugin repositories"></a>
   <a href="#-how-this-repo-fits-the-plugin-model"><img src="https://img.shields.io/badge/Model-runtime_plus_plugins-22c55e?style=for-the-badge" alt="Runtime plus plugins"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-eab308?style=for-the-badge" alt="License"></a>
@@ -26,12 +26,12 @@
 
 LLM agents can often write solver scripts, but they still need operational discipline: which inputs are physical decisions, what counts as acceptance, when to inspect runtime state, when to stop, and which logs or artifacts prove the run actually worked.
 
-`sim-skills` is the shared playbook layer for that discipline. It is intentionally smaller now that solver drivers have moved into individual plugin repositories.
+`sim-skills` is the shared playbook layer for that discipline. It is intentionally small: solver-specific driver skills live with their plugin repositories.
 
 - **Core agent protocols live here.** The shared `sim-cli` skill owns lifecycle, command surface, version probing, input classification, acceptance, and escalation.
-- **Open-source skills can live here.** Lightweight solver or library skills that do not require private/vendor assets may remain in this repo.
+- **Runtime-injected tool protocols live here.** Shared tools such as `sim-cli/gui` are owned by the runtime and reused across drivers.
 - **Driver implementations live in plugins.** Runtime driver code ships through out-of-tree plugin packages and the plugin index.
-- **Plugin-specific skills travel with plugins.** When a driver needs specialized workflows, private references, GUI automation, or vendor-specific troubleshooting, keep that skill content with the matching plugin repo.
+- **Solver-specific skills travel with plugins.** If a skill names a solver, it belongs with `sim-plugin-<name>` unless it is promoted into a genuinely shared runtime convention.
 
 ---
 
@@ -41,12 +41,12 @@ The sim ecosystem is split deliberately:
 
 | Layer | Repo | Audience | Contents |
 |---|---|---|---|
-| Runtime | [`sim-cli`](https://github.com/svd-ai-lab/sim-cli) | Users and plugin authors | `sim-runtime`, CLI commands, HTTP protocol, plugin loading |
+| Runtime | [`sim-cli`](https://github.com/svd-ai-lab/sim-cli) | Users and plugin authors | `sim-cli-core`, CLI commands, HTTP protocol, plugin loading |
 | Plugin registry | [`sim-plugin-index`](https://github.com/svd-ai-lab/sim-plugin-index) | Users and installers | Curated plugin metadata for `sim plugin list / install` |
 | Plugin repos | `sim-plugin-<name>` | Driver maintainers | Driver code, tests, packaged plugin metadata, plugin-owned skills |
-| Shared skills | This repo | Agents and contributors | Shared runtime skill plus open/public agent playbooks |
+| Shared skills | This repo | Agents and contributors | Shared runtime and runtime-tool skills |
 
-This repo should not mirror every plugin. If a driver has been extracted to a plugin repository, keep the implementation and driver-specific agent playbook there. Link to the plugin registry from here instead of carrying stale copies.
+This repo should not mirror plugins. If a driver has been extracted to a plugin repository, keep the implementation and driver-specific agent playbook there. Link to the plugin registry from here instead of carrying stale copies.
 
 ---
 
@@ -58,14 +58,11 @@ Current tracked skill folders on `main`:
 |---|---|---|---|---|
 | [**sim-cli**](sim-cli/SKILL.md) | Shared runtime contract | Persistent sessions and one-shot runs | Core | Load alongside any solver or plugin skill. Owns lifecycle, command surface, Step-0 version probe, input classification, acceptance, and escalation. |
 | [**sim-cli/gui**](sim-cli/gui/SKILL.md) | Runtime-injected GUI tool | GUI-capable sessions | Core | Shared actuation API for drivers that expose a `gui` object through `sim exec`. |
-| [**openfoam-sim**](openfoam/SKILL.md) | Open-source CFD | Case files, command-line runs, remote Linux workflows | Active | OpenFOAM case setup, solver selection, mesh/log diagnosis, parallel execution, and post-processing guidance. |
-| [**ltspice-sim**](ltspice/SKILL.md) | Circuit simulation | One-shot batch runs | Active | Netlist authoring, platform dispatch, `.meas` result extraction, and log-based acceptance. |
-| [**coolprop-sim**](coolprop/SKILL.md) | Thermophysical properties | One-shot Python scripts | Active | Property lookups for fluids, humid air, saturation curves, and cycle-analysis tasks. |
 
-Extracted or private drivers are intentionally not listed as local folders here. Discover installable drivers through:
+Solver skills such as CoolProp, LTspice, and OpenFOAM are bundled inside their plugin packages. Discover installable drivers through:
 
 ```bash
-uv pip install sim-runtime
+uv pip install sim-cli-core
 sim plugin list
 sim plugin install <name>
 ```
@@ -83,7 +80,7 @@ When a task involves sim, the agent should:
 5. Execute through `sim connect`, `sim exec`, `sim inspect`, `sim run`, and related runtime commands as appropriate.
 6. Verify outcome-based acceptance, not just `exit_code == 0`.
 
-For plugin-owned skills, the plugin repo is the source of truth. Do not recreate driver-specific instructions here unless they are genuinely shared across multiple drivers.
+For solver skills, the plugin repo is the source of truth. Do not recreate driver-specific instructions here unless they are genuinely shared across multiple drivers.
 
 ---
 
@@ -104,11 +101,11 @@ These apply to every driver skill, whether the skill lives here or inside a plug
 
 ## Runtime dependency
 
-These skills are designed for the [`sim-runtime`](https://github.com/svd-ai-lab/sim-cli) CLI and plugin system.
+These skills are designed for the [`sim-cli-core`](https://github.com/svd-ai-lab/sim-cli) CLI and plugin system.
 
 ```bash
 # Install the solver-agnostic runtime.
-uv pip install sim-runtime
+uv pip install sim-cli-core
 
 # Discover and install driver plugins.
 sim plugin list
@@ -130,10 +127,7 @@ sim-skills/
 ├── LICENSE            Apache-2.0
 ├── NOTICE
 ├── assets/            Banner and related graphics
-├── sim-cli/           Shared runtime contract and runtime-injected tool skills
-├── openfoam/          OpenFOAM agent playbook
-├── ltspice/           LTspice agent playbook
-└── coolprop/          CoolProp agent playbook
+└── sim-cli/           Shared runtime contract and runtime-injected tool skills
 ```
 
 Ignored local folders such as `.local/`, `.claude/`, or local vendor/reference caches are not part of the public skill grid.

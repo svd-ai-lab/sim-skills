@@ -22,17 +22,17 @@ contract every driver skill depends on).
 | Kind of content | Location | Audience |
 |---|---|---|
 | Shared runtime contract (lifecycle, commands, version probe, acceptance, escalation, input classification) | [`sim-cli/`](sim-cli/SKILL.md) + `sim-cli/reference/*.md` | End users' agents |
-| Solver-specific protocol (physics, APIs, quirks per version) | `<solver>/SKILL.md` in this repo for shared/public skills, or the matching `sim-plugin-<name>` repo for plugin-owned skills | End users' agents |
+| Solver-specific protocol (physics, APIs, quirks per version) | The matching `sim-plugin-<name>` repo, bundled under that package's `_skills/<name>/` directory | End users' agents |
 | Runtime-injected tool skills (actuation objects sim-cli puts into `sim exec` — `gui`, future `fs` / `shell` / etc.) | [`sim-cli/<tool>/SKILL.md`](sim-cli/) | End users' agents |
 | Human-facing overview, skill grid, news | [`README.md`](README.md) | Humans browsing GitHub |
 | Contributor guide (this file) | `CLAUDE.md` | You, right now |
 
 **Rule of thumb while editing:** if a change belongs in more than one
 driver, it belongs in `sim-cli/`. If it is solver-specific, it belongs
-in `<solver>/`. Runtime-injected objects (`gui`, future `fs` / `shell`,
-…) — anything sim-cli puts into the `sim exec` namespace alongside
-`session` / `model` — belong under `sim-cli/<tool>/`. Never duplicate
-across drivers.
+in the matching `sim-plugin-<name>` repo. Runtime-injected objects
+(`gui`, future `fs` / `shell`, …) — anything sim-cli puts into the
+`sim exec` namespace alongside `session` / `model` — belong under
+`sim-cli/<tool>/`. Never duplicate across drivers.
 
 ### `sim-cli/<tool>/` — runtime-injected tool skills
 
@@ -80,22 +80,20 @@ API itself is not repeated per solver.
 
 ## When adding a new solver skill
 
-1. Create `<new-solver>/SKILL.md` with proper frontmatter.
-2. Start by pointing to `../sim-cli/SKILL.md` — the shared contract
-   is not repeated. Keep your SKILL.md focused on the solver overlay.
-3. Mirror the section structure of an existing tracked skill such as
-   [`openfoam/SKILL.md`](openfoam/SKILL.md),
-   [`ltspice/SKILL.md`](ltspice/SKILL.md), or
-   [`coolprop/SKILL.md`](coolprop/SKILL.md): Identity → Scope → Hard
-   constraints → Required protocol → Input validation → File index.
-4. If the solver needs a runtime driver, create or update the matching
-   `sim-plugin-<name>` repository and register it through
-   [`sim-plugin-index`](https://github.com/svd-ai-lab/sim-plugin-index).
-   Do not add new driver code to this repo.
-5. Add a row to the skill grid in [`README.md`](README.md) only when
-   the skill folder is tracked in this repo. Plugin-owned skills should
-   be documented in their plugin repo and discoverable through the
-   plugin index.
+1. Create or update the matching `sim-plugin-<name>` repository.
+2. Add the skill under the plugin package, normally
+   `src/sim_plugin_<name>/_skills/<name>/SKILL.md`.
+3. Start by pointing to this repo's [`sim-cli/SKILL.md`](sim-cli/SKILL.md)
+   — the shared contract is not repeated. Keep the plugin SKILL.md
+   focused on the solver overlay.
+4. Register the plugin through
+   [`sim-plugin-index`](https://github.com/svd-ai-lab/sim-plugin-index)
+   when it is public. Private/commercial plugins stay off the public
+   index unless a private index is introduced.
+5. Add or keep a wheel-content test in the plugin repo that proves
+   `_skills/<name>/SKILL.md` ships in the built wheel.
+6. Do not add new solver folders to this repo. This repo is for shared
+   runtime protocol and runtime-injected tool skills.
 
 ## Runtime dependency
 
