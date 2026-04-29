@@ -22,7 +22,7 @@ contract every driver skill depends on).
 | Kind of content | Location | Audience |
 |---|---|---|
 | Shared runtime contract (lifecycle, commands, version probe, acceptance, escalation, input classification) | [`sim-cli/`](sim-cli/SKILL.md) + `sim-cli/reference/*.md` | End users' agents |
-| Solver-specific protocol (physics, APIs, quirks per version) | `<solver>/SKILL.md` + `<solver>/{reference,workflows,snippets}/` | End users' agents |
+| Solver-specific protocol (physics, APIs, quirks per version) | `<solver>/SKILL.md` in this repo for shared/public skills, or the matching `sim-plugin-<name>` repo for plugin-owned skills | End users' agents |
 | Runtime-injected tool skills (actuation objects sim-cli puts into `sim exec` — `gui`, future `fs` / `shell` / etc.) | [`sim-cli/<tool>/SKILL.md`](sim-cli/) | End users' agents |
 | Human-facing overview, skill grid, news | [`README.md`](README.md) | Humans browsing GitHub |
 | Contributor guide (this file) | `CLAUDE.md` | You, right now |
@@ -74,30 +74,34 @@ API itself is not repeated per solver.
    [`sim-cli/`](sim-cli/SKILL.md) instead of the per-driver SKILL.md.
 4. Update the `## File index` section of the SKILL.md if you add or
    rename files.
-5. Drift between the skill and the driver in
-   `../sim-cli/src/sim/drivers/<solver>/` is a bug. Fix one or the
-   other; don't leave them disagreeing.
+5. Drift between a skill and its driver plugin is a bug. Fix one or the
+   other; don't leave them disagreeing. For extracted drivers, the
+   plugin repo is the source of truth for driver-specific skills.
 
 ## When adding a new solver skill
 
 1. Create `<new-solver>/SKILL.md` with proper frontmatter.
 2. Start by pointing to `../sim-cli/SKILL.md` — the shared contract
    is not repeated. Keep your SKILL.md focused on the solver overlay.
-3. Mirror the section structure of an existing pilot
-   ([`fluent/SKILL.md`](fluent/SKILL.md),
-   [`matlab/SKILL.md`](matlab/SKILL.md),
-   [`comsol/SKILL.md`](comsol/SKILL.md)): Identity → Scope → Hard
+3. Mirror the section structure of an existing tracked skill such as
+   [`openfoam/SKILL.md`](openfoam/SKILL.md),
+   [`ltspice/SKILL.md`](ltspice/SKILL.md), or
+   [`coolprop/SKILL.md`](coolprop/SKILL.md): Identity → Scope → Hard
    constraints → Required protocol → Input validation → File index.
-4. Add the matching driver under
-   `../sim-cli/src/sim/drivers/<new-solver>/` and register it in
-   `../sim-cli/src/sim/drivers/__init__.py`.
-5. Add a row to the skill grid in [`README.md`](README.md). (The
-   grid lives in README, not here — contributors can link to it.)
+4. If the solver needs a runtime driver, create or update the matching
+   `sim-plugin-<name>` repository and register it through
+   [`sim-plugin-index`](https://github.com/svd-ai-lab/sim-plugin-index).
+   Do not add new driver code to this repo.
+5. Add a row to the skill grid in [`README.md`](README.md) only when
+   the skill folder is tracked in this repo. Plugin-owned skills should
+   be documented in their plugin repo and discoverable through the
+   plugin index.
 
 ## Runtime dependency
 
 These skills control the [`sim`](../sim-cli/) runtime. If you are
 developing locally, the runtime repo sits at `../sim-cli/`. See
-`../sim-cli/CLAUDE.md` for its internals (driver protocol, registry,
-HTTP endpoints). For each solver the matching driver lives at
-`../sim-cli/src/sim/drivers/<solver>/`.
+`../sim-cli/CLAUDE.md` for its internals (runtime protocol, plugin
+loading, HTTP endpoints). Solver drivers now live in individual
+`sim-plugin-<name>` repositories and are discoverable through the
+plugin index.
