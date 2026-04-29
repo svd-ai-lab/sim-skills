@@ -8,8 +8,7 @@ skill tells you which one applies.
 
 # Part A — Persistent session (connect / exec / inspect / disconnect)
 
-Used by Fluent, COMSOL, Mechanical, MAPDL (session mode), Workbench,
-CFX, and any other driver that holds a live solver process open.
+Used by any driver that holds a live process/session open.
 
 ## Pattern 0 — Session lifecycle
 
@@ -84,8 +83,7 @@ Format: structured summary, not a narrative. Values should be explicit.
 
 # Part B — One-shot batch (run / parse / evaluate)
 
-Used by MATLAB (v0), STAR-CCM+ batch, Abaqus `.inp`, LS-DYNA `.k`,
-PyBaMM, ANSA, Flotherm (FloSCRIPT playback), and most OSS solvers.
+Used by drivers that execute one input/script and exit.
 
 ## Pattern 0 — Execution model
 
@@ -105,8 +103,8 @@ acceptance evaluation).
 1. Classify inputs per
    [`input_classification.md`](input_classification.md) and ask for any
    missing Category A inputs — especially the acceptance criterion.
-2. Optionally call the driver's lint/check hook (if the driver skill
-   documents one — e.g. `driver.lint(pack_path)` for flotherm).
+2. Optionally call the driver's lint/check hook if the driver skill
+   documents one.
 3. Confirm the input files exist and are readable.
 
 If any check fails: stop. Report the specific failure. Do not call

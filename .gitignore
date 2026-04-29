@@ -29,7 +29,7 @@ Thumbs.db
 *.raw
 *.op.raw
 flprt.*
-cleanup-fluent-*.bat
+cleanup-*.bat
 
 # Local-only files (sensitive info, vendor assets — never push)
 .local/
@@ -37,9 +37,9 @@ cleanup-fluent-*.bat
 # Local Claude Code skills (project-private, do not publish)
 .claude/
 
-# Flotherm vendor files (Siemens IP — keep local only)
-flotherm/base/reference/flotherm/*/examples/
-flotherm/base/reference/flotherm/*/user_guide/*.xlsm
+# Local vendor files — keep local only
+*/base/reference/vendor/*/examples/
+*/base/reference/vendor/*/user_guide/*.xlsm
 
 # Solver binary outputs (too large for git)
 *.odb

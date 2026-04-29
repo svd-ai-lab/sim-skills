@@ -88,8 +88,9 @@ API itself is not repeated per solver.
    focused on the solver overlay.
 4. Register the plugin through
    [`sim-plugin-index`](https://github.com/svd-ai-lab/sim-plugin-index)
-   when it is public. Private/commercial plugins stay off the public
-   index unless a private index is introduced.
+   when it is public. Commercial plugin availability depends on
+   third-party license conditions; contact <contact@svd-ai-lab.com> to
+   discuss commercial plugin access.
 5. Add or keep a wheel-content test in the plugin repo that proves
    `_skills/<name>/SKILL.md` ships in the built wheel.
 6. Do not add new solver folders to this repo. This repo is for shared

@@ -42,28 +42,28 @@ Format example (persistent):
 
 ```
 [sim] FAILED at step 4/8 (label="setup-material")
-  error: AttributeError: 'FluentSettings' has no attribute 'general'
+  error: AttributeError: settings object has no attribute 'general'
   session: connected=true, mode=solver, run_count=3
   stdout (last 5 lines): …
   stderr (last 5 lines): …
 
-Likely cause: PyFluent 0.37 dialect used against 0.38 runtime.
-The active_sdk_layer returned by Step-0 was "pyfluent-0.37"
-but the snippet is from base/snippets/ (0.38 dialect).
-To proceed: either swap to sdk/pyfluent-0.37/snippets/, or upgrade
-the environment to pyfluent 0.38.
+Likely cause: snippet/API dialect does not match the active runtime.
+The active_sdk_layer returned by Step-0 was "sdk-1.1"
+but the snippet is from a newer SDK layer.
+To proceed: either swap to a matching snippet layer, or update the
+runtime environment.
 ```
 
 Format example (one-shot):
 
 ```
-[sim] FAILED (exit=2) during sim run analysis.m --solver matlab
-  stderr: Undefined function 'cfd_solve' for input arguments of type 'double'.
+[sim] FAILED (exit=2) during sim run analysis.py --solver example
+  stderr: Undefined function 'solve_case' for input arguments of type 'double'.
   stdout: (empty)
 
-Likely cause: cfd_solve is not on the MATLAB path in the current environment.
-To proceed: either add the toolbox containing cfd_solve to the MATLAB
-path, or supply a script that uses a built-in solver.
+Likely cause: a required helper is not on the runtime path.
+To proceed: either add the package containing that helper to the
+environment, or supply a self-contained script.
 ```
 
 ---
@@ -87,5 +87,5 @@ path, or supply a script that uses a built-in solver.
 
 v0 sim-cli skills do **not** attempt automated error recovery. Recovery
 strategies (retry with different `--processors`, fall back to a simpler
-mesh, switch from `pyfluent.launch_fluent` to `sim serve`, …) are a v1
+mesh, switch execution surfaces, …) are a v1
 concern and require explicit user opt-in.
