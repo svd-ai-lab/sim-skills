@@ -1,0 +1,4 @@
+interface:
+  display_name: "2D CAD to 3D"
+  short_description: "Reconstruct and validate 3D candidates from 2D CAD"
+  default_prompt: "Use $cad-2d-to-3d to assess this 2D CAD drawing and build a validated 3D reconstruction candidate."
