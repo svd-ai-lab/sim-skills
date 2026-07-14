@@ -30,6 +30,35 @@ def line_mask(image: Image.Image, threshold: int) -> np.ndarray:
     return np.asarray(image.convert("L"), dtype=np.uint8) < threshold
 
 
+def otsu_threshold(image: Image.Image) -> int:
+    """Choose a foreground/background split without assuming a white viewport."""
+    values = np.asarray(image.convert("L"), dtype=np.uint8)
+    histogram = np.bincount(values.ravel(), minlength=256).astype(np.float64)
+    total = values.size
+    weighted_total = float(np.dot(np.arange(256), histogram))
+    background_weight = 0.0
+    background_sum = 0.0
+    best_variance = -1.0
+    best_level = 0
+    for level in range(256):
+        background_weight += histogram[level]
+        if background_weight == 0:
+            continue
+        foreground_weight = total - background_weight
+        if foreground_weight == 0:
+            break
+        background_sum += level * histogram[level]
+        background_mean = background_sum / background_weight
+        foreground_mean = ((weighted_total - background_sum)
+                           / foreground_weight)
+        variance = (background_weight * foreground_weight
+                    * (background_mean - foreground_mean) ** 2)
+        if variance > best_variance:
+            best_variance = variance
+            best_level = level
+    return min(255, best_level + 1)
+
+
 def dilate(mask: np.ndarray, radius: int) -> np.ndarray:
     if radius <= 0:
         return mask
@@ -50,7 +79,10 @@ def main() -> int:
     parser.add_argument("candidate", type=Path)
     parser.add_argument("--overlay", type=Path)
     parser.add_argument("--report", type=Path)
-    parser.add_argument("--threshold", type=int, default=205)
+    parser.add_argument(
+        "--threshold", type=int,
+        help="Shared grayscale threshold; omit to choose an Otsu threshold per image",
+    )
     parser.add_argument(
         "--tolerance-radius",
         type=int,
@@ -71,8 +103,10 @@ def main() -> int:
             f"images must already share scale and size: {reference.size} != {candidate.size}"
         )
 
-    ref_mask = line_mask(reference, args.threshold)
-    cand_mask = line_mask(candidate, args.threshold)
+    ref_threshold = args.threshold if args.threshold is not None else otsu_threshold(reference)
+    cand_threshold = args.threshold if args.threshold is not None else otsu_threshold(candidate)
+    ref_mask = line_mask(reference, ref_threshold)
+    cand_mask = line_mask(candidate, cand_threshold)
     ref_near = dilate(ref_mask, args.tolerance_radius)
     cand_near = dilate(cand_mask, args.tolerance_radius)
 
@@ -81,19 +115,32 @@ def main() -> int:
     f1 = safe_ratio(2.0 * precision * recall, precision + recall)
     exact_overlap = int((ref_mask & cand_mask).sum())
 
+    ref_coverage = safe_ratio(int(ref_mask.sum()), ref_mask.size)
+    cand_coverage = safe_ratio(int(cand_mask.sum()), cand_mask.size)
+    warnings = []
+    if ref_coverage == 0 or ref_coverage > 0.5:
+        warnings.append("reference mask coverage is implausible; inspect threshold/background")
+    if cand_coverage == 0 or cand_coverage > 0.5:
+        warnings.append("candidate mask coverage is implausible; inspect threshold/background")
+
     report = {
         "reference": str(args.reference),
         "candidate": str(args.candidate),
         "image_size_px": list(reference.size),
-        "threshold": args.threshold,
+        "threshold": args.threshold if args.threshold is not None else "auto",
+        "reference_threshold": ref_threshold,
+        "candidate_threshold": cand_threshold,
         "tolerance_radius_px": args.tolerance_radius,
         "reference_line_pixels": int(ref_mask.sum()),
         "candidate_line_pixels": int(cand_mask.sum()),
+        "reference_mask_coverage": ref_coverage,
+        "candidate_mask_coverage": cand_coverage,
         "exact_overlap_pixels": exact_overlap,
         "precision": precision,
         "recall": recall,
         "f1": f1,
         "interpretation": "Regression signal only; not dimensional or manufacturing accuracy.",
+        "warnings": warnings,
     }
 
     if args.overlay:

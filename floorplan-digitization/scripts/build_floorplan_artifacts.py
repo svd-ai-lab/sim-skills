@@ -308,8 +308,25 @@ def validate(plan: dict, residuals: np.ndarray) -> dict:
     acceptance_status = acceptance.get("status", "needs_review")
     if acceptance_status not in {"needs_review", "accepted"}:
         errors.append(f"unsupported acceptance status: {acceptance_status}")
+    acceptance_checks = plan.get("acceptance_checks", [])
+    check_ids = set()
+    for check in acceptance_checks:
+        check_id = check.get("id")
+        if not check_id:
+            errors.append("acceptance check requires a stable id")
+        elif check_id in check_ids:
+            errors.append(f"duplicate acceptance check id: {check_id}")
+        check_ids.add(check_id)
+        if check.get("status") not in {"confirmed", "needs_review"}:
+            errors.append(
+                f"acceptance check {check_id or '<missing>'} has unsupported status")
+        if not check.get("question"):
+            errors.append(
+                f"acceptance check {check_id or '<missing>'} requires a question")
+    pending_checks = [check["id"] for check in acceptance_checks
+                      if check.get("status") != "confirmed" and check.get("id")]
     needs_review = ("missing" in evidence_states or "conflicting" in evidence_states
-                    or acceptance_status != "accepted")
+                    or acceptance_status != "accepted" or bool(pending_checks))
     if needs_review:
         warnings.append("plan has not passed the human 2D acceptance gate")
     status = "fail" if errors else ("needs_review" if needs_review else "pass")
@@ -318,6 +335,8 @@ def validate(plan: dict, residuals: np.ndarray) -> dict:
         "acceptance": {
             "status": acceptance_status,
             "note": acceptance.get("note"),
+            "checks": acceptance_checks,
+            "pending_check_ids": pending_checks,
         },
         "calibration": {
             "anchor_count": int(len(residuals)),

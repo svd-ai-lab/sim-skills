@@ -12,6 +12,7 @@ review artifacts.
   "units": "mm",
   "reference_image": "floorplan.png",
   "acceptance": {"status": "needs_review", "note": "awaiting human review"},
+  "acceptance_checks": [],
   "calibration": {
     "model_points": [[0, 0], [10000, 0], [0, 8000]],
     "image_points": [[120, 900], [1420, 900], [120, 120]]
@@ -35,6 +36,14 @@ revised contracts start as `needs_review`. Set `accepted` only after a human has
 confirmed the property/exclusion boundary, wall topology, opening assignments,
 removed walls, retained structure, and unresolved dimension conflicts. Preserve
 a short acceptance note; do not infer acceptance from a high projection score.
+
+Track review decisions as `acceptance_checks` when several local topology
+questions are involved. Each check has a stable `id`, a concise `question`, a
+`status` of `confirmed` or `needs_review`, and optional `evidence_refs` pointing
+to evidence-ledger IDs. A confirmed local check prevents later iterations from
+silently reinterpreting that decision, but it does not make the whole plan
+accepted. Keep the top-level status at `needs_review` until every required check
+is confirmed and the human accepts the complete registered overlay.
 
 ## Walls
 

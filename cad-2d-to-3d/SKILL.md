@@ -131,6 +131,9 @@ Use `scripts/compare_projection.py` for same-size binary line-image scoring and
 red/blue overlays. Treat the score as a regression signal between candidates,
 not a claim of dimensional accuracy. Keep dimensions, annotations, centerlines,
 and title blocks out of the scored mask when possible.
+Let the script choose per-image thresholds when viewport and source backgrounds
+differ. Treat an empty or majority-foreground mask warning as a failed
+comparison setup, not as evidence about geometry.
 
 For architecture, project the candidate back to a strict orthographic plan at
 the accepted cut plane. Compare boundary, wall centre lines and thickness,

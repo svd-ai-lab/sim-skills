@@ -438,6 +438,13 @@ def build(plan_path, output_blend, render_path=None, wall_height_mm=2700,
     scene["cad_2d_to_3d.reference_image"] = str(reference_path)
     scene["cad_2d_to_3d.acceptance_status"] = plan.get(
         "acceptance", {}).get("status", "needs_review")
+    acceptance_checks = plan.get("acceptance_checks", [])
+    scene["cad_2d_to_3d.acceptance_checks"] = json.dumps(
+        acceptance_checks, ensure_ascii=False)
+    scene["cad_2d_to_3d.pending_acceptance_checks"] = json.dumps([
+        check.get("id") for check in acceptance_checks
+        if check.get("status") != "confirmed" and check.get("id")
+    ], ensure_ascii=False)
     scene["cad_2d_to_3d.schema_version"] = int(plan.get("schema_version", 1))
     scene["cad_2d_to_3d.validation_cut_height_mm"] = float(validation_cut_height_mm)
     scene.camera = camera
@@ -483,6 +490,11 @@ def build(plan_path, output_blend, render_path=None, wall_height_mm=2700,
         "reference_image": str(reference_path),
         "acceptance_status": plan.get("acceptance", {}).get(
             "status", "needs_review"),
+        "acceptance_checks": acceptance_checks,
+        "pending_acceptance_checks": [
+            check.get("id") for check in acceptance_checks
+            if check.get("status") != "confirmed" and check.get("id")
+        ],
         "wall_height_mm": wall_height_mm,
         "walls": len(plan.get("walls", [])),
         "openings": len(plan.get("openings", [])),

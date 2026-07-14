@@ -83,6 +83,13 @@ then switch shell objects to wire display for the review screenshot. Keep this
 as a viewport comparison mode; do not embed the raster as geometry or treat its
 pixels as more authoritative than printed dimensions and the semantic contract.
 
+In addition to the whole-plan view, capture focused comparisons for every
+topology hotspot: the main entrance and adjacent service rooms, every removed
+wall with retained piers/beam, corner glazing, and any opening whose host wall
+or swing was previously disputed. A whole-plan screenshot can hide a one-wall
+or one-opening error. Record each hotspot as a stable acceptance check so an
+already confirmed decision is not reinterpreted during later 3D iterations.
+
 When using `scripts/build_architecture_blender.py`, call
 `set_reference_review_mode()` to display the true cut collection over the
 calibrated background. Do not use the full wall-top wireframe because lintels
