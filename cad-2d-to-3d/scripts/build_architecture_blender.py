@@ -202,6 +202,32 @@ def set_model_top_view(plan):
     bpy.context.view_layer.update()
 
 
+def set_model_review_region(plan, check_id):
+    """Focus the solid top view on one semantic acceptance-check region."""
+    check = next((item for item in plan.get("acceptance_checks", [])
+                  if item.get("id") == check_id), None)
+    if check is None:
+        raise KeyError(f"unknown acceptance check: {check_id}")
+    region = check.get("review_region")
+    if not region or len(region) != 4:
+        raise ValueError(f"acceptance check {check_id} has no valid review_region")
+    set_model_top_view(plan)
+    min_x, min_y, max_x, max_y = [mm(value) for value in region]
+    center = Vector(((min_x + max_x) / 2, (min_y + max_y) / 2, 0.0))
+    distance = max(max_x - min_x, max_y - min_y) * 1.5
+    for window in bpy.context.window_manager.windows:
+        for area in window.screen.areas:
+            if area.type != "VIEW_3D":
+                continue
+            region_3d = area.spaces.active.region_3d
+            region_3d.view_location = center
+            region_3d.view_distance = distance
+            area.tag_redraw()
+    bpy.context.view_layer.update()
+    return {"id": check_id, "status": check.get("status"),
+            "review_region": region}
+
+
 def reset_scene():
     for obj in list(bpy.data.objects):
         bpy.data.objects.remove(obj, do_unlink=True)

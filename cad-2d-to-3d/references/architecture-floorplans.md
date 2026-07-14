@@ -94,7 +94,9 @@ When using `scripts/build_architecture_blender.py`, call
 `set_reference_review_mode()` to display the true cut collection over the
 calibrated background. Do not use the full wall-top wireframe because lintels
 and overhead beams conceal openings. Call `set_model_top_view(plan)` to restore
-the solid shell and semantic space labels.
+the solid shell and semantic space labels. Call
+`set_model_review_region(plan, check_id)` to focus the live top view on the same
+stable region used by a local acceptance-check artifact.
 
 ## Live Blender MCP loop
 

@@ -40,7 +40,9 @@ a short acceptance note; do not infer acceptance from a high projection score.
 Track review decisions as `acceptance_checks` when several local topology
 questions are involved. Each check has a stable `id`, a concise `question`, a
 `status` of `confirmed` or `needs_review`, and optional `evidence_refs` pointing
-to evidence-ledger IDs. A confirmed local check prevents later iterations from
+to evidence-ledger IDs. Give every check a `review_region` as
+`[min_x, min_y, max_x, max_y]` in plan units so the artifact builder can create
+a focused registered comparison. A confirmed local check prevents later iterations from
 silently reinterpreting that decision, but it does not make the whole plan
 accepted. Keep the top-level status at `needs_review` until every required check
 is confirmed and the human accepts the complete registered overlay.

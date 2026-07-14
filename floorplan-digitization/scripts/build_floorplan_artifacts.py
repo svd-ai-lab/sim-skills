@@ -7,6 +7,7 @@ import argparse
 import json
 import math
 from pathlib import Path
+import textwrap
 from typing import Iterable
 
 import numpy as np
@@ -216,6 +217,49 @@ def draw_semantic_review(image: Image.Image, plan: dict, coeff: np.ndarray) -> I
     return reviewed
 
 
+def write_acceptance_focus_reviews(output_dir: Path, image: Image.Image,
+                                   plan: dict, coeff: np.ndarray) -> list[str]:
+    """Write one registered, enlarged review image per acceptance check."""
+    overlay = draw_plan(image, plan, coeff).convert("RGB")
+    artifacts = []
+    for check in plan.get("acceptance_checks", []):
+        region = check.get("review_region")
+        if not region:
+            continue
+        min_x, min_y, max_x, max_y = map(float, region)
+        corners = [
+            transform_point(coeff, point)
+            for point in ((min_x, min_y), (min_x, max_y),
+                          (max_x, min_y), (max_x, max_y))
+        ]
+        padding = 18
+        left = max(0, math.floor(min(point[0] for point in corners)) - padding)
+        top = max(0, math.floor(min(point[1] for point in corners)) - padding)
+        right = min(overlay.width,
+                    math.ceil(max(point[0] for point in corners)) + padding)
+        bottom = min(overlay.height,
+                     math.ceil(max(point[1] for point in corners)) + padding)
+        crop = overlay.crop((left, top, right, bottom))
+        scale = max(1.0, min(2.5, 1400 / max(1, crop.width)))
+        if scale > 1.0:
+            crop = crop.resize((round(crop.width * scale),
+                                round(crop.height * scale)), Image.Resampling.LANCZOS)
+        lines = textwrap.wrap(check["question"], width=max(36, crop.width // 8))
+        title = f"{check['id']}  [{check['status']}]\n" + "\n".join(lines)
+        header_height = 16 + 14 * (1 + len(lines))
+        canvas = Image.new("RGB", (crop.width, crop.height + header_height), "white")
+        canvas.paste(crop, (0, header_height))
+        draw = ImageDraw.Draw(canvas)
+        color = (20, 125, 55) if check["status"] == "confirmed" else (195, 80, 15)
+        draw.rectangle((0, 0, canvas.width - 1, header_height - 1),
+                       outline=color, width=3)
+        draw.multiline_text((9, 7), title, fill=color, spacing=2)
+        path = output_dir / f"review_focus_{check['id']}.png"
+        canvas.save(path)
+        artifacts.append(str(path))
+    return artifacts
+
+
 def draw_shell_mask(size, plan: dict, coeff: np.ndarray) -> Image.Image:
     canvas = Image.new("L", size, 255)
     draw = ImageDraw.Draw(canvas)
@@ -323,6 +367,12 @@ def validate(plan: dict, residuals: np.ndarray) -> dict:
         if not check.get("question"):
             errors.append(
                 f"acceptance check {check_id or '<missing>'} requires a question")
+        region = check.get("review_region")
+        if (not isinstance(region, list) or len(region) != 4
+                or not all(isinstance(value, (int, float)) for value in region)
+                or region[2] <= region[0] or region[3] <= region[1]):
+            errors.append(
+                f"acceptance check {check_id or '<missing>'} requires a valid review_region")
     pending_checks = [check["id"] for check in acceptance_checks
                       if check.get("status") != "confirmed" and check.get("id")]
     needs_review = ("missing" in evidence_states or "conflicting" in evidence_states
@@ -377,6 +427,8 @@ def main() -> int:
     overlay.save(args.output_dir / "floorplan_overlay.png")
     draw_semantic_review(image, plan, coeff).save(
         args.output_dir / "floorplan_semantic_review.png")
+    focus_reviews = write_acceptance_focus_reviews(
+        args.output_dir, image, plan, coeff)
     blank = Image.new("RGBA", image.size, "white")
     draw_plan(blank, plan, coeff, opaque=True).save(args.output_dir / "floorplan_cad.png")
     draw_shell_mask(image.size, plan, coeff).save(args.output_dir / "floorplan_shell_mask.png")
@@ -385,6 +437,7 @@ def main() -> int:
     report = validate(plan, residuals)
     report["cut_height_mm"] = args.cut_height_mm
     report["affine_model_to_image"] = coeff.tolist()
+    report["acceptance_focus_reviews"] = focus_reviews
     (args.output_dir / "floorplan_validation.json").write_text(
         json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
     print(json.dumps(report, ensure_ascii=False))
