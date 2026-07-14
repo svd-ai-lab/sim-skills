@@ -561,6 +561,8 @@ def build(plan_path, output_blend, render_path=None, wall_height_mm=2700,
     opening_collection = ensure_collection(OPENING_COLLECTION_NAME)
     circulation_collection = ensure_collection(CIRCULATION_COLLECTION_NAME)
     wall_mat = material("validation/wall", (0.08, 0.08, 0.08, 1.0))
+    interior_wall_mat = material(
+        "architecture/interior-wall-ivory", (0.96, 0.94, 0.90, 1.0))
     floor_mat = material("validation/floor", (0.98, 0.98, 0.98, 1.0))
     beam_mat = material("validation/beam", (0.35, 0.12, 0.55, 1.0))
     space_mat = material("validation/space-label", (0.05, 0.25, 0.75, 1.0))
@@ -574,7 +576,8 @@ def build(plan_path, output_blend, render_path=None, wall_height_mm=2700,
     wall_map = {}
     structural_objects = []
     for wall in plan.get("walls", []):
-        wall_obj = add_wall(wall, height, collection, wall_mat)
+        display_mat = interior_wall_mat if wall.get("class") == "interior" else wall_mat
+        wall_obj = add_wall(wall, height, collection, display_mat)
         wall_map[wall["id"]] = (wall, wall_obj)
         structural_objects.append(wall_obj)
     for opening in plan.get("openings", []):
