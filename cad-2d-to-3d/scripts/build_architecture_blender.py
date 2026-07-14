@@ -18,6 +18,7 @@ SPACE_COLLECTION_NAME = "cad_2d_to_3d/spaces"
 OPENING_COLLECTION_NAME = "cad_2d_to_3d/opening-markers"
 CIRCULATION_COLLECTION_NAME = "cad_2d_to_3d/circulation"
 BUILT_IN_COLLECTION_NAME = "cad_2d_to_3d/built-ins"
+FIXTURE_COLLECTION_NAME = "cad_2d_to_3d/fixtures"
 
 
 def mm(value):
@@ -337,7 +338,7 @@ def add_built_ins(plan, collection, cabinet_mat, cabinet_front_mat,
         height = mm(item["height"])
         modules = max(1, int(item.get("modules", 1)))
         front = item.get("front", "north")
-        if front not in {"north", "south"}:
+        if front not in {"north", "south", "east", "west"}:
             raise ValueError(f"unsupported built-in front: {front}")
 
         body_height = height - (0.04 if item["kind"] == "water-bar-base-cabinet" else 0.0)
@@ -348,29 +349,43 @@ def add_built_ins(plan, collection, cabinet_mat, cabinet_front_mat,
         objects.append(body)
 
         gap = 0.012
-        panel_width = (width - gap * (modules + 1)) / modules
+        run_length = width if front in {"north", "south"} else depth
+        panel_width = (run_length - gap * (modules + 1)) / modules
         panel_bottom = 0.09
         panel_top = body_height - 0.05
         panel_height = panel_top - panel_bottom
-        panel_y = ymax + 0.012 if front == "north" else ymin - 0.012
         for index in range(modules):
-            panel_x = xmin + gap + panel_width / 2 + index * (panel_width + gap)
+            along = (xmin if front in {"north", "south"} else ymin)
+            along += gap + panel_width / 2 + index * (panel_width + gap)
+            if front in {"north", "south"}:
+                center = (along, ymax + 0.012 if front == "north" else ymin - 0.012,
+                          panel_bottom + panel_height / 2)
+                size = (panel_width, 0.024, panel_height)
+            else:
+                center = (xmax + 0.012 if front == "east" else xmin - 0.012, along,
+                          panel_bottom + panel_height / 2)
+                size = (0.024, panel_width, panel_height)
             panel = add_box(
                 f"built-in/{item['id']}/front-{index + 1:02d}",
-                (panel_x, panel_y, panel_bottom + panel_height / 2),
-                (panel_width, 0.024, panel_height), 0.0,
+                center, size, 0.0,
                 collection, cabinet_front_mat)
             objects.append(panel)
 
+        if front in {"north", "south"}:
+            plinth_center = ((xmin + xmax) / 2,
+                              ymax - 0.035 if front == "north" else ymin + 0.035,
+                              0.045)
+            plinth_size = (width - 0.08, 0.07, 0.09)
+        else:
+            plinth_center = (xmax - 0.035 if front == "east" else xmin + 0.035,
+                              (ymin + ymax) / 2, 0.045)
+            plinth_size = (0.07, depth - 0.08, 0.09)
         plinth = add_box(
-            f"built-in/{item['id']}/plinth",
-            ((xmin + xmax) / 2,
-             ymax - 0.035 if front == "north" else ymin + 0.035,
-             0.045),
-            (width - 0.08, 0.07, 0.09), 0.0, collection, cabinet_mat)
+            f"built-in/{item['id']}/plinth", plinth_center,
+            plinth_size, 0.0, collection, cabinet_mat)
         objects.append(plinth)
 
-        if item["kind"] == "water-bar-base-cabinet":
+        if item["kind"] in {"water-bar-base-cabinet", "kitchen-base-cabinet"}:
             top = add_box(
                 f"built-in/{item['id']}/countertop",
                 ((xmin + xmax) / 2, (ymin + ymax) / 2, height - 0.02),
@@ -384,6 +399,171 @@ def add_built_ins(plan, collection, cabinet_mat, cabinet_front_mat,
                 obj["built_in_kind"] = item["kind"]
                 obj["space_id"] = item["space_id"]
                 obj["evidence"] = item.get("evidence", "inferred")
+    return objects
+
+
+def add_cylinder(name, center, radius, depth, collection, mat,
+                 rotation=(0.0, 0.0, 0.0), scale_xy=(1.0, 1.0), vertices=48):
+    bpy.ops.mesh.primitive_cylinder_add(
+        vertices=vertices, radius=radius, depth=depth,
+        location=center, rotation=rotation)
+    obj = bpy.context.object
+    obj.name = name
+    obj.scale.x = scale_xy[0]
+    obj.scale.y = scale_xy[1]
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    obj.data.materials.append(mat)
+    move_to_collection(obj, collection)
+    return obj
+
+
+def pale_lilac_marble_material():
+    name = "architecture/pale-lilac-marble"
+    mat = bpy.data.materials.get(name) or bpy.data.materials.new(name)
+    mat.diffuse_color = (0.78, 0.69, 0.84, 1.0)
+    mat.use_nodes = True
+    nodes = mat.node_tree.nodes
+    links = mat.node_tree.links
+    nodes.clear()
+    output = nodes.new("ShaderNodeOutputMaterial")
+    principled = nodes.new("ShaderNodeBsdfPrincipled")
+    principled.inputs["Roughness"].default_value = 0.28
+    noise = nodes.new("ShaderNodeTexNoise")
+    noise.inputs["Scale"].default_value = 3.2
+    noise.inputs["Detail"].default_value = 7.0
+    noise.inputs["Roughness"].default_value = 0.7
+    ramp = nodes.new("ShaderNodeValToRGB")
+    ramp.color_ramp.elements[0].position = 0.40
+    ramp.color_ramp.elements[0].color = (0.88, 0.84, 0.90, 1.0)
+    ramp.color_ramp.elements[1].position = 0.58
+    ramp.color_ramp.elements[1].color = (0.48, 0.27, 0.58, 1.0)
+    bump = nodes.new("ShaderNodeBump")
+    bump.inputs["Strength"].default_value = 0.08
+    bump.inputs["Distance"].default_value = 0.002
+    links.new(noise.outputs["Fac"], ramp.inputs["Fac"])
+    links.new(ramp.outputs["Color"], principled.inputs["Base Color"])
+    links.new(noise.outputs["Fac"], bump.inputs["Height"])
+    links.new(bump.outputs["Normal"], principled.inputs["Normal"])
+    links.new(principled.outputs["BSDF"], output.inputs["Surface"])
+    return mat
+
+
+def add_fixtures(plan, collection, mats):
+    """Create recognizable, replaceable room equipment from plan footprints."""
+    objects = []
+
+    def box(item, suffix, center, size, mat_key):
+        obj = add_box(
+            f"fixture/{item['id']}/{suffix}", center, size, 0.0,
+            collection, mats[mat_key])
+        objects.append(obj)
+        return obj
+
+    def cyl(item, suffix, center, radius, depth, mat_key,
+            rotation=(0.0, 0.0, 0.0), scale_xy=(1.0, 1.0)):
+        obj = add_cylinder(
+            f"fixture/{item['id']}/{suffix}", center, radius, depth,
+            collection, mats[mat_key], rotation=rotation, scale_xy=scale_xy)
+        objects.append(obj)
+        return obj
+
+    for item in plan.get("fixtures", []):
+        cx, cy = (mm(v) for v in item["center"])
+        sx, sy, sz = (mm(v) for v in item["size"])
+        kind = item["kind"]
+        before = len(objects)
+        if kind == "fridge":
+            box(item, "body", (cx, cy, sz / 2), (sx, sy, sz), "appliance")
+            box(item, "front", (cx, cy - sy / 2 - 0.012, sz / 2),
+                (sx - 0.04, 0.024, sz - 0.06), "appliance-front")
+            box(item, "divider", (cx, cy - sy / 2 - 0.027, sz * 0.40),
+                (sx - 0.08, 0.012, 0.018), "dark")
+            box(item, "handle", (cx + sx * 0.34, cy - sy / 2 - 0.045, sz * 0.64),
+                (0.025, 0.025, 0.52), "metal")
+        elif kind == "dishwasher":
+            box(item, "body", (cx, cy, sz / 2), (sx, sy, sz), "appliance")
+            box(item, "front", (cx, cy - sy / 2 - 0.012, sz / 2),
+                (sx - 0.035, 0.024, sz - 0.035), "metal")
+            box(item, "control", (cx, cy - sy / 2 - 0.03, sz - 0.06),
+                (sx - 0.07, 0.018, 0.08), "dark")
+        elif kind == "sink":
+            top = mm(item.get("top", 900))
+            box(item, "rim", (cx, cy, top), (sx, sy, 0.035), "metal")
+            box(item, "basin", (cx, cy, top - sz / 2),
+                (sx - 0.08, sy - 0.08, sz), "sink-dark")
+            cyl(item, "faucet", (cx, cy + sy * 0.42, top + 0.19),
+                0.018, 0.38, "metal")
+        elif kind == "cooktop":
+            top = mm(item.get("top", 925))
+            box(item, "glass", (cx, cy, top), (sx, sy, sz), "dark")
+            for dx, dy in ((-0.13, -0.10), (0.13, -0.10), (-0.13, 0.10), (0.13, 0.10)):
+                cyl(item, f"burner-{dx}-{dy}", (cx + dx, cy + dy, top + sz / 2 + 0.006),
+                    0.075, 0.012, "metal")
+        elif kind == "range-hood":
+            bottom = mm(item.get("bottom", 1550))
+            box(item, "canopy", (cx, cy, bottom + 0.11), (sx, sy, 0.22), "metal")
+            box(item, "chimney", (cx, cy + sy * 0.28, bottom + 0.22 + (sz - 0.22) / 2),
+                (sx * 0.46, sy * 0.42, sz - 0.22), "metal")
+        elif kind == "washer-dryer-stack":
+            box(item, "body", (cx, cy, sz / 2), (sx, sy, sz), "appliance")
+            for z in (sz * 0.27, sz * 0.73):
+                cyl(item, f"door-{z}", (cx, cy - sy / 2 - 0.02, z),
+                    sx * 0.26, 0.045, "dark", rotation=(math.pi / 2, 0.0, 0.0))
+                cyl(item, f"rim-{z}", (cx, cy - sy / 2 - 0.048, z),
+                    sx * 0.31, 0.018, "metal", rotation=(math.pi / 2, 0.0, 0.0))
+        elif kind == "vanity":
+            box(item, "cabinet", (cx, cy, sz / 2), (sx, sy, sz), "cabinet-front")
+            box(item, "top", (cx, cy, sz + 0.025), (sx + 0.04, sy + 0.04, 0.05), "stone")
+            cyl(item, "basin", (cx, cy - 0.04, sz + 0.08), sx * 0.20, 0.11,
+                "ceramic", scale_xy=(1.0, 0.65))
+        elif kind == "mirror":
+            bottom = mm(item.get("bottom", 1100))
+            box(item, "panel", (cx, cy, bottom + sz / 2), (sx, sy, sz), "mirror")
+        elif kind == "toilet":
+            box(item, "tank", (cx, cy + sy * 0.31, sz * 0.64),
+                (sx, sy * 0.30, sz * 0.60), "ceramic")
+            cyl(item, "bowl", (cx, cy - sy * 0.08, sz * 0.34), sx * 0.48,
+                sz * 0.42, "ceramic", scale_xy=(1.0, 1.42))
+            cyl(item, "seat", (cx, cy - sy * 0.08, sz * 0.57), sx * 0.43,
+                0.055, "metal", scale_xy=(1.0, 1.40))
+        elif kind == "shower":
+            box(item, "tray", (cx, cy, 0.035), (sx, sy, 0.07), "ceramic")
+            box(item, "glass", (cx - sx / 2, cy, sz / 2),
+                (0.022, sy, sz), "glass")
+            cyl(item, "riser", (cx + sx * 0.32, cy + sy * 0.36, sz * 0.53),
+                0.016, sz * 0.78, "metal")
+            cyl(item, "head", (cx + sx * 0.32, cy + sy * 0.28, sz * 0.86),
+                0.11, 0.035, "metal")
+        elif kind == "double-desk":
+            box(item, "top", (cx, cy, sz - 0.035), (sx, sy, 0.07), "desk")
+            for dx in (-sx * 0.43, 0.0, sx * 0.43):
+                box(item, f"leg-{dx}", (cx + dx, cy, (sz - 0.07) / 2),
+                    (0.055, sy * 0.82, sz - 0.07), "metal")
+            box(item, "cable-tray", (cx, cy + sy * 0.33, sz - 0.17),
+                (sx * 0.82, 0.08, 0.12), "dark")
+            for index, dx in enumerate((-sx * 0.25, sx * 0.25), start=1):
+                chair_y = cy - sy / 2 - 0.34
+                box(item, f"chair-{index}-seat", (cx + dx, chair_y, 0.44),
+                    (0.46, 0.46, 0.08), "dark")
+                box(item, f"chair-{index}-back", (cx + dx, chair_y - 0.21, 0.72),
+                    (0.46, 0.06, 0.56), "dark")
+                for leg_dx in (-0.16, 0.16):
+                    box(item, f"chair-{index}-leg-{leg_dx}",
+                        (cx + dx + leg_dx, chair_y, 0.20),
+                        (0.035, 0.035, 0.40), "metal")
+        elif kind == "oval-marble-table":
+            cyl(item, "top", (cx, cy, sz - 0.04), sy / 2, 0.08,
+                "lilac-marble", scale_xy=(sx / sy, 1.0))
+            cyl(item, "pedestal", (cx, cy, (sz - 0.08) / 2), sy * 0.20,
+                sz - 0.08, "stone", scale_xy=(1.25, 1.0))
+        else:
+            raise ValueError(f"unsupported fixture kind: {kind}")
+
+        for obj in objects[before:]:
+            obj["fixture_id"] = item["id"]
+            obj["fixture_kind"] = kind
+            obj["space_id"] = item["space_id"]
+            obj["evidence"] = item.get("evidence", "inferred")
     return objects
 
 
@@ -672,6 +852,7 @@ def build(plan_path, output_blend, render_path=None, wall_height_mm=2700,
     opening_collection = ensure_collection(OPENING_COLLECTION_NAME)
     circulation_collection = ensure_collection(CIRCULATION_COLLECTION_NAME)
     built_in_collection = ensure_collection(BUILT_IN_COLLECTION_NAME)
+    fixture_collection = ensure_collection(FIXTURE_COLLECTION_NAME)
     wall_mat = material("validation/wall", (0.08, 0.08, 0.08, 1.0))
     interior_wall_mat = material(
         "architecture/interior-wall-ivory", (0.96, 0.94, 0.90, 1.0))
@@ -690,10 +871,25 @@ def build(plan_path, output_blend, render_path=None, wall_height_mm=2700,
         "architecture/built-in-front-warm-ivory", (0.91, 0.87, 0.79, 1.0))
     countertop_mat = material(
         "architecture/countertop-warm-stone", (0.36, 0.31, 0.26, 1.0))
+    fixture_mats = {
+        "appliance": material("architecture/appliance-white", (0.80, 0.81, 0.82, 1.0)),
+        "appliance-front": material("architecture/appliance-front", (0.92, 0.93, 0.94, 1.0)),
+        "cabinet-front": cabinet_front_mat,
+        "ceramic": material("architecture/ceramic-white", (0.94, 0.95, 0.96, 1.0)),
+        "dark": material("architecture/appliance-black", (0.025, 0.028, 0.032, 1.0)),
+        "desk": material("architecture/desk-warm-wood", (0.42, 0.23, 0.11, 1.0)),
+        "glass": material("architecture/shower-glass", (0.35, 0.68, 0.78, 0.38)),
+        "lilac-marble": pale_lilac_marble_material(),
+        "metal": material("architecture/brushed-metal", (0.31, 0.34, 0.37, 1.0)),
+        "mirror": material("architecture/mirror-blue-grey", (0.38, 0.54, 0.62, 1.0)),
+        "sink-dark": material("architecture/sink-shadow", (0.12, 0.14, 0.15, 1.0)),
+        "stone": countertop_mat,
+    }
     add_floor(plan["property_boundary"], collection, floor_mat)
     built_in_objects = add_built_ins(
         plan, built_in_collection, cabinet_mat, cabinet_front_mat,
         countertop_mat)
+    fixture_objects = add_fixtures(plan, fixture_collection, fixture_mats)
     height = mm(wall_height_mm)
     wall_map = {}
     structural_objects = []
@@ -805,6 +1001,8 @@ def build(plan_path, output_blend, render_path=None, wall_height_mm=2700,
         "circulation_marker_objects": len(circulation_objects),
         "built_ins": len(plan.get("built_ins", [])),
         "built_in_objects": len(built_in_objects),
+        "fixtures": len(plan.get("fixtures", [])),
+        "fixture_objects": len(fixture_objects),
         "window_verticals_mm": {
             opening["id"]: {
                 "sill": opening.get("sill", 0),
@@ -822,6 +1020,7 @@ def build(plan_path, output_blend, render_path=None, wall_height_mm=2700,
         "opening_collection": OPENING_COLLECTION_NAME,
         "circulation_collection": CIRCULATION_COLLECTION_NAME,
         "built_in_collection": BUILT_IN_COLLECTION_NAME,
+        "fixture_collection": FIXTURE_COLLECTION_NAME,
     }
     if report_path:
         report_file = Path(report_path).resolve()
