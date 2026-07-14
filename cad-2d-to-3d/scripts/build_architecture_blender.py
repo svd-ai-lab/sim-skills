@@ -332,7 +332,7 @@ def cut_opening(wall_obj, wall, opening, collection):
     bpy.data.objects.remove(cutter, do_unlink=True)
 
 
-def add_door_swing_marker(opening, start, end, collection, mat):
+def add_door_swing_marker(opening, start, end, collection, mat, leaf_mat=None):
     """Add a review-only leaf and swing arc from explicit semantic orientation."""
     hinge_name = opening.get("hinge")
     swing_side = opening.get("swing_side")
@@ -350,7 +350,7 @@ def add_door_swing_marker(opening, start, end, collection, mat):
         f"opening/{opening['id']}/leaf",
         (leaf_center.x, leaf_center.y, head / 2),
         (width, 0.035, head),
-        math.atan2(open_direction.y, open_direction.x), collection, mat)
+        math.atan2(open_direction.y, open_direction.x), collection, leaf_mat or mat)
 
     curve = bpy.data.curves.new(f"opening/{opening['id']}/swing-arc", type="CURVE")
     curve.dimensions = "3D"
@@ -413,8 +413,16 @@ def add_opening_marker(wall, opening, collection, mat,
     elif opening.get("hinge") and opening.get("swing_side"):
         swing_mat = (accepted_mat if opening.get("swing_status") == "confirmed"
                      else review_mat) or mat
+        leaf_color = opening.get("leaf_color")
+        leaf_mat = None
+        if isinstance(leaf_color, list) and len(leaf_color) in {3, 4}:
+            rgba = tuple(float(value) for value in leaf_color)
+            if len(rgba) == 3:
+                rgba += (1.0,)
+            leaf_mat = material(
+                f"architecture/door-leaf/{opening['id']}", rgba)
         pieces.extend(add_door_swing_marker(
-            opening, start, end, collection, swing_mat))
+            opening, start, end, collection, swing_mat, leaf_mat=leaf_mat))
     for piece in pieces:
         piece["opening_id"] = opening["id"]
         piece["opening_kind"] = opening["kind"]
