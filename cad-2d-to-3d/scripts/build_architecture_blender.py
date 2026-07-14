@@ -17,6 +17,7 @@ CUT_COLLECTION_NAME = "cad_2d_to_3d/validation-cut"
 SPACE_COLLECTION_NAME = "cad_2d_to_3d/spaces"
 OPENING_COLLECTION_NAME = "cad_2d_to_3d/opening-markers"
 CIRCULATION_COLLECTION_NAME = "cad_2d_to_3d/circulation"
+BUILT_IN_COLLECTION_NAME = "cad_2d_to_3d/built-ins"
 
 
 def mm(value):
@@ -322,6 +323,70 @@ def add_box(name, center, size, angle, collection, mat):
     return obj
 
 
+def add_built_ins(plan, collection, cabinet_mat, cabinet_front_mat,
+                  countertop_mat):
+    """Build simple modular cabinetry from axis-aligned 2D footprints."""
+    objects = []
+    for item in plan.get("built_ins", []):
+        x0, y0 = (mm(value) for value in item["a"])
+        x1, y1 = (mm(value) for value in item["b"])
+        xmin, xmax = sorted((x0, x1))
+        ymin, ymax = sorted((y0, y1))
+        width = xmax - xmin
+        depth = ymax - ymin
+        height = mm(item["height"])
+        modules = max(1, int(item.get("modules", 1)))
+        front = item.get("front", "north")
+        if front not in {"north", "south"}:
+            raise ValueError(f"unsupported built-in front: {front}")
+
+        body_height = height - (0.04 if item["kind"] == "water-bar-base-cabinet" else 0.0)
+        body = add_box(
+            f"built-in/{item['id']}/carcass",
+            ((xmin + xmax) / 2, (ymin + ymax) / 2, body_height / 2),
+            (width, depth, body_height), 0.0, collection, cabinet_mat)
+        objects.append(body)
+
+        gap = 0.012
+        panel_width = (width - gap * (modules + 1)) / modules
+        panel_bottom = 0.09
+        panel_top = body_height - 0.05
+        panel_height = panel_top - panel_bottom
+        panel_y = ymax + 0.012 if front == "north" else ymin - 0.012
+        for index in range(modules):
+            panel_x = xmin + gap + panel_width / 2 + index * (panel_width + gap)
+            panel = add_box(
+                f"built-in/{item['id']}/front-{index + 1:02d}",
+                (panel_x, panel_y, panel_bottom + panel_height / 2),
+                (panel_width, 0.024, panel_height), 0.0,
+                collection, cabinet_front_mat)
+            objects.append(panel)
+
+        plinth = add_box(
+            f"built-in/{item['id']}/plinth",
+            ((xmin + xmax) / 2,
+             ymax - 0.035 if front == "north" else ymin + 0.035,
+             0.045),
+            (width - 0.08, 0.07, 0.09), 0.0, collection, cabinet_mat)
+        objects.append(plinth)
+
+        if item["kind"] == "water-bar-base-cabinet":
+            top = add_box(
+                f"built-in/{item['id']}/countertop",
+                ((xmin + xmax) / 2, (ymin + ymax) / 2, height - 0.02),
+                (width + 0.04, depth + 0.05, 0.04), 0.0,
+                collection, countertop_mat)
+            objects.append(top)
+
+        for obj in objects:
+            if "built_in_id" not in obj:
+                obj["built_in_id"] = item["id"]
+                obj["built_in_kind"] = item["kind"]
+                obj["space_id"] = item["space_id"]
+                obj["evidence"] = item.get("evidence", "inferred")
+    return objects
+
+
 def add_wall(wall, height, collection, mat):
     a = Vector((mm(wall["a"][0]), mm(wall["a"][1])))
     b = Vector((mm(wall["b"][0]), mm(wall["b"][1])))
@@ -606,6 +671,7 @@ def build(plan_path, output_blend, render_path=None, wall_height_mm=2700,
     space_collection = ensure_collection(SPACE_COLLECTION_NAME)
     opening_collection = ensure_collection(OPENING_COLLECTION_NAME)
     circulation_collection = ensure_collection(CIRCULATION_COLLECTION_NAME)
+    built_in_collection = ensure_collection(BUILT_IN_COLLECTION_NAME)
     wall_mat = material("validation/wall", (0.08, 0.08, 0.08, 1.0))
     interior_wall_mat = material(
         "architecture/interior-wall-ivory", (0.96, 0.94, 0.90, 1.0))
@@ -618,7 +684,16 @@ def build(plan_path, output_blend, render_path=None, wall_height_mm=2700,
     review_mat = material("validation/status-needs-review", (0.9, 0.03, 0.03, 1.0))
     accepted_mat = material("validation/status-accepted", (0.05, 0.65, 0.15, 1.0))
     circulation_mat = material("validation/circulation", (0.0, 0.75, 0.95, 1.0))
+    cabinet_mat = material(
+        "architecture/built-in-warm-ivory", (0.68, 0.61, 0.52, 1.0))
+    cabinet_front_mat = material(
+        "architecture/built-in-front-warm-ivory", (0.91, 0.87, 0.79, 1.0))
+    countertop_mat = material(
+        "architecture/countertop-warm-stone", (0.36, 0.31, 0.26, 1.0))
     add_floor(plan["property_boundary"], collection, floor_mat)
+    built_in_objects = add_built_ins(
+        plan, built_in_collection, cabinet_mat, cabinet_front_mat,
+        countertop_mat)
     height = mm(wall_height_mm)
     wall_map = {}
     structural_objects = []
@@ -728,6 +803,8 @@ def build(plan_path, output_blend, render_path=None, wall_height_mm=2700,
         "connections": len(plan.get("connections", [])),
         "circulation": plan.get("circulation", {}),
         "circulation_marker_objects": len(circulation_objects),
+        "built_ins": len(plan.get("built_ins", [])),
+        "built_in_objects": len(built_in_objects),
         "window_verticals_mm": {
             opening["id"]: {
                 "sill": opening.get("sill", 0),
@@ -744,6 +821,7 @@ def build(plan_path, output_blend, render_path=None, wall_height_mm=2700,
         "space_collection": SPACE_COLLECTION_NAME,
         "opening_collection": OPENING_COLLECTION_NAME,
         "circulation_collection": CIRCULATION_COLLECTION_NAME,
+        "built_in_collection": BUILT_IN_COLLECTION_NAME,
     }
     if report_path:
         report_file = Path(report_path).resolve()
