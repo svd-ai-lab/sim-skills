@@ -574,7 +574,8 @@ def build(plan_path, output_blend, render_path=None, wall_height_mm=2700,
     floor_mat = material("validation/floor", (0.98, 0.98, 0.98, 1.0))
     beam_mat = material("validation/beam", (0.35, 0.12, 0.55, 1.0))
     space_mat = material("validation/space-label", (0.05, 0.25, 0.75, 1.0))
-    window_mat = material("validation/window-frame", (0.05, 0.55, 0.95, 1.0))
+    window_mat = material(
+        "architecture/window-frame-black", (0.015, 0.015, 0.015, 1.0))
     door_mat = material("validation/door-frame", (1.0, 0.35, 0.05, 1.0))
     review_mat = material("validation/status-needs-review", (0.9, 0.03, 0.03, 1.0))
     accepted_mat = material("validation/status-accepted", (0.05, 0.65, 0.15, 1.0))
