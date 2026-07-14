@@ -16,6 +16,7 @@ COLLECTION_NAME = "cad_2d_to_3d/shell"
 CUT_COLLECTION_NAME = "cad_2d_to_3d/validation-cut"
 SPACE_COLLECTION_NAME = "cad_2d_to_3d/spaces"
 OPENING_COLLECTION_NAME = "cad_2d_to_3d/opening-markers"
+CIRCULATION_COLLECTION_NAME = "cad_2d_to_3d/circulation"
 
 
 def mm(value):
@@ -173,6 +174,10 @@ def set_reference_review_mode():
         obj.hide_set(True)
     for obj in bpy.data.collections[OPENING_COLLECTION_NAME].objects:
         obj.hide_set(True)
+    circulation = bpy.data.collections.get(CIRCULATION_COLLECTION_NAME)
+    if circulation:
+        for obj in circulation.objects:
+            obj.hide_set(True)
     for window in bpy.context.window_manager.windows:
         for area in window.screen.areas:
             if area.type == "VIEW_3D":
@@ -198,6 +203,10 @@ def set_model_top_view(plan):
         obj.hide_set(False)
     for obj in bpy.data.collections[OPENING_COLLECTION_NAME].objects:
         obj.hide_set(False)
+    circulation = bpy.data.collections.get(CIRCULATION_COLLECTION_NAME)
+    if circulation:
+        for obj in circulation.objects:
+            obj.hide_set(True)
     frame_top_view(plan)
     bpy.context.view_layer.update()
 
@@ -226,6 +235,24 @@ def set_model_review_region(plan, check_id):
     bpy.context.view_layer.update()
     return {"id": check_id, "status": check.get("status"),
             "review_region": region}
+
+
+def set_circulation_review_mode(plan):
+    """Show the semantic space-connection graph over the solid top view."""
+    set_model_top_view(plan)
+    circulation = bpy.data.collections.get(CIRCULATION_COLLECTION_NAME)
+    if circulation is None:
+        raise KeyError(f"missing collection: {CIRCULATION_COLLECTION_NAME}")
+    for obj in circulation.objects:
+        obj.hide_set(False)
+        obj.show_in_front = True
+    for window in bpy.context.window_manager.windows:
+        for area in window.screen.areas:
+            if area.type == "VIEW_3D":
+                area.tag_redraw()
+    bpy.context.view_layer.update()
+    return {"entry_space": plan.get("circulation", {}).get("entry_space"),
+            "connection_count": len(plan.get("connections", []))}
 
 
 def reset_scene():
@@ -415,6 +442,63 @@ def add_floor(boundary, collection, mat, thickness=0.05):
     return obj
 
 
+def add_circulation_markers(plan, collection, mat):
+    """Build review-only curves through each connection's semantic portal."""
+    spaces = {space["id"]: space for space in plan.get("spaces", [])}
+    walls = {wall["id"]: wall for wall in plan.get("walls", [])}
+    openings = {opening["id"]: opening for opening in plan.get("openings", [])}
+    removed = {item["id"]: item for item in plan.get("removed_walls", [])}
+
+    def center(space):
+        points = space["polygon"]
+        return Vector((sum(mm(p[0]) for p in points) / len(points),
+                       sum(mm(p[1]) for p in points) / len(points)))
+
+    def portal(connection):
+        if connection["kind"] == "door":
+            opening = openings[connection["opening_id"]]
+            wall = walls[opening["wall_id"]]
+            wall_a = Vector((mm(wall["a"][0]), mm(wall["a"][1])))
+            wall_b = Vector((mm(wall["b"][0]), mm(wall["b"][1])))
+            direction = (wall_b - wall_a).normalized()
+            start = wall_a + direction * mm(opening["offset"])
+            end = start + direction * mm(opening["width"])
+        elif connection["kind"] == "removed-wall":
+            item = removed[connection["removed_wall_id"]]
+            start = Vector((mm(item["a"][0]), mm(item["a"][1])))
+            end = Vector((mm(item["b"][0]), mm(item["b"][1])))
+        else:
+            start = Vector((mm(connection["segment"][0][0]),
+                            mm(connection["segment"][0][1])))
+            end = Vector((mm(connection["segment"][1][0]),
+                          mm(connection["segment"][1][1])))
+        return (start + end) / 2
+
+    objects = []
+    for connection in plan.get("connections", []):
+        a_id, b_id = connection["spaces"]
+        points = [center(spaces[a_id]), portal(connection), center(spaces[b_id])]
+        curve = bpy.data.curves.new(f"circulation/{connection['id']}", type="CURVE")
+        curve.dimensions = "3D"
+        curve.bevel_depth = 0.025
+        curve.bevel_resolution = 2
+        spline = curve.splines.new("POLY")
+        spline.points.add(len(points) - 1)
+        for index, point in enumerate(points):
+            spline.points[index].co = (point.x, point.y, 0.075, 1.0)
+        obj = bpy.data.objects.new(f"circulation/{connection['id']}", curve)
+        curve.materials.append(mat)
+        collection.objects.link(obj)
+        obj["connection_id"] = connection["id"]
+        obj["connection_kind"] = connection["kind"]
+        obj["space_a"] = a_id
+        obj["space_b"] = b_id
+        obj.hide_render = True
+        obj.hide_set(True)
+        objects.append(obj)
+    return objects
+
+
 def configure_top_camera(plan, image_size, collection, cut_height_mm):
     model = plan["calibration"]["model_points"]
     image = plan["calibration"]["image_points"]
@@ -475,6 +559,7 @@ def build(plan_path, output_blend, render_path=None, wall_height_mm=2700,
     cut_collection = ensure_collection(CUT_COLLECTION_NAME)
     space_collection = ensure_collection(SPACE_COLLECTION_NAME)
     opening_collection = ensure_collection(OPENING_COLLECTION_NAME)
+    circulation_collection = ensure_collection(CIRCULATION_COLLECTION_NAME)
     wall_mat = material("validation/wall", (0.08, 0.08, 0.08, 1.0))
     floor_mat = material("validation/floor", (0.98, 0.98, 0.98, 1.0))
     beam_mat = material("validation/beam", (0.35, 0.12, 0.55, 1.0))
@@ -483,6 +568,7 @@ def build(plan_path, output_blend, render_path=None, wall_height_mm=2700,
     door_mat = material("validation/door-frame", (1.0, 0.35, 0.05, 1.0))
     review_mat = material("validation/status-needs-review", (0.9, 0.03, 0.03, 1.0))
     accepted_mat = material("validation/status-accepted", (0.05, 0.65, 0.15, 1.0))
+    circulation_mat = material("validation/circulation", (0.0, 0.75, 0.95, 1.0))
     add_floor(plan["property_boundary"], collection, floor_mat)
     height = mm(wall_height_mm)
     wall_map = {}
@@ -511,6 +597,8 @@ def build(plan_path, output_blend, render_path=None, wall_height_mm=2700,
     cut_objects = create_validation_cut(
         structural_objects, plan, validation_cut_height_mm, cut_collection, wall_mat)
     add_space_markers(plan, space_collection, space_mat)
+    circulation_objects = add_circulation_markers(
+        plan, circulation_collection, circulation_mat)
     add_acceptance_marker(plan, space_collection, review_mat, accepted_mat)
     camera = configure_top_camera(plan, image_size, collection, validation_cut_height_mm)
     attach_reference_background(camera, reference_path)
@@ -529,6 +617,10 @@ def build(plan_path, output_blend, render_path=None, wall_height_mm=2700,
     ], ensure_ascii=False)
     scene["cad_2d_to_3d.schema_version"] = int(plan.get("schema_version", 1))
     scene["cad_2d_to_3d.validation_cut_height_mm"] = float(validation_cut_height_mm)
+    scene["cad_2d_to_3d.connections"] = json.dumps(
+        plan.get("connections", []), ensure_ascii=False)
+    scene["cad_2d_to_3d.circulation"] = json.dumps(
+        plan.get("circulation", {}), ensure_ascii=False)
     scene.camera = camera
     scene.render.engine = "BLENDER_EEVEE"
     scene.render.resolution_x, scene.render.resolution_y = image_size
@@ -583,6 +675,9 @@ def build(plan_path, output_blend, render_path=None, wall_height_mm=2700,
         "beams": len(plan.get("beams", [])),
         "spaces": len(plan.get("spaces", [])),
         "opening_marker_objects": len(opening_collection.objects),
+        "connections": len(plan.get("connections", [])),
+        "circulation": plan.get("circulation", {}),
+        "circulation_marker_objects": len(circulation_objects),
         "window_verticals_mm": {
             opening["id"]: {
                 "sill": opening.get("sill", 0),
@@ -598,6 +693,7 @@ def build(plan_path, output_blend, render_path=None, wall_height_mm=2700,
         "validation_collection": CUT_COLLECTION_NAME,
         "space_collection": SPACE_COLLECTION_NAME,
         "opening_collection": OPENING_COLLECTION_NAME,
+        "circulation_collection": CIRCULATION_COLLECTION_NAME,
     }
     if report_path:
         report_file = Path(report_path).resolve()

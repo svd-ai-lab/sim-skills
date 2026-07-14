@@ -72,6 +72,7 @@ Validate in layers:
 - property boundary and excluded areas
 - wall centre lines and thickness
 - space adjacency and accessible openings
+- explicit space connections and reachability from the main entry
 - door/window count, host wall, offset, width, sill, and head
 - removed-wall gaps plus retained piers/beam
 - overall bounds, floor elevation, wall height, and beam clearance
@@ -103,6 +104,9 @@ and overhead beams conceal openings. Call `set_model_top_view(plan)` to restore
 the solid shell and semantic space labels. Call
 `set_model_review_region(plan, check_id)` to focus the live top view on the same
 stable region used by a local acceptance-check artifact.
+Call `set_circulation_review_mode(plan)` to show the semantic connection graph
+as a review-only overlay. Keep that collection hidden from shell renders and
+ordinary modeling views.
 
 ## Live Blender MCP loop
 

@@ -25,6 +25,8 @@ review artifacts.
   "columns": [],
   "removed_walls": [],
   "spaces": [],
+  "connections": [],
+  "circulation": {"entry_space": null, "required_reachable_spaces": []},
   "evidence": []
 }
 ```
@@ -107,6 +109,27 @@ meaning without generating a full-height wall.
 Spaces use closed polygons and stable names. `excluded_regions` must include
 neighbour, common, void, or out-of-scope areas that might otherwise be mistaken
 for the subject property.
+
+## Connections and circulation
+
+Represent architectural adjacency independently from visual proximity:
+
+```json
+{
+  "id": "entry-to-bathroom",
+  "spaces": ["entry-foyer", "bathroom"],
+  "kind": "door",
+  "opening_id": "bath-door",
+  "evidence": "known"
+}
+```
+
+Use `door`, `open`, or `removed-wall` as the connection kind. Door connections
+reference a door opening; removed-wall connections reference a removed-wall ID;
+open connections include a two-point `segment`. Set `circulation.entry_space`
+and list every space that must be reachable from it. A geometrically aligned
+plan fails architectural validation when the connection graph is wrong or a
+required room is unreachable.
 
 ## Evidence ledger
 

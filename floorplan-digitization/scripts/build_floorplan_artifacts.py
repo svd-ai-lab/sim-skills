@@ -260,6 +260,58 @@ def write_acceptance_focus_reviews(output_dir: Path, image: Image.Image,
     return artifacts
 
 
+def polygon_centroid(points):
+    return (sum(point[0] for point in points) / len(points),
+            sum(point[1] for point in points) / len(points))
+
+
+def draw_circulation_review(image: Image.Image, plan: dict,
+                            coeff: np.ndarray) -> Image.Image:
+    """Overlay the explicit space-connection graph on the registered plan."""
+    reviewed = draw_plan(image, plan, coeff)
+    draw = ImageDraw.Draw(reviewed, "RGBA")
+    spaces = {space["id"]: space for space in plan.get("spaces", [])}
+    walls = {wall["id"]: wall for wall in plan.get("walls", [])}
+    openings = {opening["id"]: opening for opening in plan.get("openings", [])}
+    removed = {item["id"]: item for item in plan.get("removed_walls", [])}
+    legend = []
+    for index, connection in enumerate(plan.get("connections", []), 1):
+        a_id, b_id = connection["spaces"]
+        a = polygon_centroid(spaces[a_id]["polygon"])
+        b = polygon_centroid(spaces[b_id]["polygon"])
+        if connection["kind"] == "door":
+            opening = openings[connection["opening_id"]]
+            p0, p1 = opening_segment(opening, walls[opening["wall_id"]])
+        elif connection["kind"] == "removed-wall":
+            item = removed[connection["removed_wall_id"]]
+            p0, p1 = item["a"], item["b"]
+        else:
+            p0, p1 = connection["segment"]
+        portal = ((p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2)
+        pixels = [transform_point(coeff, point) for point in (a, portal, b)]
+        draw.line(pixels, fill=(15, 155, 190, 225), width=6, joint="curve")
+        px, py = pixels[1]
+        draw.ellipse((px - 7, py - 7, px + 7, py + 7),
+                     fill=(255, 195, 20, 255), outline=(20, 90, 110, 255), width=2)
+        code = f"C{index}"
+        draw.text((px + 9, py - 9), code, fill=(10, 80, 100, 255))
+        legend.append(f"{code} {a_id} <-> {b_id} ({connection['kind']})")
+    entry_id = plan.get("circulation", {}).get("entry_space")
+    if entry_id in spaces:
+        px, py = transform_point(coeff, polygon_centroid(spaces[entry_id]["polygon"]))
+        draw.ellipse((px - 10, py - 10, px + 10, py + 10),
+                     fill=(30, 175, 65, 245), outline=(0, 80, 25, 255), width=3)
+        draw.text((px + 13, py - 8), "ENTRY", fill=(0, 90, 30, 255))
+    if legend:
+        height = len(legend) * 14 + 10
+        top = reviewed.height - height
+        draw.rectangle((0, top, reviewed.width, reviewed.height),
+                       fill=(255, 255, 255, 235))
+        for index, line in enumerate(legend):
+            draw.text((10, top + 5 + index * 14), line, fill=(10, 80, 100, 255))
+    return reviewed
+
+
 def draw_shell_mask(size, plan: dict, coeff: np.ndarray) -> Image.Image:
     canvas = Image.new("L", size, 255)
     draw = ImageDraw.Draw(canvas)
@@ -358,6 +410,57 @@ def validate(plan: dict, residuals: np.ndarray) -> dict:
     for beam in plan.get("beams", []):
         if float(beam["top"]) <= float(beam["underside"]):
             errors.append(f"beam {beam['id']} top must be above underside")
+    opening_map = {opening["id"]: opening for opening in plan.get("openings", [])}
+    removed_map = {item["id"]: item for item in plan.get("removed_walls", [])}
+    graph = {space_id: set() for space_id in space_ids}
+    connection_ids = set()
+    for connection in plan.get("connections", []):
+        connection_id = connection.get("id")
+        if not connection_id or connection_id in connection_ids:
+            errors.append(f"missing or duplicate connection id: {connection_id}")
+        connection_ids.add(connection_id)
+        endpoints = connection.get("spaces", [])
+        if (len(endpoints) != 2 or endpoints[0] == endpoints[1]
+                or any(space_id not in space_ids for space_id in endpoints)):
+            errors.append(f"connection {connection_id} has invalid space endpoints")
+            continue
+        kind = connection.get("kind")
+        if kind == "door":
+            opening = opening_map.get(connection.get("opening_id"))
+            if opening is None or opening.get("kind") != "door":
+                errors.append(f"connection {connection_id} requires a door opening")
+        elif kind == "removed-wall":
+            if connection.get("removed_wall_id") not in removed_map:
+                errors.append(
+                    f"connection {connection_id} references a missing removed wall")
+        elif kind == "open":
+            segment = connection.get("segment", [])
+            if (len(segment) != 2 or any(len(point) != 2 for point in segment)):
+                errors.append(f"connection {connection_id} requires an open segment")
+        else:
+            errors.append(f"connection {connection_id} has unsupported kind {kind}")
+        graph[endpoints[0]].add(endpoints[1])
+        graph[endpoints[1]].add(endpoints[0])
+    circulation = plan.get("circulation", {})
+    entry_space = circulation.get("entry_space")
+    required_spaces = circulation.get("required_reachable_spaces", [])
+    reachable = set()
+    if entry_space not in space_ids:
+        errors.append(f"circulation entry_space is missing: {entry_space}")
+    else:
+        stack = [entry_space]
+        while stack:
+            current = stack.pop()
+            if current in reachable:
+                continue
+            reachable.add(current)
+            stack.extend(graph[current] - reachable)
+    unknown_required = sorted(set(required_spaces) - space_ids)
+    if unknown_required:
+        errors.append(f"circulation requires unknown spaces: {unknown_required}")
+    unreachable = sorted((set(required_spaces) & space_ids) - reachable)
+    if unreachable:
+        errors.append(f"spaces unreachable from {entry_space}: {unreachable}")
     if not plan.get("excluded_regions"):
         warnings.append("no excluded regions recorded; confirm property ownership boundary")
     evidence_states = {item.get("status") for item in plan.get("evidence", [])}
@@ -414,6 +517,13 @@ def validate(plan: dict, residuals: np.ndarray) -> dict:
             "removed_walls": len(plan.get("removed_walls", [])),
             "excluded_regions": len(plan.get("excluded_regions", [])),
             "spaces": len(plan.get("spaces", [])),
+            "connections": len(plan.get("connections", [])),
+        },
+        "circulation": {
+            "entry_space": entry_space,
+            "reachable_spaces": sorted(reachable),
+            "required_reachable_spaces": required_spaces,
+            "unreachable_spaces": unreachable,
         },
         "errors": errors,
         "warnings": warnings,
@@ -440,6 +550,8 @@ def main() -> int:
     overlay.save(args.output_dir / "floorplan_overlay.png")
     draw_semantic_review(image, plan, coeff).save(
         args.output_dir / "floorplan_semantic_review.png")
+    circulation_review = args.output_dir / "floorplan_circulation_review.png"
+    draw_circulation_review(image, plan, coeff).save(circulation_review)
     focus_reviews = write_acceptance_focus_reviews(
         args.output_dir, image, plan, coeff)
     blank = Image.new("RGBA", image.size, "white")
@@ -451,6 +563,7 @@ def main() -> int:
     report["cut_height_mm"] = args.cut_height_mm
     report["affine_model_to_image"] = coeff.tolist()
     report["acceptance_focus_reviews"] = focus_reviews
+    report["circulation_review"] = str(circulation_review)
     (args.output_dir / "floorplan_validation.json").write_text(
         json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
     print(json.dumps(report, ensure_ascii=False))
