@@ -39,6 +39,44 @@ def material(name, color):
     return mat
 
 
+def wood_plank_tile_material():
+    """Warm, matte wood-look plank tile with staggered joints."""
+    name = "architecture/floor-wood-look-plank-tile"
+    existing = bpy.data.materials.get(name)
+    mat = existing or bpy.data.materials.new(name)
+    mat.diffuse_color = (0.48, 0.25, 0.10, 1.0)
+    mat.use_nodes = True
+    nodes = mat.node_tree.nodes
+    links = mat.node_tree.links
+    nodes.clear()
+
+    output = nodes.new("ShaderNodeOutputMaterial")
+    principled = nodes.new("ShaderNodeBsdfPrincipled")
+    principled.inputs["Roughness"].default_value = 0.72
+    texcoord = nodes.new("ShaderNodeTexCoord")
+    brick = nodes.new("ShaderNodeTexBrick")
+    brick.offset = 0.5
+    brick.offset_frequency = 2
+    brick.inputs["Color1"].default_value = (0.50, 0.27, 0.11, 1.0)
+    brick.inputs["Color2"].default_value = (0.32, 0.14, 0.045, 1.0)
+    brick.inputs["Mortar"].default_value = (0.055, 0.032, 0.018, 1.0)
+    brick.inputs["Scale"].default_value = 6.0
+    brick.inputs["Mortar Size"].default_value = 0.010
+    brick.inputs["Mortar Smooth"].default_value = 0.002
+    brick.inputs["Brick Width"].default_value = 0.72
+    brick.inputs["Row Height"].default_value = 0.22
+    bump = nodes.new("ShaderNodeBump")
+    bump.inputs["Strength"].default_value = 0.12
+    bump.inputs["Distance"].default_value = 0.003
+
+    links.new(texcoord.outputs["Generated"], brick.inputs["Vector"])
+    links.new(brick.outputs["Color"], principled.inputs["Base Color"])
+    links.new(brick.outputs["Fac"], bump.inputs["Height"])
+    links.new(bump.outputs["Normal"], principled.inputs["Normal"])
+    links.new(principled.outputs["BSDF"], output.inputs["Surface"])
+    return mat
+
+
 def ensure_collection(name):
     existing = bpy.data.collections.get(name)
     if existing:
@@ -571,7 +609,7 @@ def build(plan_path, output_blend, render_path=None, wall_height_mm=2700,
     wall_mat = material("validation/wall", (0.08, 0.08, 0.08, 1.0))
     interior_wall_mat = material(
         "architecture/interior-wall-ivory", (0.96, 0.94, 0.90, 1.0))
-    floor_mat = material("validation/floor", (0.98, 0.98, 0.98, 1.0))
+    floor_mat = wood_plank_tile_material()
     beam_mat = material("validation/beam", (0.35, 0.12, 0.55, 1.0))
     space_mat = material("validation/space-label", (0.05, 0.25, 0.75, 1.0))
     window_mat = material(
