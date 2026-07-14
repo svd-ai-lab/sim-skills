@@ -64,7 +64,7 @@ def wood_plank_tile_material():
     brick.inputs["Mortar Size"].default_value = 0.0015
     brick.inputs["Mortar Smooth"].default_value = 0.0005
     brick.inputs["Brick Width"].default_value = 0.72
-    brick.inputs["Row Height"].default_value = 0.22
+    brick.inputs["Row Height"].default_value = 0.44
     bump = nodes.new("ShaderNodeBump")
     bump.inputs["Strength"].default_value = 0.12
     bump.inputs["Distance"].default_value = 0.003
