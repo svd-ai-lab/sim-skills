@@ -82,8 +82,12 @@ Assign every opening to one wall by ID. `offset` is measured from wall endpoint
 }
 ```
 
-Doors may add `swing`, `hinge`, and `opens_to`. Never encode an opening without
-a host wall.
+Doors may add `swing`, `hinge`, `swing_side`, `opens_to`, and `swing_status`.
+Use `hinge: "a"` or `"b"` for the corresponding end of the opening segment.
+Use `swing_side: "left"` or `"right"` relative to the host wall direction from
+`a` to `b`; use a space ID or `outside` for `opens_to`. Keep an inferred leaf at
+`swing_status: "needs_review"` so the 3D stage can display it as provisional.
+Never encode an opening without a host wall.
 
 Verify the drawing's abbreviation convention before mapping vertical values.
 On many Chinese architectural/interior drawings, `CH` means window height

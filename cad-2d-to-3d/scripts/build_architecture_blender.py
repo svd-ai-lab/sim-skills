@@ -305,8 +305,58 @@ def cut_opening(wall_obj, wall, opening, collection):
     bpy.data.objects.remove(cutter, do_unlink=True)
 
 
-def add_opening_marker(wall, opening, collection, mat):
-    """Add a reversible frame proxy without inventing door-leaf geometry."""
+def add_door_swing_marker(opening, start, end, collection, mat):
+    """Add a review-only leaf and swing arc from explicit semantic orientation."""
+    hinge_name = opening.get("hinge")
+    swing_side = opening.get("swing_side")
+    if hinge_name not in {"a", "b"} or swing_side not in {"left", "right"}:
+        return []
+    wall_direction = (end - start).normalized()
+    hinge = start if hinge_name == "a" else end
+    closed_direction = wall_direction if hinge_name == "a" else -wall_direction
+    left_normal = Vector((-wall_direction.y, wall_direction.x))
+    open_direction = left_normal if swing_side == "left" else -left_normal
+    width = (end - start).length
+    head = mm(opening["head"])
+    leaf_center = hinge + open_direction * width / 2
+    leaf = add_box(
+        f"opening/{opening['id']}/leaf",
+        (leaf_center.x, leaf_center.y, head / 2),
+        (width, 0.035, head),
+        math.atan2(open_direction.y, open_direction.x), collection, mat)
+
+    curve = bpy.data.curves.new(f"opening/{opening['id']}/swing-arc", type="CURVE")
+    curve.dimensions = "3D"
+    curve.bevel_depth = 0.012
+    curve.bevel_resolution = 2
+    spline = curve.splines.new("POLY")
+    steps = 20
+    spline.points.add(steps)
+    closed_angle = math.atan2(closed_direction.y, closed_direction.x)
+    open_angle = math.atan2(open_direction.y, open_direction.x)
+    delta = (open_angle - closed_angle + math.pi) % (2 * math.pi) - math.pi
+    for index in range(steps + 1):
+        angle = closed_angle + delta * index / steps
+        point = hinge + Vector((math.cos(angle), math.sin(angle))) * width
+        spline.points[index].co = (point.x, point.y, 0.035, 1.0)
+    arc = bpy.data.objects.new(f"opening/{opening['id']}/swing-arc", curve)
+    curve.materials.append(mat)
+    collection.objects.link(arc)
+    pieces = [leaf, arc]
+    for piece in pieces:
+        piece["opening_id"] = opening["id"]
+        piece["opening_kind"] = "door"
+        piece["swing_status"] = opening.get("swing_status", "needs_review")
+        piece["hinge"] = hinge_name
+        piece["swing_side"] = swing_side
+        piece["opens_to"] = opening.get("opens_to", "")
+        piece.hide_render = True
+    return pieces
+
+
+def add_opening_marker(wall, opening, collection, mat,
+                       review_mat=None, accepted_mat=None):
+    """Add reversible frame and optional semantically explicit door proxies."""
     a = Vector((mm(wall["a"][0]), mm(wall["a"][1])))
     b = Vector((mm(wall["b"][0]), mm(wall["b"][1])))
     direction = (b - a).normalized()
@@ -333,6 +383,11 @@ def add_opening_marker(wall, opening, collection, mat):
             f"opening/{opening['id']}/sill",
             (center.x, center.y, sill + frame_width / 2),
             ((end - start).length, depth, frame_width), angle, collection, mat))
+    elif opening.get("hinge") and opening.get("swing_side"):
+        swing_mat = (accepted_mat if opening.get("swing_status") == "confirmed"
+                     else review_mat) or mat
+        pieces.extend(add_door_swing_marker(
+            opening, start, end, collection, swing_mat))
     for piece in pieces:
         piece["opening_id"] = opening["id"]
         piece["opening_kind"] = opening["kind"]
@@ -441,7 +496,8 @@ def build(plan_path, output_blend, render_path=None, wall_height_mm=2700,
         cut_opening(wall_obj, wall, opening, collection)
         add_opening_marker(
             wall, opening, opening_collection,
-            window_mat if opening["kind"] == "window" else door_mat)
+            window_mat if opening["kind"] == "window" else door_mat,
+            review_mat=review_mat, accepted_mat=accepted_mat)
     for beam in plan.get("beams", []):
         a = Vector((mm(beam["a"][0]), mm(beam["a"][1])))
         b = Vector((mm(beam["b"][0]), mm(beam["b"][1])))

@@ -59,6 +59,12 @@ their own collection and exclude them from cut-mask rendering. Do not invent a
 door leaf, hinge side, swing arc, glazing subdivision, or construction detail
 that is absent from the plan contract.
 
+Create a door leaf and swing arc only when the semantic opening explicitly has
+`hinge`, `swing_side`, `opens_to`, and `swing_status`. Color a `needs_review`
+orientation as provisional and keep it out of shell projection scoring. Do not
+derive a leaf direction merely from room adjacency or from an unaccepted arc in
+the raster plan.
+
 ## Architectural validation
 
 Validate in layers:

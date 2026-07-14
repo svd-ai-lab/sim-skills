@@ -326,6 +326,19 @@ def validate(plan: dict, residuals: np.ndarray) -> dict:
                 float(opening["head"]) - sill - float(opening["height"])) > 1e-6:
             errors.append(
                 f"opening {opening['id']} head-sill does not equal source height")
+        if opening.get("kind") == "door":
+            swing_fields = ("hinge", "swing_side", "opens_to", "swing_status")
+            if any(field in opening for field in swing_fields):
+                if opening.get("hinge") not in {"a", "b"}:
+                    errors.append(f"door {opening['id']} requires hinge a or b")
+                if opening.get("swing_side") not in {"left", "right"}:
+                    errors.append(
+                        f"door {opening['id']} requires swing_side left or right")
+                if not opening.get("opens_to"):
+                    errors.append(f"door {opening['id']} requires opens_to")
+                if opening.get("swing_status") not in {"confirmed", "needs_review"}:
+                    errors.append(
+                        f"door {opening['id']} requires a valid swing_status")
     space_ids = set()
     for space in plan.get("spaces", []):
         if space["id"] in space_ids:
