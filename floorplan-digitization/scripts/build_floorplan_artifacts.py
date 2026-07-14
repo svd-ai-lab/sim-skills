@@ -304,12 +304,21 @@ def validate(plan: dict, residuals: np.ndarray) -> dict:
     if not plan.get("excluded_regions"):
         warnings.append("no excluded regions recorded; confirm property ownership boundary")
     evidence_states = {item.get("status") for item in plan.get("evidence", [])}
-    needs_review = "missing" in evidence_states or "conflicting" in evidence_states
+    acceptance = plan.get("acceptance", {})
+    acceptance_status = acceptance.get("status", "needs_review")
+    if acceptance_status not in {"needs_review", "accepted"}:
+        errors.append(f"unsupported acceptance status: {acceptance_status}")
+    needs_review = ("missing" in evidence_states or "conflicting" in evidence_states
+                    or acceptance_status != "accepted")
     if needs_review:
-        warnings.append("evidence ledger contains missing or conflicting inputs")
+        warnings.append("plan has not passed the human 2D acceptance gate")
     status = "fail" if errors else ("needs_review" if needs_review else "pass")
     return {
         "status": status,
+        "acceptance": {
+            "status": acceptance_status,
+            "note": acceptance.get("note"),
+        },
         "calibration": {
             "anchor_count": int(len(residuals)),
             "rms_residual_px": float(np.sqrt(np.mean(residuals ** 2))),

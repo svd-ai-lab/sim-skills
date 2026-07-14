@@ -11,6 +11,7 @@ review artifacts.
   "name": "example-plan",
   "units": "mm",
   "reference_image": "floorplan.png",
+  "acceptance": {"status": "needs_review", "note": "awaiting human review"},
   "calibration": {
     "model_points": [[0, 0], [10000, 0], [0, 8000]],
     "image_points": [[120, 900], [1420, 900], [120, 120]]
@@ -26,6 +27,14 @@ review artifacts.
   "evidence": []
 }
 ```
+
+## Acceptance state
+
+Use `acceptance.status` with either `needs_review` or `accepted`. New and
+revised contracts start as `needs_review`. Set `accepted` only after a human has
+confirmed the property/exclusion boundary, wall topology, opening assignments,
+removed walls, retained structure, and unresolved dimension conflicts. Preserve
+a short acceptance note; do not infer acceptance from a high projection score.
 
 ## Walls
 

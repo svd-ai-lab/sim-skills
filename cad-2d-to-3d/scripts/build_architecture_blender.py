@@ -113,6 +113,29 @@ def add_space_markers(plan, collection, mat):
     return markers
 
 
+def add_acceptance_marker(plan, collection, review_mat, accepted_mat):
+    acceptance = plan.get("acceptance", {})
+    status = acceptance.get("status", "needs_review")
+    points = plan["property_boundary"]
+    center_x = mm((min(point[0] for point in points)
+                   + max(point[0] for point in points)) / 2)
+    top_y = mm(max(point[1] for point in points)) + 0.5
+    curve = bpy.data.curves.new("validation/acceptance-status-text", type="FONT")
+    curve.body = ("2D PLAN ACCEPTED" if status == "accepted"
+                  else "PROVISIONAL - 2D REVIEW REQUIRED")
+    curve.align_x = "CENTER"
+    curve.align_y = "CENTER"
+    curve.size = 0.24
+    obj = bpy.data.objects.new("validation/acceptance-status", curve)
+    obj.location = (center_x, top_y, 0.03)
+    obj["acceptance_status"] = status
+    obj["acceptance_note"] = acceptance.get("note", "")
+    curve.materials.append(accepted_mat if status == "accepted" else review_mat)
+    collection.objects.link(obj)
+    obj.hide_render = True
+    return obj
+
+
 def frame_top_view(plan):
     points = plan["property_boundary"]
     xs = [mm(point[0]) for point in points]
@@ -377,6 +400,8 @@ def build(plan_path, output_blend, render_path=None, wall_height_mm=2700,
     space_mat = material("validation/space-label", (0.05, 0.25, 0.75, 1.0))
     window_mat = material("validation/window-frame", (0.05, 0.55, 0.95, 1.0))
     door_mat = material("validation/door-frame", (1.0, 0.35, 0.05, 1.0))
+    review_mat = material("validation/status-needs-review", (0.9, 0.03, 0.03, 1.0))
+    accepted_mat = material("validation/status-accepted", (0.05, 0.65, 0.15, 1.0))
     add_floor(plan["property_boundary"], collection, floor_mat)
     height = mm(wall_height_mm)
     wall_map = {}
@@ -404,12 +429,15 @@ def build(plan_path, output_blend, render_path=None, wall_height_mm=2700,
     cut_objects = create_validation_cut(
         structural_objects, plan, validation_cut_height_mm, cut_collection, wall_mat)
     add_space_markers(plan, space_collection, space_mat)
+    add_acceptance_marker(plan, space_collection, review_mat, accepted_mat)
     camera = configure_top_camera(plan, image_size, collection, validation_cut_height_mm)
     attach_reference_background(camera, reference_path)
     scene = bpy.context.scene
     scene["cad_2d_to_3d.plan_path"] = str(plan_path)
     scene["cad_2d_to_3d.plan_sha256"] = hashlib.sha256(plan_bytes).hexdigest()
     scene["cad_2d_to_3d.reference_image"] = str(reference_path)
+    scene["cad_2d_to_3d.acceptance_status"] = plan.get(
+        "acceptance", {}).get("status", "needs_review")
     scene["cad_2d_to_3d.schema_version"] = int(plan.get("schema_version", 1))
     scene["cad_2d_to_3d.validation_cut_height_mm"] = float(validation_cut_height_mm)
     scene.camera = camera
@@ -453,6 +481,8 @@ def build(plan_path, output_blend, render_path=None, wall_height_mm=2700,
         "plan_path": str(plan_path),
         "plan_sha256": hashlib.sha256(plan_bytes).hexdigest(),
         "reference_image": str(reference_path),
+        "acceptance_status": plan.get("acceptance", {}).get(
+            "status", "needs_review"),
         "wall_height_mm": wall_height_mm,
         "walls": len(plan.get("walls", [])),
         "openings": len(plan.get("openings", [])),

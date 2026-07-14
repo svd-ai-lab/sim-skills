@@ -4,6 +4,11 @@ Use this profile only after the 2D plan has passed its own calibration and
 semantic acceptance gate. Consume both the CAD artifact and semantic contract;
 do not reinterpret ownership, demolition, or room labels from linework alone.
 
+If a provisional build is needed before acceptance, label it visibly as
+`needs_review`, store the status in the Blender scene and QA report, and keep
+fixed fit-out and furniture out of scope. A good projection score cannot change
+the acceptance state.
+
 ## Architectural authority
 
 Prioritize:
