@@ -59,10 +59,10 @@ def wood_plank_tile_material():
     brick.offset_frequency = 2
     brick.inputs["Color1"].default_value = (0.50, 0.27, 0.11, 1.0)
     brick.inputs["Color2"].default_value = (0.32, 0.14, 0.045, 1.0)
-    brick.inputs["Mortar"].default_value = (0.055, 0.032, 0.018, 1.0)
+    brick.inputs["Mortar"].default_value = (0.18, 0.085, 0.035, 1.0)
     brick.inputs["Scale"].default_value = 6.0
-    brick.inputs["Mortar Size"].default_value = 0.010
-    brick.inputs["Mortar Smooth"].default_value = 0.002
+    brick.inputs["Mortar Size"].default_value = 0.0015
+    brick.inputs["Mortar Smooth"].default_value = 0.0005
     brick.inputs["Brick Width"].default_value = 0.72
     brick.inputs["Row Height"].default_value = 0.22
     bump = nodes.new("ShaderNodeBump")
