@@ -45,7 +45,9 @@ multi-physics escalation, establish a compact execution contract:
 - Smallest useful smoke
 
 If one P0/P1 ambiguity would change the physical model, ask at most one
-decisive question. Otherwise proceed with visible assumptions. Run the smallest
+decisive question. List every other gap as an assumption or blocked contract
+item, not as another question; the response may contain only one user-answerable
+question. Otherwise proceed with visible assumptions. Run the smallest
 case that can test setup, sign/convention, boundary behavior, and expected
 output before launching the full job. Start the full execution only after that
 smoke produces the expected evidence, or record why the gate is being bypassed
