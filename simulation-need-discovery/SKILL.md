@@ -1,6 +1,6 @@
 ---
 name: simulation-need-discovery
-description: "Use when handling simulation requirement docs, 任务书/specs, client/lab/customer asks, vague modeling requests, paid gigs, or what should we actually deliver situations where the real decision, scope, missing inputs, validation evidence, or deliverable must be clarified before modeling."
+description: "Use when handling simulation requirement docs, 任务书/specs, client/lab/customer asks, vague modeling requests, paid gigs, or before costly full solves, long runs, sweeps, optimization, calibration, and coupled simulations where the decision, physical model, assumptions, validation evidence, or deliverable must be clear before execution."
 ---
 
 # Simulation Need Discovery
@@ -31,6 +31,25 @@ First answer:
 
 If the answer is already clear, proceed. If not, ask only the highest-value
 missing questions or propose explicit assumptions.
+
+## Solver Launch Gate
+
+Before a costly full solve, long run, sweep, optimization, calibration, or
+multi-physics escalation, establish a compact execution contract:
+
+- Goal
+- Physical model
+- Boundary conditions and actuation
+- Baseline or comparison
+- Outputs and acceptance evidence
+- Smallest useful smoke
+
+If one P0/P1 ambiguity would change the physical model, ask at most one
+decisive question. Otherwise proceed with visible assumptions. Run the smallest
+case that can test setup, sign/convention, boundary behavior, and expected
+output before launching the full job. Start the full execution only after that
+smoke produces the expected evidence, or record why the gate is being bypassed
+and what extra risk remains.
 
 ## When To Use
 
