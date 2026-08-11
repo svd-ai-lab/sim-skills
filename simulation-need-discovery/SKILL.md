@@ -44,6 +44,10 @@ multi-physics escalation, establish a compact execution contract:
 - Outputs and acceptance evidence
 - Smallest useful smoke
 
+Present these six items as a compact contract before asking the decisive
+question or starting execution. Mark each unresolved item as an assumption or
+blocked item so the user can see what is ready and what is not.
+
 If one P0/P1 ambiguity would change the physical model, ask at most one
 decisive question. List every other gap as an assumption or blocked contract
 item, not as another question; the response may contain only one user-answerable
@@ -129,8 +133,10 @@ Rank missing information by how much it can change the plan:
 - P2: Affects accuracy but not the next useful artifact. Record and continue.
 - P3: Cosmetic or polish detail. Defer.
 
-Ask only the highest-value missing questions, usually no more than three to five
-at once. If momentum matters, propose defaults and continue with visible caveats.
+Outside the Solver Launch Gate, ask only the highest-value missing questions,
+usually no more than three to five at once. At the gate, keep the stricter
+one-question limit above. If momentum matters, propose defaults and continue
+with visible caveats.
 
 ### 5. Pick The Cheapest Useful Artifact
 
@@ -218,6 +224,9 @@ directional, or a first-pass model.
 ## Question Pattern
 
 Prefer targeted questions over intake forms.
+
+At the Solver Launch Gate, ask at most the single decisive question identified
+above; represent the remaining unknowns in the compact contract instead.
 
 Examples: ask what decision the result supports, what would make the recipient
 accept the answer, whether the deliverable is a model, figure, report, or
