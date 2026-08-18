@@ -115,6 +115,25 @@ Keep the artifact set proportional. A simple bracket may only need a script, one
 preview, and a STEP file. A porous, interlaced, or repeated topology may need
 multiple views and invariant notes.
 
+## Solver Handoff Gate
+
+Before calling a mesh solver-ready, verify the handoff rather than only the
+picture or mesher exit code:
+
+- units, scale, bounds, dimensionality, region count, and connected components
+- required physical groups or named zones exist, are non-empty, and have the
+  expected entity dimension
+- boundary orientation and inside/outside assignment are consistent
+- periodic partners have compatible topology, ordering, orientation, and
+  transform; visual similarity alone is insufficient
+- quality evidence names the metric, worst value, and location; do not apply a
+  universal threshold without the target solver and element type
+- a solver import or native mesh-check dry run can inventory the same regions
+  and boundary names without silently dropping entities
+
+Report the strongest state actually proven: `preview-ready`, `mesh-generated`,
+`solver-imported`, or `setup-ready`. These states are not interchangeable.
+
 ## Solver Escalation
 
 Use heavy solvers as authority layers, not as the first sketchpad.

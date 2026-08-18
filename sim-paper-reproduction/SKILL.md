@@ -1,6 +1,6 @@
 ---
 name: sim-paper-reproduction
-description: Cross-solver discipline for reproducing simulation results from papers, reports, theses, benchmarks, or reference studies. Use with the relevant solver skill; this skill covers task framing, evidence, and staged acceptance rather than solver-specific commands.
+description: Cross-solver discipline for extracting simulation evidence from papers, reproducing reference results, and turning verified solver evidence into manuscript or report claims. Use with the relevant solver skill; this skill covers task framing, provenance, staged acceptance, and publication handoff rather than solver-specific commands.
 ---
 
 # sim-paper-reproduction
@@ -14,6 +14,22 @@ execution tool is not fixed: use `sim-cli` when it adds discovery, session
 control, inspection, logs, or artifact tracking; use solver-native scripts,
 plain Python, vendor batch executables, or GUI workflows when they are the
 right primitive.
+
+## Paper Evidence Map
+
+Before turning a paper into model inputs, build a compact evidence map for the
+parts that affect the task. For each fact, record the page or section, source
+object (text, equation, table, figure, caption, or supplement), extracted value
+and unit, and status: `direct`, `derived`, `inferred`, `ambiguous`, or `missing`.
+
+- Keep figure axes, legends, series identity, normalization, and coordinate
+  conventions with any digitized values.
+- Preserve conflicting text/table/figure values as separate evidence until the
+  conflict is resolved; do not silently choose one.
+- Treat OCR and visual readings as candidates until checked against text,
+  captions, equations, or another source.
+- Carry only `direct` or explicitly justified `derived` facts into the
+  parameter manifest. Keep inferred values visible as assumptions.
 
 ## Reproduction Loop
 
@@ -78,6 +94,20 @@ For a first pass, produce:
 
 Do not claim a reproduction is complete until the stated metrics pass. It is
 valid and useful to deliver a failed first pass if it has clear evidence.
+
+## Publication Handoff
+
+When the user wants a paper, report, or manuscript structure from the work,
+build a claim ledger before drafting results or conclusions. For each proposed
+claim, record its status (`verified`, `derived`, `planned`, or `speculative`),
+the run and artifact that support it, and the strongest wording the evidence
+allows. Planned runs and attractive hypotheses are not results.
+
+For content-preserving manuscript edits, state the preservation contract before
+changing the document: which scientific facts, numeric values, citations,
+figure pixels, and wording must remain unchanged, and whether reordering,
+headings, captions, cross-references, or formatting may change. Verify the
+finished artifact against that contract as well as its rendered layout.
 
 ## Boundaries
 

@@ -57,6 +57,12 @@ output before launching the full job. Start the full execution only after that
 smoke produces the expected evidence, or record why the gate is being bypassed
 and what extra risk remains.
 
+For a comparison, sweep, or redesign, add one controlled-comparison line:
+baseline, hypothesis, intended change, invariants, leading metric, and rejection
+condition. Prefer one causal change per variant. If several changes are
+inseparable, stage them or label the result as a bundled comparison rather than
+attributing the outcome to one factor.
+
 ## When To Use
 
 Use this skill for:
