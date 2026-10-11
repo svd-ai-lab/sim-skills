@@ -9,8 +9,8 @@ Use for DOI and bibliographic metadata.
 
 - Search: `https://api.crossref.org/works?query=<query>&rows=<n>`
 - DOI lookup: `https://api.crossref.org/works/<doi>`
-- Optional polite pool: append `mailto=<OPENSCIENCE_CONTACT_EMAIL>` when that
-  environment variable is set by the user.
+- Optional polite pool: append the visible `CROSSREF_MAILTO` or
+  `RESEARCH_CONTACT_EMAIL` value as `mailto`; the script also accepts `--mailto`.
 
 Useful fields: `title`, `author`, `published-print`, `published-online`,
 `issued`, `container-title`, `DOI`, `URL`, `type`, `reference`, `is-referenced-by-count`.
@@ -62,11 +62,16 @@ Useful fields: `is_oa`, `oa_status`, `best_oa_location`, `oa_locations`,
 
 Use for broad discovery and citation-aware search. A key is not required for
 basic public requests; use a visible `OPENALEX_API_KEY` only when the user has
-configured one. Use `OPENALEX_MAILTO` or `RESEARCH_CONTACT_EMAIL` for polite
-pool access when available.
+configured one. The search script sends it as an Authorization bearer header
+only to OpenAlex, including author and ORCID lookups. Do not include Keys in
+reported URLs or errors. An email is not a substitute for an API key or request
+budget. Follow current [authentication and limits documentation](https://help.openalex.org/api/authentication/)
+and observe rate-limit responses rather than assuming unlimited anonymous use.
 
 - Work lookup by DOI: `https://api.openalex.org/works/https://doi.org/<doi>`
 - Search: `https://api.openalex.org/works?search=<query>&per-page=<n>`
+- Keep `per_page` within the published maximum (currently 100), including the
+  candidate pool used for local citation/date re-ranking.
 
 Useful fields: `display_name`, `authorships`, `publication_year`,
 `primary_location`, `open_access`, `referenced_works`, `cited_by_count`,

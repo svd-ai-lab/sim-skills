@@ -46,7 +46,10 @@ Default public sources:
 Optional user-configured sources:
 
 - Use Unpaywall only when `UNPAYWALL_EMAIL` is visible.
-- For polite OpenAlex/Crossref pool access, pass `--mailto` to
+- Use a visible `OPENALEX_API_KEY` for a higher OpenAlex request budget; the
+  search script supports it for work, author, and ORCID lookups. Basic anonymous
+  queries remain available within the source's current limits.
+- For Crossref polite-pool access, pass `--mailto` to
   `scripts/academic_search.py` or use `OPENALEX_MAILTO`, `CROSSREF_MAILTO`, or
   `RESEARCH_CONTACT_EMAIL` when visible.
 - Use enhanced citation, graph, or full-text providers only when declared in

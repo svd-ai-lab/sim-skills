@@ -9,7 +9,8 @@ an MCP server or managed provider. It is a single self-contained file hitting
 public HTTP APIs with no third-party dependencies. Plain topic searches fall
 back to Crossref when OpenAlex is temporarily unavailable.
 
-Source: OpenAlex (https://openalex.org) — free, no API key. OpenAlex indexes
+Source: OpenAlex (https://openalex.org) — basic anonymous queries are supported;
+an optional OPENALEX_API_KEY increases the available request budget. OpenAlex indexes
 CrossRef, PubMed and arXiv-deposited works, so one endpoint covers journals,
 preprints and many repository deposits for discovery. Resolve selected records
 through authoritative DOI/arXiv/PMID sources before claiming final metadata.
@@ -30,7 +31,7 @@ Usage:
     # By exact author ID (skip name resolution)
     python3 academic_search.py --author-id A5055881494
 
-Be polite to the OpenAlex pool: pass --mailto you@example.com or set the
+For a Crossref contact email, pass --mailto you@example.com or set the
 OPENALEX_MAILTO, CROSSREF_MAILTO, or RESEARCH_CONTACT_EMAIL environment variable.
 
 Output: JSON list of papers with title, DOI, authors, year, citation count, abstract.
@@ -53,6 +54,15 @@ AUTHORS_API = "https://api.openalex.org/authors"
 CROSSREF_API = "https://api.crossref.org/works"
 # Polite-pool contact; overridden by --mailto or environment variables.
 MAILTO = ""
+
+
+def _openalex_request(endpoint: str, params: dict) -> urllib.request.Request:
+    headers = {"Accept": "application/json"}
+    key = os.environ.get("OPENALEX_API_KEY", "").strip()
+    if key:
+        headers["Authorization"] = f"Bearer {key}"
+    url = f"{endpoint}?{urllib.parse.urlencode(params)}"
+    return urllib.request.Request(url, headers=headers)
 
 # When re-ranking a query's results by citations/date, drop candidates whose
 # relevance_score is below this fraction of the top hit's score. OpenAlex's
@@ -114,11 +124,10 @@ def _cluster_summary(results: list[dict]) -> list[dict]:
 
 
 def fetch_author_candidates(name: str, per_page: int = 50) -> list[dict]:
-    params = {"search": name, "per_page": per_page}
+    params = {"search": name, "per_page": min(per_page, 100)}
     if MAILTO:
         params["mailto"] = MAILTO
-    url = f"{AUTHORS_API}?{urllib.parse.urlencode(params)}"
-    req = urllib.request.Request(url, headers={"Accept": "application/json"})
+    req = _openalex_request(AUTHORS_API, params)
     with urllib.request.urlopen(req, timeout=30) as resp:
         data = json.loads(resp.read().decode())
     return data.get("results", [])
@@ -189,8 +198,7 @@ def resolve_by_orcid(orcid: str) -> dict | None:
     params = {"filter": f"orcid:{oid}"}
     if MAILTO:
         params["mailto"] = MAILTO
-    url = f"{AUTHORS_API}?{urllib.parse.urlencode(params)}"
-    req = urllib.request.Request(url, headers={"Accept": "application/json"})
+    req = _openalex_request(AUTHORS_API, params)
     with urllib.request.urlopen(req, timeout=30) as resp:
         data = json.loads(resp.read().decode())
     results = data.get("results", [])
@@ -220,7 +228,7 @@ def search(query: str | None = None, limit: int = 10, year_from: int | None = No
     # keeping only the topically relevant top results. Without a query (e.g. author
     # browse) there is no relevance to preserve, so sort server-side as before.
     rerank = bool(query) and sort != "relevance_score"
-    per_page = min(max(limit * 5, limit), 200) if rerank else min(limit, 50)
+    per_page = min(max(limit * 5, limit), 100) if rerank else min(limit, 50)
 
     params = {
         "per_page": per_page,
@@ -246,8 +254,7 @@ def search(query: str | None = None, limit: int = 10, year_from: int | None = No
     if filters:
         params["filter"] = ",".join(filters)
 
-    url = f"{OPENALEX_API}?{urllib.parse.urlencode(params)}"
-    req = urllib.request.Request(url, headers={"Accept": "application/json"})
+    req = _openalex_request(OPENALEX_API, params)
     with urllib.request.urlopen(req, timeout=30) as resp:
         data = json.loads(resp.read().decode())
 
@@ -396,7 +403,7 @@ def main():
                         help="Sort order. With a query, cited_by_count/publication_date "
                              "re-rank within the relevance-matched pool (not the whole DB)")
     parser.add_argument("--mailto", default=None,
-                        help="Contact email for the OpenAlex polite pool "
+                        help="Contact email for Crossref requests "
                              "(falls back to OPENALEX_MAILTO / CROSSREF_MAILTO env)")
     parser.add_argument("--compact", action="store_true", help="Compact output (one line per paper)")
     args = parser.parse_args()
